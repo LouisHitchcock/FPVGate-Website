@@ -1285,10 +1285,13 @@ footer p {
 
 .screenshot-img {
     width: 100%;
+    max-width: 100%;
+    height: auto;
     border-radius: 5px;
     border: 1px solid rgba(0, 212, 255, 0.2);
     margin-top: 1rem;
     transition: transform 0.3s;
+    display: block;
 }
 
 .screenshot-img:hover {
