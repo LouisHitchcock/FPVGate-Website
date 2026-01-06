@@ -10,10 +10,11 @@
     <nav class="navbar">
         <div class="container">
             <div class="nav-brand">
-                <h1>🏁 FPVGate</h1>
+                <h1>FPVGate</h1>
             </div>
             <div class="nav-links">
                 <a href="index.html">Home</a>
+                <a href="docs.html">Documentation</a>
                 <a href="flasher.html" class="btn-primary">Flash Firmware</a>
                 <a href="https://github.com/LouisHitchcock/FPVGate" target="_blank">GitHub</a>
             </div>
@@ -22,46 +23,57 @@
 
     <section class="hero">
         <div class="container">
-            <h1>Personal FPV Lap Timer</h1>
-            <p class="subtitle">Compact, self-contained RSSI-based lap timing for 5.8GHz FPV drones</p>
-            <div class="hero-buttons">
-                <a href="flasher.html" class="btn btn-large btn-primary">Flash Firmware</a>
-                <a href="https://github.com/LouisHitchcock/FPVGate" class="btn btn-large btn-secondary" target="_blank">View on GitHub</a>
+            <div class="hero-content fade-in-up">
+                <h1>Personal FPV Lap Timer</h1>
+                <p class="subtitle">Compact, self-contained RSSI-based lap timing for 5.8GHz FPV drones</p>
+                <p class="hero-description">No transponders, no complex setup—just plug in, calibrate, and fly. Perfect for personal practice sessions and small indoor tracks.</p>
+                <div class="hero-buttons">
+                    <a href="flasher.html" class="btn btn-large btn-primary">Flash Firmware</a>
+                    <a href="docs.html" class="btn btn-large btn-secondary">Documentation</a>
+                    <a href="https://github.com/LouisHitchcock/FPVGate" class="btn btn-large btn-ghost" target="_blank">View on GitHub</a>
+                </div>
+            </div>
+            <div class="hero-visual fade-in">
+                <div class="signal-animation">
+                    <div class="signal-wave"></div>
+                    <div class="signal-wave"></div>
+                    <div class="signal-wave"></div>
+                </div>
             </div>
         </div>
     </section>
 
     <section class="features">
         <div class="container">
-            <h2>Key Features</h2>
+            <h2 class="section-title">Key Features</h2>
             <div class="feature-grid">
-                <div class="feature-card">
-                    <div class="feature-icon">📡</div>
+                <div class="feature-card" data-animation="fade-in-up">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><circle cx="12" cy="20" r="1"></circle></svg></div>
                     <h3>Dual Connectivity</h3>
                     <p>WiFi Access Point and USB Serial CDC connection for zero-latency control</p>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">💡</div>
+                <div class="feature-card" data-animation="fade-in-up" data-delay="100">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M8 12h8"></path><path d="M12 8v8"></path></svg></div>
                     <h3>Visual Feedback</h3>
                     <p>RGB LED indicators with 10 customizable presets and real-time RSSI visualization</p>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🎤</div>
+                <div class="feature-card" data-animation="fade-in-up" data-delay="200">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg></div>
                     <h3>Voice Announcements</h3>
                     <p>Natural voice announcements with 4 included voices and phonetic name support</p>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">📊</div>
+                <div class="feature-card" data-animation="fade-in-up">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></div>
                     <h3>Race Analysis</h3>
                     <p>Real-time lap tracking, gap analysis, and race history with export/import</p>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🗺️</div>
+                <div class="feature-card" data-animation="fade-in-up" data-delay="100">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></div>
                     <h3>Track Management</h3>
                     <p>Create and manage track profiles with distance tracking and custom metadata</p>
                 </div>
-                <div class="feature-card">
-                    <div class="feature-icon">🔌</div>
+                <div class="feature-card" data-animation="fade-in-up" data-delay="200">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg></div>
                     <h3>Webhooks</h3>
                     <p>HTTP webhook support for external LED controllers and device integration</p>
                 </div>
@@ -151,9 +163,10 @@
             <div class="footer-links">
                 <a href="https://github.com/LouisHitchcock/FPVGate" target="_blank">GitHub</a>
                 <a href="https://github.com/LouisHitchcock/FPVGate/issues" target="_blank">Issues</a>
-                <a href="https://github.com/LouisHitchcock/FPVGate/tree/main/docs" target="_blank">Documentation</a>
+                <a href="docs.html">Documentation</a>
             </div>
         </div>
     </footer>
+    <script src="animations.js"></script>
 </body>
 </html>

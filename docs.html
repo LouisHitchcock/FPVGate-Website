@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation - FPVGate</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <h1>FPVGate</h1>
+            </div>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="docs.html" class="btn-primary">Documentation</a>
+                <a href="flasher.html">Flash Firmware</a>
+                <a href="https://github.com/LouisHitchcock/FPVGate" target="_blank">GitHub</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="docs-hero">
+        <div class="container">
+            <h1>Documentation</h1>
+            <p class="subtitle">Everything you need to know to get started with FPVGate</p>
+        </div>
+    </section>
+
+    <section class="docs-content">
+        <div class="container">
+            <div class="docs-layout">
+                <aside class="docs-sidebar">
+                    <nav class="docs-nav">
+                        <h3>Quick Links</h3>
+                        <a href="#getting-started">Getting Started</a>
+                        <a href="#hardware">Hardware Setup</a>
+                        <a href="#flashing">Flashing Firmware</a>
+                        <a href="#configuration">Configuration</a>
+                        <a href="#calibration">Calibration</a>
+                        <a href="#racing">Using the Timer</a>
+                        <a href="#screenshots">Screenshots</a>
+                        <a href="#troubleshooting">Troubleshooting</a>
+                    </nav>
+                </aside>
+
+                <main class="docs-main">
+                    <section id="getting-started" class="doc-section">
+                        <h2>Getting Started</h2>
+                        <p>FPVGate is an RSSI-based lap timing solution for FPV drones. It measures lap times by detecting your drone's video transmitter signal strength as you fly through the gate.</p>
+                        
+                        <div class="info-box">
+                            <h4>What You'll Need</h4>
+                            <ul>
+                                <li><strong>ESP32-S3 DevKitC-1</strong> or <strong>ESP32-S3 Super Mini</strong></li>
+                                <li><strong>RX5808 Module</strong> (SPI modded)</li>
+                                <li><strong>MicroSD Card</strong> (FAT32, 1GB+)</li>
+                                <li><strong>5V Power Supply</strong> (18650 battery + regulator)</li>
+                                <li><strong>WS2812 RGB LEDs</strong> (optional)</li>
+                                <li><strong>Active Buzzer</strong> (optional)</li>
+                            </ul>
+                        </div>
+                    </section>
+
+                    <section id="hardware" class="doc-section">
+                        <h2>Hardware Setup</h2>
+                        
+                        <h3>ESP32-S3 DevKitC-1 Wiring</h3>
+                        <pre><code>ESP32-S3        RX5808           SD Card
+GPIO4    ────── RSSI             
+GPIO10   ────── CH1 (DATA)       
+GPIO11   ────── CH2 (SELECT)     
+GPIO12   ────── CH3 (CLOCK)      
+GPIO39   ────────────────────── CS
+GPIO36   ────────────────────── SCK
+GPIO35   ────────────────────── MOSI
+GPIO37   ────────────────────── MISO
+GND      ────── GND
+5V       ────── +5V</code></pre>
+
+                        <h3>ESP32-S3 Super Mini Wiring</h3>
+                        <pre><code>ESP32-S3        RX5808           SD Card
+GPIO3    ────── RSSI             
+GPIO6    ────── CH1 (DATA)       
+GPIO7    ────── CH2 (SELECT)     
+GPIO4    ────── CH3 (CLOCK)      
+GPIO8    ────────────────────── CS
+GPIO2    ────────────────────── SCK
+GPIO10   ────────────────────── MOSI
+GPIO9    ────────────────────── MISO
+GND      ────── GND
+5V       ────── +5V</code></pre>
+
+                        <div class="warning-box">
+                            <h4>Important</h4>
+                            <p>The RX5808 module must be SPI modded to work with FPVGate. See the <a href="https://sheaivey.github.io/rx5808-pro-diversity/docs/rx5808-spi-mod.html" target="_blank">SPI mod guide</a>.</p>
+                        </div>
+                    </section>
+
+                    <section id="flashing" class="doc-section">
+                        <h2>Flashing Firmware</h2>
+                        <p>Use our <a href="flasher.html">web-based flasher</a> for the easiest installation experience. No command line required!</p>
+                        
+                        <div class="steps-list">
+                            <div class="step-item">
+                                <div class="step-num">1</div>
+                                <div class="step-content">
+                                    <h4>Connect Your Device</h4>
+                                    <p>Connect your ESP32-S3 to your computer via USB. Use Chrome, Edge, or Opera browser.</p>
+                                </div>
+                            </div>
+                            <div class="step-item">
+                                <div class="step-num">2</div>
+                                <div class="step-content">
+                                    <h4>Select Board & Version</h4>
+                                    <p>Choose your board type and the firmware version you want to install.</p>
+                                </div>
+                            </div>
+                            <div class="step-item">
+                                <div class="step-num">3</div>
+                                <div class="step-content">
+                                    <h4>Flash</h4>
+                                    <p>Click "Connect & Flash Device" and wait 2-3 minutes for the process to complete.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <a href="flasher.html" class="btn btn-primary">Go to Web Flasher</a>
+                    </section>
+
+                    <section id="configuration" class="doc-section">
+                        <h2>Configuration</h2>
+                        <p>After flashing, connect to the FPVGate WiFi network and access the web interface.</p>
+                        
+                        <div class="config-steps">
+                            <h3>First-Time Setup</h3>
+                            <ol>
+                                <li>Connect to WiFi network: <code>FPVGate_XXXX</code></li>
+                                <li>Password: <code>fpvgate1</code></li>
+                                <li>Open browser to: <code>http://www.fpvgate.xyz</code> or <code>http://192.168.4.1</code></li>
+                                <li>Go to Configuration → Set your VTx frequency</li>
+                                <li>Configure LED settings (if using RGB LEDs)</li>
+                                <li>Set up voice announcements (optional)</li>
+                            </ol>
+                        </div>
+                    </section>
+
+                    <section id="calibration" class="doc-section">
+                        <h2>Calibration</h2>
+                        <p>Proper calibration is essential for accurate lap detection.</p>
+                        
+                        <div class="info-box">
+                            <h4>Calibration Wizard</h4>
+                            <p>FPVGate includes a guided calibration wizard that helps you set optimal RSSI thresholds:</p>
+                            <ol>
+                                <li>Place your drone at the gate</li>
+                                <li>Start the calibration wizard</li>
+                                <li>Move the drone through the gate several times</li>
+                                <li>The wizard will automatically calculate optimal thresholds</li>
+                            </ol>
+                        </div>
+
+                        <h3>Manual Calibration</h3>
+                        <p>You can also manually set thresholds:</p>
+                        <ul>
+                            <li><strong>Enter Threshold:</strong> RSSI level when crossing starts</li>
+                            <li><strong>Exit Threshold:</strong> RSSI level when crossing ends</li>
+                            <li><strong>Peak Detection:</strong> RSSI must peak between enter and exit</li>
+                        </ul>
+                    </section>
+
+                    <section id="racing" class="doc-section">
+                        <h2>Using the Lap Timer</h2>
+                        
+                        <h3>Starting a Race</h3>
+                        <ol>
+                            <li>Ensure calibration is complete</li>
+                            <li>Power on your drone</li>
+                            <li>Click "Start Race" on the web interface</li>
+                            <li>Fly through the gate - laps will be recorded automatically</li>
+                            <li>Click "Stop Race" when finished</li>
+                        </ol>
+
+                        <h3>Features During Race</h3>
+                        <ul>
+                            <li>Real-time lap display</li>
+                            <li>Fastest lap highlighting</li>
+                            <li>Gap analysis</li>
+                            <li>Voice announcements for each lap</li>
+                            <li>LED feedback (if configured)</li>
+                        </ul>
+
+                        <h3>After Race</h3>
+                        <ul>
+                            <li>View race statistics</li>
+                            <li>Export race data</li>
+                            <li>Compare with previous sessions</li>
+                            <li>Edit laps if needed (Marshalling Mode)</li>
+                        </ul>
+                    </section>
+
+                    <section id="screenshots" class="doc-section">
+                        <h2>Screenshots</h2>
+                        <div class="screenshot-gallery">
+                            <div class="screenshot-item">
+                                <h4>Race Screen</h4>
+                                <p>Real-time lap display with fastest lap highlighting and gap analysis</p>
+                                <div class="screenshot-placeholder">
+                                    <p>Race interface with live lap times, current lap progress, and statistics</p>
+                                </div>
+                            </div>
+                            <div class="screenshot-item">
+                                <h4>Configuration Menu</h4>
+                                <p>Easy-to-use interface for setting up your device</p>
+                                <div class="screenshot-placeholder">
+                                    <p>Configuration options including VTx frequency, LED settings, and voice setup</p>
+                                </div>
+                            </div>
+                            <div class="screenshot-item">
+                                <h4>Calibration Wizard</h4>
+                                <p>Guided calibration process for optimal lap detection</p>
+                                <div class="screenshot-placeholder">
+                                    <p>Step-by-step calibration with real-time RSSI visualization</p>
+                                </div>
+                            </div>
+                            <div class="screenshot-item">
+                                <h4>Race History</h4>
+                                <p>Detailed analysis of all your races</p>
+                                <div class="screenshot-placeholder">
+                                    <p>Complete race history with export/import functionality and detailed statistics</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <section id="troubleshooting" class="doc-section">
+                        <h2>Troubleshooting</h2>
+                        
+                        <div class="trouble-item">
+                            <h4>Can't connect to WiFi</h4>
+                            <ul>
+                                <li>Wait 30 seconds after boot for AP to start</li>
+                                <li>Check serial monitor for errors</li>
+                                <li>Verify firmware flashed correctly</li>
+                            </ul>
+                        </div>
+
+                        <div class="trouble-item">
+                            <h4>No lap detection</h4>
+                            <ul>
+                                <li>Verify RX5808 is SPI modded</li>
+                                <li>Check VTx frequency matches configuration</li>
+                                <li>Re-run calibration wizard</li>
+                                <li>Ensure drone is powered on</li>
+                            </ul>
+                        </div>
+
+                        <div class="trouble-item">
+                            <h4>False lap detections</h4>
+                            <ul>
+                                <li>Increase enter/exit thresholds</li>
+                                <li>Move gate farther from flight area</li>
+                                <li>Reduce transmitter power if too strong</li>
+                            </ul>
+                        </div>
+
+                        <div class="trouble-item">
+                            <h4>No audio announcements</h4>
+                            <ul>
+                                <li>Verify SD card is FAT32 formatted</li>
+                                <li>Check SD card contents match required structure</li>
+                                <li>Try different SD card</li>
+                                <li>Check audio files in Configuration menu</li>
+                            </ul>
+                        </div>
+                    </section>
+
+                    <div class="docs-footer">
+                        <h3>Need More Help?</h3>
+                        <p>Check out the full documentation on GitHub or report an issue.</p>
+                        <div class="docs-footer-links">
+                            <a href="https://github.com/LouisHitchcock/FPVGate/tree/main/docs" class="btn btn-secondary" target="_blank">Full Documentation</a>
+                            <a href="https://github.com/LouisHitchcock/FPVGate/issues" class="btn btn-secondary" target="_blank">Report Issue</a>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>Made with care for the FPV community</p>
+            <p>Licensed under CC BY-NC-SA 4.0</p>
+        </div>
+    </footer>
+
+    <script src="animations.js"></script>
+</body>
+</html>
