@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FPVGate Web Flasher</title>
     <link rel="stylesheet" href="styles.css">
-    <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
 </head>
 <body>
     <nav class="navbar">
@@ -27,8 +26,8 @@
             <h1>FPVGate Web Flasher</h1>
             <p class="subtitle">Flash FPVGate firmware directly from your browser - no command line required!</p>
 
-            <div class="alert alert-info">
-                <strong>Requirements:</strong> Chrome, Edge, or Opera browser. Connect your ESP32-S3 via USB.
+            <div class="alert alert-info" id="browser-warning" style="display: none;">
+                <strong>Browser Not Supported!</strong> Please use Chrome, Edge, or Opera browser.
             </div>
 
             <div class="beta-mode-toggle">
@@ -36,28 +35,29 @@
                     <input type="checkbox" id="beta-mode">
                     <span class="slider"></span>
                 </label>
-                <span class="toggle-label">Expert Mode (Advanced Features)</span>
+                <span class="toggle-label">Expert Mode</span>
             </div>
 
             <div class="flasher-container">
-                <div class="flasher-config">
-                    <div class="form-group">
-                        <label for="board-select">Select Your Board:</label>
-                        <select id="board-select" class="form-control">
-                            <option value="">Choose your ESP32 board...</option>
-                            <option value="esp32s3">ESP32-S3 DevKitC-1 (8MB Flash) - Recommended</option>
-                            <option value="esp32s3supermini">ESP32-S3 Super Mini (4MB Flash)</option>
-                        </select>
-                        <small>Not sure? Check the <a href="https://github.com/LouisHitchcock/FPVGate/blob/main/docs/HARDWARE_GUIDE.md" target="_blank">Hardware Guide</a></small>
-                    </div>
+                <div class="flasher-main">
+                    <div class="flasher-config">
+                        <div class="form-group">
+                            <label for="board-select">1. Select Your Board</label>
+                            <select id="board-select" class="form-control">
+                                <option value="">Choose your ESP32 board...</option>
+                                <option value="esp32s3">ESP32-S3 DevKitC-1 (8MB Flash) - Recommended</option>
+                                <option value="esp32s3supermini">ESP32-S3 Super Mini (4MB Flash)</option>
+                            </select>
+                            <small>Not sure which board you have? Check the <a href="https://github.com/LouisHitchcock/FPVGate/blob/main/docs/HARDWARE_GUIDE.md" target="_blank">Hardware Guide</a></small>
+                        </div>
 
-                    <div class="form-group">
-                        <label for="version-select">Select Firmware Version:</label>
-                        <select id="version-select" class="form-control">
-                            <option value="">Loading versions...</option>
-                        </select>
-                        <small id="version-info" class="version-info"></small>
-                    </div>
+                        <div class="form-group">
+                            <label for="version-select">2. Select Firmware Version</label>
+                            <select id="version-select" class="form-control">
+                                <option value="">Loading versions...</option>
+                            </select>
+                            <small id="version-info" class="version-info"></small>
+                        </div>
 
                     <div id="custom-firmware-section" class="beta-only" style="display: none;">
                         <div class="form-group">
@@ -72,91 +72,111 @@
                         </div>
                     </div>
 
-                    <div class="form-group beta-only" style="display: none;">
-                        <label>Flash Options:</label>
-                        <div class="checkbox-group">
-                            <label class="checkbox-label">
-                                <input type="checkbox" id="erase-flash">
-                                <span>Erase entire flash before writing</span>
-                            </label>
-                            <small>Warning: This will delete all data including configuration</small>
-                        </div>
-                    </div>
+                        <div class="form-group">
+                            <label>3. Flash Options</label>
+                            
+                            <div class="flash-option-item">
+                                <div class="option-info">
+                                    <span class="option-title">Full Chip Erase</span>
+                                    <small>Erase all data before flashing (recommended for first-time setup)</small>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="erase-flash-toggle">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
 
-                    <div id="flash-section" style="display: none;">
-                        <div class="flash-info">
-                            <h3>Ready to Flash</h3>
-                            <p id="flash-description"></p>
-                            <div class="flash-details">
-                                <p><strong>Board:</strong> <span id="selected-board"></span></p>
-                                <p><strong>Version:</strong> <span id="selected-version"></span></p>
+                            <div class="flash-option-item">
+                                <div class="option-info">
+                                    <span class="option-title">Verify After Flash</span>
+                                    <small>Read back and verify written data (slower but safer)</small>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="verify-flash-toggle" checked>
+                                    <span class="slider"></span>
+                                </label>
                             </div>
                         </div>
 
-                        <div class="flash-button-container">
-                            <esp-web-install-button id="install-button" show-log>
-                                <button slot="activate" class="btn btn-large btn-primary">
+                        <div id="flash-section" style="display: none;">
+                            <div class="flash-ready-card">
+                                <h3>4. Ready to Flash</h3>
+                                <div class="flash-summary">
+                                    <div class="summary-item">
+                                        <span class="summary-label">Board:</span>
+                                        <span id="selected-board" class="summary-value"></span>
+                                    </div>
+                                    <div class="summary-item">
+                                        <span class="summary-label">Version:</span>
+                                        <span id="selected-version" class="summary-value"></span>
+                                    </div>
+                                </div>
+                                <button id="connect-button" class="btn btn-large btn-primary btn-flash">
+                                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style="margin-right: 8px;">
+                                        <path d="M11 3L3 11h6l-1 7 8-8h-6l1-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                    </svg>
                                     Connect & Flash Device
                                 </button>
-                            </esp-web-install-button>
+                            </div>
+
+                            <div id="flash-progress" class="flash-progress" style="display: none;">
+                                <h4 id="progress-title">Connecting...</h4>
+                                <div class="progress-bar-container">
+                                    <div id="progress-bar" class="progress-bar"></div>
+                                </div>
+                                <p id="progress-status" class="progress-status"></p>
+                                <div id="progress-log" class="progress-log"></div>
+                            </div>
+
+                            <div class="post-flash-actions" id="post-flash-actions" style="display: none;">
+                                <h4>Flash Complete!</h4>
+                                <p>Your device is ready. Connect to your FPVGate:</p>
+                                <button id="open-device" class="btn btn-secondary">
+                                    Open Device Interface
+                                </button>
+                                <small>Opens http://fpvgate.local or http://192.168.4.1</small>
+                            </div>
                         </div>
 
-                        <div id="console-output" class="console-output" style="display: none;">
-                            <h4>Flash Progress</h4>
-                            <div class="console-content" id="console-content"></div>
+                        <div id="loading-section" style="display: none;">
+                            <div class="loading-spinner"></div>
+                            <p>Preparing firmware...</p>
                         </div>
 
-                        <div class="post-flash-actions" id="post-flash-actions" style="display: none;">
-                            <h4>Flash Complete!</h4>
-                            <p>Your device has been flashed successfully. Connect to your FPVGate device:</p>
-                            <button id="open-device" class="btn btn-secondary">
-                                Open Device Interface
-                            </button>
-                            <small>Opens http://www.fpvgate.xyz (or http://192.168.4.1)</small>
+                        <div id="error-section" class="alert alert-error" style="display: none;">
+                            <strong>Error:</strong> <span id="error-message"></span>
                         </div>
-                    </div>
-
-                    <div id="loading-section" style="display: none;">
-                        <div class="loading-spinner"></div>
-                        <p>Preparing firmware...</p>
-                    </div>
-
-                    <div id="error-section" class="alert alert-error" style="display: none;">
-                        <strong>Error:</strong> <span id="error-message"></span>
                     </div>
                 </div>
 
-                <div class="flasher-instructions">
-                    <h3>Instructions</h3>
-                    <ol>
-                        <li>Select your ESP32-S3 board type from the dropdown</li>
-                        <li>Choose the firmware version you want to install</li>
-                        <li>Click "Connect & Flash Device"</li>
-                        <li>Select your device's COM port when prompted</li>
-                        <li>Wait for the flashing process to complete (2-3 minutes)</li>
-                        <li>Done! Your device will reboot automatically</li>
-                    </ol>
-
-                    <div class="alert alert-warning">
-                        <strong>First time flashing?</strong><br>
-                        You may need to hold the BOOT button on your ESP32-S3 when connecting USB to enter flash mode.
+                <div class="flasher-sidebar">
+                    <div class="info-card">
+                        <h3>Quick Tips</h3>
+                        <ul>
+                            <li>Connect your ESP32 via USB before starting</li>
+                            <li>First time? Enable "Full Chip Erase"</li>
+                            <li>Hold BOOT button if device isn't detected</li>
+                            <li>Flashing takes 2-3 minutes</li>
+                        </ul>
                     </div>
 
-                    <h3>After Flashing</h3>
-                    <ol>
-                        <li>Prepare your SD card with audio files (see <a href="https://github.com/LouisHitchcock/FPVGate/releases" target="_blank">release package</a>)</li>
-                        <li>Connect to WiFi network: <strong>FPVGate_XXXX</strong></li>
-                        <li>Password: <strong>fpvgate1</strong></li>
-                        <li>Open browser to: <strong>http://www.fpvgate.xyz</strong> or <strong>http://192.168.4.1</strong></li>
-                        <li>Configure your VTx frequency and calibrate thresholds</li>
-                    </ol>
+                    <div class="info-card">
+                        <h3>After Flashing</h3>
+                        <ol>
+                            <li>Connect to WiFi: <strong>FPVGate_XXXX</strong></li>
+                            <li>Password: <strong>fpvgate1</strong></li>
+                            <li>Open <strong>fpvgate.local</strong></li>
+                            <li>Configure your settings</li>
+                        </ol>
+                    </div>
 
-                    <div class="help-links">
-                        <h4>Need Help?</h4>
+                    <div class="info-card">
+                        <h3>Helpful Links</h3>
                         <ul>
-                            <li><a href="https://github.com/LouisHitchcock/FPVGate/blob/main/docs/GETTING_STARTED.md" target="_blank">Getting Started Guide</a></li>
+                            <li><a href="https://github.com/LouisHitchcock/FPVGate/blob/main/docs/GETTING_STARTED.md" target="_blank">Getting Started</a></li>
                             <li><a href="https://github.com/LouisHitchcock/FPVGate/blob/main/docs/HARDWARE_GUIDE.md" target="_blank">Hardware Guide</a></li>
-                            <li><a href="https://github.com/LouisHitchcock/FPVGate/issues" target="_blank">Report an Issue</a></li>
+                            <li><a href="https://github.com/LouisHitchcock/FPVGate/releases" target="_blank">Download Audio Files</a></li>
+                            <li><a href="https://github.com/LouisHitchcock/FPVGate/issues" target="_blank">Report Issues</a></li>
                         </ul>
                     </div>
                 </div>

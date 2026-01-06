@@ -1,6 +1,6 @@
 // FPVGate Web Flasher
 const GITHUB_API = 'https://api.github.com/repos/LouisHitchcock/FPVGate/releases';
-const GITHUB_RELEASE_BASE = 'https://github.com/LouisHitchcock/FPVGate/releases/download';
+const FIRMWARE_BASE = './firmware'; // Local firmware directory
 const BOARDS_CONFIG_URL = 'https://raw.githubusercontent.com/LouisHitchcock/FPVGate/main/boards.json';
 
 // GitHub object storage base - supports CORS
@@ -62,6 +62,10 @@ let releases = [];
 let selectedBoard = null;
 let selectedVersion = null;
 let betaMode = false;
+let flashOptions = {
+    eraseFlash: false,
+    verifyFlash: true
+};
 let customFirmware = {
     firmware: null,
     filesystem: null
@@ -78,6 +82,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     setupEventListeners();
     setupBetaMode();
     setupCustomFirmwareUpload();
+    setupEraseFlashButton();
     setupPostFlashActions();
 });
 
@@ -225,42 +230,25 @@ function updateFlashInfo() {
     
     document.getElementById('selected-board').textContent = boardConfig.name;
     document.getElementById('selected-version').textContent = selectedVersion.tag_name;
-    document.getElementById('flash-description').textContent = 
-        `Ready to flash ${selectedVersion.tag_name} firmware for ${boardConfig.name}`;
 }
 
-// Prepare the ESP Web Tools flash button
+// Prepare the custom flash button
+let flashButtonReady = false;
+
 async function prepareFlashButton() {
-    const installButton = document.getElementById('install-button');
+    const connectButton = document.getElementById('connect-button');
     const loadingSection = document.getElementById('loading-section');
     const flashSection = document.getElementById('flash-section');
     
-    loadingSection.style.display = 'block';
-    flashSection.style.display = 'none';
+    loadingSection.style.display = 'none';
+    flashSection.style.display = 'block';
     
-    try {
-        const manifest = generateManifest();
-        
-        console.log('Generated manifest:', manifest);
-        
-        // Convert manifest object to JSON string and create data URL
-        const manifestJson = JSON.stringify(manifest, null, 2);
-        const manifestBlob = new Blob([manifestJson], { type: 'application/json' });
-        const manifestUrl = URL.createObjectURL(manifestBlob);
-        
-        console.log('Manifest URL:', manifestUrl);
-        console.log('Binary URLs:', manifest.builds[0].parts.map(p => p.path));
-        
-        // Set manifest URL on the install button
-        installButton.manifest = manifestUrl;
-        
-        loadingSection.style.display = 'none';
-        flashSection.style.display = 'block';
-        
-    } catch (error) {
-        console.error('Error preparing flash:', error);
-        showError(`Failed to prepare firmware: ${error.message}`);
-        loadingSection.style.display = 'none';
+    // Only add listener once
+    if (!flashButtonReady) {
+        connectButton.addEventListener('click', async () => {
+            await startFlashing();
+        });
+        flashButtonReady = true;
     }
 }
 
@@ -269,19 +257,13 @@ function generateManifest() {
     const boardConfig = BOARD_CONFIGS[selectedBoard];
     const version = selectedVersion.tag_name;
     
-    // Get asset URLs from the selected release
+    // Use local firmware files - construct absolute URLs from current location
+    const baseUrl = new URL(window.location.href);
+    const firmwareBaseUrl = new URL('firmware/', baseUrl).href;
+    
     const parts = boardConfig.parts.map(part => {
-        const asset = selectedVersion.assets.find(a => a.name === part.path);
-        if (!asset) {
-            console.warn(`Asset not found: ${part.path}`);
-            return {
-                path: `${GITHUB_RELEASE_BASE}/${version}/${part.path}`,
-                offset: part.offset
-            };
-        }
-        // Use browser_download_url which should work with CORS
         return {
-            path: asset.browser_download_url,
+            path: `${firmwareBaseUrl}${version}/${part.path}`,
             offset: part.offset
         };
     });
@@ -352,6 +334,24 @@ function setupBetaMode() {
     });
 }
 
+// Setup flash option toggles
+function setupEraseFlashButton() {
+    const eraseToggle = document.getElementById('erase-flash-toggle');
+    const verifyToggle = document.getElementById('verify-flash-toggle');
+    
+    if (eraseToggle) {
+        eraseToggle.addEventListener('change', (e) => {
+            flashOptions.eraseFlash = e.target.checked;
+        });
+    }
+    
+    if (verifyToggle) {
+        verifyToggle.addEventListener('change', (e) => {
+            flashOptions.verifyFlash = e.target.checked;
+        });
+    }
+}
+
 // Custom Firmware Upload
 function setupCustomFirmwareUpload() {
     const fileInput = document.getElementById('file-input');
@@ -411,39 +411,104 @@ function removeCustomFile(type) {
     updateUploadedFilesList();
 }
 
+// Start the flashing process
+async function startFlashing() {
+    const connectButton = document.getElementById('connect-button');
+    const flashProgress = document.getElementById('flash-progress');
+    const progressTitle = document.getElementById('progress-title');
+    const progressBar = document.getElementById('progress-bar');
+    const progressStatus = document.getElementById('progress-status');
+    const progressLog = document.getElementById('progress-log');
+    const postFlashActions = document.getElementById('post-flash-actions');
+    const errorSection = document.getElementById('error-section');
+    
+    // Hide button, show progress
+    connectButton.style.display = 'none';
+    flashProgress.style.display = 'block';
+    postFlashActions.style.display = 'none';
+    errorSection.style.display = 'none';
+    
+    // Reset progress
+    progressBar.style.width = '0%';
+    progressBar.textContent = '';
+    progressLog.innerHTML = '';
+    
+    try {
+        const manifest = generateManifest();
+        
+        // Import and create flasher
+        const { CustomESPFlasher } = await import('./esp-flasher.js');
+        const flasher = new CustomESPFlasher();
+        
+        // Setup event handlers
+        flasher.setHandlers({
+            onProgress: (percent, status) => {
+                progressBar.style.width = `${percent}%`;
+                progressBar.textContent = `${percent}%`;
+                progressStatus.textContent = status;
+            },
+            onLog: (message) => {
+                const logEntry = document.createElement('div');
+                logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+                progressLog.appendChild(logEntry);
+                progressLog.scrollTop = progressLog.scrollHeight;
+            },
+            onError: (error) => {
+                progressTitle.textContent = 'Flash Failed';
+                progressTitle.style.color = 'var(--error-color)';
+                showError(error.message);
+                connectButton.style.display = 'block';
+            },
+            onComplete: () => {
+                progressTitle.textContent = 'Flash Complete!';
+                progressTitle.style.color = 'var(--success-color)';
+                postFlashActions.style.display = 'block';
+            }
+        });
+        
+        // Connect to device
+        progressTitle.textContent = 'Connecting to Device...';
+        await flasher.connect();
+        
+        // Flash firmware
+        progressTitle.textContent = 'Flashing Firmware...';
+        await flasher.flash(manifest, flashOptions.eraseFlash);
+        
+        // Disconnect
+        await flasher.disconnect();
+        
+    } catch (error) {
+        console.error('Flash error:', error);
+        progressTitle.textContent = 'Flash Failed';
+        progressTitle.style.color = 'var(--error-color)';
+        showError(error.message || 'An error occurred during flashing');
+        connectButton.style.display = 'block';
+    }
+}
+
 // Post-Flash Actions
 function setupPostFlashActions() {
     const openDeviceBtn = document.getElementById('open-device');
-    const installButton = document.getElementById('install-button');
     
     openDeviceBtn.addEventListener('click', () => {
-        // Try www.fpvgate.xyz first, fallback to IP
-        window.open('http://www.fpvgate.xyz', '_blank');
+        // Try fpvgate.local first, fallback to IP
+        window.open('http://fpvgate.local', '_blank');
         setTimeout(() => {
             // Fallback option
-            if (!confirm('If www.fpvgate.xyz didn\'t work, click OK to try 192.168.4.1')) {
+            if (!confirm('If fpvgate.local didn\'t work, click OK to try 192.168.4.1')) {
                 return;
             }
             window.open('http://192.168.4.1', '_blank');
         }, 2000);
     });
-    
-    // Listen for flash completion
-    if (installButton) {
-        installButton.addEventListener('state-changed', (e) => {
-            if (e.detail && e.detail.state === 'installed') {
-                document.getElementById('post-flash-actions').style.display = 'block';
-            }
-        });
-    }
 }
 
 // Check if browser supports Web Serial
 if (!navigator.serial) {
     document.addEventListener('DOMContentLoaded', () => {
-        const alertDiv = document.querySelector('.alert-info');
-        alertDiv.className = 'alert alert-error';
-        alertDiv.innerHTML = '<strong>Browser Not Supported!</strong><br>Please use Chrome, Edge, or Opera browser to flash your device.';
+        const warningDiv = document.getElementById('browser-warning');
+        warningDiv.style.display = 'block';
+        warningDiv.className = 'alert alert-error';
     });
 }
 

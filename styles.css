@@ -350,9 +350,67 @@ body {
 
 .flasher-container {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 3rem;
-    margin-top: 3rem;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.flasher-main {
+    min-width: 0;
+}
+
+.step-indicator {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: var(--card-bg);
+    border-radius: 10px;
+    border: 1px solid rgba(0, 212, 255, 0.1);
+}
+
+.step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    opacity: 0.4;
+    transition: opacity 0.3s;
+}
+
+.step.active {
+    opacity: 1;
+}
+
+.step-number {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(0, 212, 255, 0.1);
+    border: 2px solid rgba(0, 212, 255, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: var(--text-secondary);
+    transition: all 0.3s;
+}
+
+.step.active .step-number {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: var(--dark-bg);
+}
+
+.step span {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+.step.active span {
+    color: var(--primary-color);
+    font-weight: 600;
 }
 
 .flasher-config {
@@ -362,11 +420,48 @@ body {
     border: 1px solid rgba(0, 212, 255, 0.1);
 }
 
-.flasher-instructions {
+.flasher-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.info-card {
     background: var(--card-bg);
-    padding: 2rem;
+    padding: 1.5rem;
     border-radius: 10px;
     border: 1px solid rgba(0, 212, 255, 0.1);
+}
+
+.info-card h3 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    font-size: 1.1rem;
+}
+
+.info-card ul,
+.info-card ol {
+    margin-left: 1.25rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.8;
+}
+
+.info-card li {
+    margin-bottom: 0.5rem;
+}
+
+.info-card a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.info-card a:hover {
+    text-decoration: underline;
+}
+
+.info-card strong {
+    color: var(--text-primary);
 }
 
 .form-group {
@@ -406,29 +501,52 @@ body {
     color: var(--primary-color);
 }
 
-.flash-info {
-    background: rgba(0, 212, 255, 0.1);
-    padding: 1.5rem;
-    border-radius: 5px;
+.flash-ready-card {
+    background: rgba(0, 212, 255, 0.05);
+    padding: 2rem;
+    border-radius: 10px;
+    border: 2px solid rgba(0, 212, 255, 0.2);
+    margin-top: 2rem;
+    text-align: center;
+}
+
+.flash-ready-card h3 {
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+}
+
+.flash-summary {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
     margin-bottom: 2rem;
 }
 
-.flash-info h3 {
-    color: var(--primary-color);
-    margin-bottom: 1rem;
+.summary-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
 }
 
-.flash-details {
-    margin-top: 1rem;
-}
-
-.flash-details p {
-    margin-bottom: 0.5rem;
+.summary-label {
+    font-size: 0.85rem;
     color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-.flash-button-container {
-    text-align: center;
+.summary-value {
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.btn-flash {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    padding: 1rem 2.5rem;
 }
 
 .version-info {
@@ -531,6 +649,43 @@ body {
 .toggle-label {
     font-weight: 600;
     color: var(--warning-color);
+}
+
+/* Flash Options */
+.flash-option-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: rgba(0, 212, 255, 0.05);
+    border-radius: 5px;
+    margin-bottom: 0.75rem;
+    border: 1px solid rgba(0, 212, 255, 0.1);
+    transition: all 0.3s;
+}
+
+.flash-option-item:hover {
+    background: rgba(0, 212, 255, 0.1);
+    border-color: rgba(0, 212, 255, 0.3);
+}
+
+.option-info {
+    flex: 1;
+    margin-right: 1rem;
+}
+
+.option-title {
+    display: block;
+    color: var(--text-primary);
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.option-info small {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    line-height: 1.4;
 }
 
 .toggle-switch {
@@ -687,48 +842,85 @@ input:checked + .slider:before {
     margin-top: 0.5rem;
 }
 
-/* Console Output */
-.console-output {
+/* Flash Progress */
+.flash-progress {
     margin-top: 2rem;
+    padding: 2rem;
+    background: rgba(0, 212, 255, 0.05);
+    border-radius: 10px;
+    border: 1px solid rgba(0, 212, 255, 0.2);
+}
+
+.flash-progress h4 {
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    text-align: center;
+}
+
+.progress-bar-container {
+    width: 100%;
+    height: 30px;
+    background: var(--dark-bg);
+    border-radius: 15px;
+    overflow: hidden;
+    margin-bottom: 1rem;
+    border: 2px solid rgba(0, 212, 255, 0.3);
+}
+
+.progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    width: 0%;
+    transition: width 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 10px;
+    color: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.progress-status {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    margin-bottom: 1rem;
+}
+
+.progress-log {
     background: var(--dark-bg);
     border-radius: 5px;
-    border: 1px solid rgba(0, 212, 255, 0.3);
-    overflow: hidden;
-}
-
-.console-output h4 {
-    color: var(--primary-color);
-    padding: 1rem;
-    margin: 0;
-    background: rgba(0, 212, 255, 0.1);
-    border-bottom: 1px solid rgba(0, 212, 255, 0.3);
-}
-
-.console-content {
     padding: 1rem;
     font-family: 'Courier New', monospace;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     color: var(--text-secondary);
-    max-height: 400px;
+    max-height: 300px;
     overflow-y: auto;
-    line-height: 1.6;
+    line-height: 1.5;
+    margin-top: 1rem;
+    border: 1px solid rgba(0, 212, 255, 0.2);
 }
 
-.console-content::-webkit-scrollbar {
+.progress-log::-webkit-scrollbar {
     width: 8px;
 }
 
-.console-content::-webkit-scrollbar-track {
+.progress-log::-webkit-scrollbar-track {
     background: rgba(0, 0, 0, 0.2);
 }
 
-.console-content::-webkit-scrollbar-thumb {
+.progress-log::-webkit-scrollbar-thumb {
     background: var(--primary-color);
     border-radius: 4px;
 }
 
-.console-content::-webkit-scrollbar-thumb:hover {
+.progress-log::-webkit-scrollbar-thumb:hover {
     background: var(--secondary-color);
+}
+
+.progress-log div {
+    margin-bottom: 0.3rem;
 }
 
 /* Footer */

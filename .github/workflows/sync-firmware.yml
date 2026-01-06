@@ -1,0 +1,115 @@
+name: Sync Firmware from FPVGate
+
+on:
+  # Run when manually triggered
+  workflow_dispatch:
+  # Run daily to check for new releases
+  schedule:
+    - cron: '0 0 * * *'
+  # Can be triggered by repository_dispatch from FPVGate repo
+  repository_dispatch:
+    types: [new-release]
+
+jobs:
+  sync-firmware:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout website repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Fetch latest FPVGate release
+        id: get_release
+        run: |
+          # Get latest release info
+          RELEASE_DATA=$(curl -s https://api.github.com/repos/LouisHitchcock/FPVGate/releases/latest)
+          
+          # Extract version and download URLs
+          VERSION=$(echo "$RELEASE_DATA" | jq -r '.tag_name')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          
+          # Get asset download URLs
+          BOOTLOADER_URL=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name=="bootloader.bin") | .browser_download_url')
+          PARTITIONS_URL=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name=="partitions.bin") | .browser_download_url')
+          FIRMWARE_URL=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name=="firmware.bin") | .browser_download_url')
+          LITTLEFS_URL=$(echo "$RELEASE_DATA" | jq -r '.assets[] | select(.name=="littlefs.bin") | .browser_download_url')
+          
+          echo "bootloader_url=$BOOTLOADER_URL" >> $GITHUB_OUTPUT
+          echo "partitions_url=$PARTITIONS_URL" >> $GITHUB_OUTPUT
+          echo "firmware_url=$FIRMWARE_URL" >> $GITHUB_OUTPUT
+          echo "littlefs_url=$LITTLEFS_URL" >> $GITHUB_OUTPUT
+          
+          echo "Found release: $VERSION"
+      
+      - name: Check if version already exists
+        id: check_version
+        run: |
+          VERSION="${{ steps.get_release.outputs.version }}"
+          if [ -d "firmware/$VERSION" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Version $VERSION already exists, skipping download"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Version $VERSION is new, will download"
+          fi
+      
+      - name: Download firmware binaries
+        if: steps.check_version.outputs.exists == 'false'
+        run: |
+          VERSION="${{ steps.get_release.outputs.version }}"
+          mkdir -p "firmware/$VERSION"
+          
+          # Download each binary
+          echo "Downloading bootloader.bin..."
+          curl -L -o "firmware/$VERSION/bootloader.bin" "${{ steps.get_release.outputs.bootloader_url }}"
+          
+          echo "Downloading partitions.bin..."
+          curl -L -o "firmware/$VERSION/partitions.bin" "${{ steps.get_release.outputs.partitions_url }}"
+          
+          echo "Downloading firmware.bin..."
+          curl -L -o "firmware/$VERSION/firmware.bin" "${{ steps.get_release.outputs.firmware_url }}"
+          
+          echo "Downloading littlefs.bin..."
+          curl -L -o "firmware/$VERSION/littlefs.bin" "${{ steps.get_release.outputs.littlefs_url }}"
+          
+          echo "Downloaded all binaries for $VERSION"
+          ls -lh "firmware/$VERSION"
+      
+      - name: Update latest symlink
+        if: steps.check_version.outputs.exists == 'false'
+        run: |
+          VERSION="${{ steps.get_release.outputs.version }}"
+          
+          # Create a versions.json file to track available versions
+          if [ ! -f "firmware/versions.json" ]; then
+            echo '{"versions": []}' > firmware/versions.json
+          fi
+          
+          # Add this version to versions.json if not already there
+          VERSIONS=$(cat firmware/versions.json)
+          if ! echo "$VERSIONS" | jq -e ".versions[] | select(. == \"$VERSION\")" > /dev/null; then
+            echo "$VERSIONS" | jq ".versions += [\"$VERSION\"] | .versions |= sort_by(.) | reverse" > firmware/versions.json
+            echo "Added $VERSION to versions.json"
+          fi
+          
+          # Update latest.json to point to this version
+          echo "{\"latest\": \"$VERSION\"}" > firmware/latest.json
+          
+          cat firmware/versions.json
+          cat firmware/latest.json
+      
+      - name: Commit and push changes
+        if: steps.check_version.outputs.exists == 'false'
+        run: |
+          VERSION="${{ steps.get_release.outputs.version }}"
+          
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add firmware/
+          git commit -m "Add firmware binaries for $VERSION"
+          git push
+          
+          echo "Successfully synced firmware $VERSION"
