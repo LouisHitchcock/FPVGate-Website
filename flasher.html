@@ -11,10 +11,11 @@
     <nav class="navbar">
         <div class="container">
             <div class="nav-brand">
-                <h1>🏁 FPVGate</h1>
+                <h1>FPVGate</h1>
             </div>
             <div class="nav-links">
                 <a href="index.html">Home</a>
+                <a href="docs.html">Documentation</a>
                 <a href="flasher.html" class="btn-primary">Flash Firmware</a>
                 <a href="https://github.com/LouisHitchcock/FPVGate" target="_blank">GitHub</a>
             </div>
@@ -30,12 +31,20 @@
                 <strong>Requirements:</strong> Chrome, Edge, or Opera browser. Connect your ESP32-S3 via USB.
             </div>
 
+            <div class="beta-mode-toggle">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="beta-mode">
+                    <span class="slider"></span>
+                </label>
+                <span class="toggle-label">Expert Mode (Advanced Features)</span>
+            </div>
+
             <div class="flasher-container">
                 <div class="flasher-config">
                     <div class="form-group">
                         <label for="board-select">Select Your Board:</label>
                         <select id="board-select" class="form-control">
-                            <option value="">Choose your ESP32-S3 board...</option>
+                            <option value="">Choose your ESP32 board...</option>
                             <option value="esp32s3">ESP32-S3 DevKitC-1 (8MB Flash) - Recommended</option>
                             <option value="esp32s3supermini">ESP32-S3 Super Mini (4MB Flash)</option>
                         </select>
@@ -50,6 +59,30 @@
                         <small id="version-info" class="version-info"></small>
                     </div>
 
+                    <div id="custom-firmware-section" class="beta-only" style="display: none;">
+                        <div class="form-group">
+                            <label>Custom Firmware Upload:</label>
+                            <div class="file-upload-group">
+                                <button type="button" id="upload-firmware" class="btn btn-secondary btn-sm">Upload Firmware</button>
+                                <button type="button" id="upload-filesystem" class="btn btn-secondary btn-sm">Upload Filesystem</button>
+                            </div>
+                            <input type="file" id="file-input" style="display: none;" accept=".bin">
+                            <div id="uploaded-files" class="uploaded-files-list"></div>
+                            <small>Upload custom .bin files to replace official firmware</small>
+                        </div>
+                    </div>
+
+                    <div class="form-group beta-only" style="display: none;">
+                        <label>Flash Options:</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="erase-flash">
+                                <span>Erase entire flash before writing</span>
+                            </label>
+                            <small>Warning: This will delete all data including configuration</small>
+                        </div>
+                    </div>
+
                     <div id="flash-section" style="display: none;">
                         <div class="flash-info">
                             <h3>Ready to Flash</h3>
@@ -61,11 +94,25 @@
                         </div>
 
                         <div class="flash-button-container">
-                            <esp-web-install-button id="install-button">
+                            <esp-web-install-button id="install-button" show-log>
                                 <button slot="activate" class="btn btn-large btn-primary">
                                     Connect & Flash Device
                                 </button>
                             </esp-web-install-button>
+                        </div>
+
+                        <div id="console-output" class="console-output" style="display: none;">
+                            <h4>Flash Progress</h4>
+                            <div class="console-content" id="console-content"></div>
+                        </div>
+
+                        <div class="post-flash-actions" id="post-flash-actions" style="display: none;">
+                            <h4>Flash Complete!</h4>
+                            <p>Your device has been flashed successfully. Connect to your FPVGate device:</p>
+                            <button id="open-device" class="btn btn-secondary">
+                                Open Device Interface
+                            </button>
+                            <small>Opens http://www.fpvgate.xyz (or http://192.168.4.1)</small>
                         </div>
                     </div>
 
