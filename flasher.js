@@ -1,10 +1,6 @@
 // FPVGate Web Flasher
 const GITHUB_API = 'https://api.github.com/repos/LouisHitchcock/FPVGate/releases';
-const FIRMWARE_BASE = './firmware'; // Local firmware directory
 const BOARDS_CONFIG_URL = 'https://raw.githubusercontent.com/LouisHitchcock/FPVGate/main/boards.json';
-
-// GitHub object storage base - supports CORS
-const GITHUB_OBJECTS_BASE = 'https://objects.githubusercontent.com/github-production-release-asset-2e65be';
 
 // Board configurations
 const BOARD_CONFIGS = {
@@ -257,13 +253,28 @@ function generateManifest() {
     const boardConfig = BOARD_CONFIGS[selectedBoard];
     const version = selectedVersion.tag_name;
     
-    // Use local firmware files - construct absolute URLs from current location
-    const baseUrl = new URL(window.location.href);
-    const firmwareBaseUrl = new URL('firmware/', baseUrl).href;
+    // Get board-specific prefix for asset names in GitHub release
+    const boardPrefixes = {
+        'esp32s3': 'ESP32S3-8MB',
+        'esp32s3supermini': 'ESP32S3-SuperMini-4MB',
+        'esp32c3': 'ESP32C3',
+        'lilygo': 'LilyGO-T-Energy-S3',
+        'esp32c6': 'ESP32C6'
+    };
     
+    const boardPrefix = boardPrefixes[selectedBoard];
+    
+    // Map parts to GitHub release assets
     const parts = boardConfig.parts.map(part => {
+        const assetName = `${boardPrefix}-${part.path}`;
+        const asset = selectedVersion.assets.find(a => a.name === assetName);
+        
+        if (!asset) {
+            throw new Error(`Asset not found: ${assetName}`);
+        }
+        
         return {
-            path: `${firmwareBaseUrl}${version}/${part.path}`,
+            path: asset.browser_download_url,
             offset: part.offset
         };
     });
