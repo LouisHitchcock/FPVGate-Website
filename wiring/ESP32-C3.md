@@ -29,7 +29,7 @@ GND      ────── GND           ─── GND      ─── GND
 | **ESP32-C3** | Yes | RISC-V based variant |
 | **RX5808 Module** | Yes | 5.8GHz receiver ([SPI mod required](https://sheaivey.github.io/rx5808-pro-diversity/docs/rx5808-spi-mod.html)) |
 | **MicroSD Card** | Yes | FAT32, 1GB+ for audio storage |
-| **5V Power Supply** | Yes | 18650 battery + 5V regulator recommended |
+| **5V Power Supply** | Yes | USB power or any 5V power source |
 | **External LED** | Optional | Single LED for basic status (GPIO1) |
 | **Active Buzzer** | Optional | 3.3V-5V for audio beeps (GPIO5) |
 | **Mode Switch** | Optional | LOW=WiFi, HIGH=RotorHazard mode (GPIO1) |
@@ -59,8 +59,8 @@ GND      ────── GND           ─── GND      ─── GND
 ## Power Supply
 
 The ESP32-C3 requires a stable 5V power supply:
-- **Recommended**: 18650 battery (3.7V) + 5V boost converter
-- **USB Power**: Can be powered via USB-C for testing (not suitable for field use)
+- **USB Power**: Easiest option - powered via USB-C port
+- **External 5V**: Any regulated 5V power source (battery pack, bench supply, etc.)
 - **Current Draw**: ~150-300mA typical, up to 400mA peak with WiFi active
 
 ## Notes
