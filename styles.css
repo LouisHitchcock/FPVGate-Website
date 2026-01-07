@@ -1310,6 +1310,151 @@ footer p {
     border-bottom: none;
 }
 
+/* Board Selector for Wiring Diagrams */
+.board-selector {
+    margin: 2rem 0;
+    padding: 1.5rem;
+    background: var(--card-bg);
+    border-radius: 8px;
+    border: 1px solid rgba(0, 212, 255, 0.2);
+}
+
+.board-selector label {
+    display: block;
+    margin-bottom: 0.75rem;
+    color: var(--primary-color);
+    font-size: 1.1rem;
+}
+
+.board-dropdown {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background: var(--dark-bg);
+    color: var(--text-primary);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.board-dropdown:hover {
+    border-color: var(--primary-color);
+}
+
+.board-dropdown:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.1);
+}
+
+.wiring-content {
+    margin-top: 2rem;
+    padding: 2rem;
+    background: var(--card-bg);
+    border-radius: 8px;
+    border: 1px solid rgba(0, 212, 255, 0.1);
+}
+
+.wiring-content h1 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    font-size: 2rem;
+}
+
+.wiring-content h2 {
+    color: var(--primary-color);
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    font-size: 1.5rem;
+}
+
+.wiring-content h3 {
+    color: var(--text-primary);
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    font-size: 1.2rem;
+}
+
+.wiring-content h4 {
+    color: var(--text-primary);
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.wiring-content p {
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+    line-height: 1.8;
+}
+
+.wiring-content ul {
+    margin-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.wiring-content li {
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.wiring-content table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1.5rem 0;
+}
+
+.wiring-content table th,
+.wiring-content table td {
+    padding: 0.75rem;
+    text-align: left;
+    border: 1px solid rgba(0, 212, 255, 0.2);
+}
+
+.wiring-content table th {
+    background: var(--dark-bg);
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.wiring-content table td {
+    color: var(--text-secondary);
+}
+
+.wiring-content pre {
+    background: var(--dark-bg);
+    padding: 1.5rem;
+    border-radius: 5px;
+    overflow-x: auto;
+    margin: 1rem 0;
+}
+
+.wiring-content pre code {
+    color: var(--text-primary);
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.wiring-content code {
+    background: var(--dark-bg);
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+    color: var(--primary-color);
+    font-family: 'Courier New', monospace;
+}
+
+.wiring-content a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color 0.3s;
+}
+
+.wiring-content a:hover {
+    color: var(--secondary-color);
+    text-decoration: underline;
+}
+
 /* Docs Footer */
 .docs-footer {
     margin-top: 4rem;

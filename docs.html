@@ -67,34 +67,11 @@
 
                     <section id="hardware" class="doc-section">
                         <h2>Hardware Setup</h2>
+                        <p>FPVGate supports multiple ESP32 boards. Select your board below to see the wiring diagram:</p>
                         
-                        <h3>ESP32-S3 DevKitC-1 Wiring</h3>
-                        <pre><code>ESP32-S3        RX5808           SD Card
-GPIO4    ────── RSSI             
-GPIO10   ────── CH1 (DATA)       
-GPIO11   ────── CH2 (SELECT)     
-GPIO12   ────── CH3 (CLOCK)      
-GPIO39   ────────────────────── CS
-GPIO36   ────────────────────── SCK
-GPIO35   ────────────────────── MOSI
-GPIO37   ────────────────────── MISO
-GND      ────── GND
-5V       ────── +5V</code></pre>
-
-                        <h3>ESP32-S3 Super Mini Wiring</h3>
-                        <pre><code>ESP32-S3        RX5808           SD Card
-GPIO3    ────── RSSI             
-GPIO6    ────── CH1 (DATA)       
-GPIO7    ────── CH2 (SELECT)     
-GPIO4    ────── CH3 (CLOCK)      
-GPIO8    ────────────────────── CS
-GPIO2    ────────────────────── SCK
-GPIO10   ────────────────────── MOSI
-GPIO9    ────────────────────── MISO
-GND      ────── GND
-5V       ────── +5V</code></pre>
-
-                        <div class="warning-box">
+                        <div id="wiring-diagram-container"></div>
+                        
+                        <div class="warning-box" style="margin-top: 2rem;">
                             <h4>Important</h4>
                             <p>The RX5808 module must be SPI modded to work with FPVGate. See the <a href="https://sheaivey.github.io/rx5808-pro-diversity/docs/rx5808-spi-mod.html" target="_blank">SPI mod guide</a>.</p>
                         </div>
@@ -301,6 +278,7 @@ GND      ────── GND
     </footer>
 
     <script src="animations.js"></script>
+    <script src="wiring-loader.js"></script>
 </body>
 </html>
 
