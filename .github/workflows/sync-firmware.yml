@@ -10,6 +10,9 @@ on:
   repository_dispatch:
     types: [new-release]
 
+permissions:
+  contents: write
+
 jobs:
   sync-firmware:
     runs-on: ubuntu-latest
