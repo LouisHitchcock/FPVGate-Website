@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FPVGate Analytics Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            color: #00d4ff;
+            margin-bottom: 10px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .stat-card h3 {
+            color: #00d4ff;
+            font-size: 14px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: bold;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #888;
+        }
+
+        .chart-container {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .chart-container h2 {
+            color: #00d4ff;
+            font-size: 18px;
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #333;
+        }
+
+        th {
+            background: #252525;
+            color: #00d4ff;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+
+        tr:hover {
+            background: #222;
+        }
+
+        .success {
+            color: #00ff88;
+        }
+
+        .error {
+            color: #ff4444;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+
+        .refresh-btn {
+            background: #00d4ff;
+            color: #0a0a0a;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .refresh-btn:hover {
+            background: #00b8e6;
+        }
+
+        .bar-chart {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .bar-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .bar-label {
+            min-width: 150px;
+            font-size: 14px;
+        }
+
+        .bar-bg {
+            flex: 1;
+            height: 30px;
+            background: #252525;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00d4ff, #0088ff);
+            transition: width 0.3s ease;
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            color: #fff;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .error-table {
+            overflow-x: auto;
+        }
+
+        .timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .timeline-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background: #252525;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .timeline-date {
+            color: #888;
+        }
+
+        .date-filter {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .date-filter h3 {
+            color: #00d4ff;
+            font-size: 16px;
+            margin: 0;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .filter-presets {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background: #252525;
+            color: #e0e0e0;
+            border: 1px solid #444;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            background: #333;
+            border-color: #00d4ff;
+        }
+
+        .filter-btn.active {
+            background: #00d4ff;
+            color: #0a0a0a;
+            border-color: #00d4ff;
+        }
+
+        .custom-date {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .custom-date input[type="date"] {
+            background: #252525;
+            color: #e0e0e0;
+            border: 1px solid #444;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .custom-date label {
+            color: #888;
+            font-size: 14px;
+        }
+
+        .map-container {
+            position: relative;
+            min-height: 400px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .world-map {
+            width: 100%;
+            max-width: 900px;
+            height: auto;
+        }
+
+        .country-tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            pointer-events: none;
+            display: none;
+            z-index: 1000;
+        }
+
+        canvas {
+            max-height: 300px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>FPVGate Analytics Dashboard</h1>
+            <p>Real-time usage statistics and insights</p>
+        </header>
+
+        <button class="refresh-btn" onclick="loadStats()">Refresh Data</button>
+
+        <div id="loading" class="loading">
+            Loading analytics data...
+        </div>
+
+        <div id="dashboard" style="display: none;">
+            <!-- Key Metrics -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>Total Events</h3>
+                    <div class="stat-value" id="total-events">-</div>
+                    <div class="stat-label">All time</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Flash Success Rate</h3>
+                    <div class="stat-value" id="success-rate">-</div>
+                    <div class="stat-label">Completion percentage</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Unique Users</h3>
+                    <div class="stat-value" id="unique-users">-</div>
+                    <div class="stat-label">Last 30 days</div>
+                </div>
+                <div class="stat-card">
+                    <h3>Total Flashes</h3>
+                    <div class="stat-value" id="total-flashes">-</div>
+                    <div class="stat-label">Successful completions</div>
+                </div>
+            </div>
+
+            <!-- Board Popularity -->
+            <div class="chart-container">
+                <h2>Board Popularity</h2>
+                <div class="bar-chart" id="board-chart"></div>
+            </div>
+
+            <!-- Version Popularity -->
+            <div class="chart-container">
+                <h2>Firmware Version Usage</h2>
+                <div class="bar-chart" id="version-chart"></div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="chart-container">
+                <h2>Activity (Last 30 Days)</h2>
+                <div class="timeline" id="activity-timeline"></div>
+            </div>
+
+            <!-- Flash Events Breakdown -->
+            <div class="chart-container">
+                <h2>Flash Events Breakdown</h2>
+                <div class="bar-chart" id="flash-events-chart"></div>
+            </div>
+
+            <!-- Country Distribution -->
+            <div class="chart-container">
+                <h2>Geographic Distribution</h2>
+                <div class="bar-chart" id="country-chart"></div>
+            </div>
+
+            <!-- Common Errors -->
+            <div class="chart-container">
+                <h2>Common Errors</h2>
+                <div class="error-table">
+                    <table id="error-table">
+                        <thead>
+                            <tr>
+                                <th>Error Message</th>
+                                <th>Board</th>
+                                <th>Version</th>
+                                <th>Count</th>
+                                <th>Last Occurred</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Replace with your deployed Cloudflare Worker URL
+        const API_ENDPOINT = 'https://fpvgate-analytics.fpvgate-analytics.workers.dev';
+
+        async function loadStats() {
+            const loading = document.getElementById('loading');
+            const dashboard = document.getElementById('dashboard');
+            
+            loading.style.display = 'block';
+            dashboard.style.display = 'none';
+
+            try {
+                const response = await fetch(`${API_ENDPOINT}/stats/detailed`);
+                const data = await response.json();
+                
+                displayStats(data);
+                
+                loading.style.display = 'none';
+                dashboard.style.display = 'block';
+            } catch (error) {
+                loading.innerHTML = `<div class="error">Failed to load analytics: ${error.message}</div>`;
+            }
+        }
+
+        function displayStats(data) {
+            // Key metrics
+            document.getElementById('total-events').textContent = data.total_events || 0;
+            document.getElementById('unique-users').textContent = data.unique_users_30d || 0;
+            
+            // Success rate
+            if (data.success_rate) {
+                document.getElementById('success-rate').textContent = data.success_rate.rate;
+                document.getElementById('total-flashes').textContent = data.success_rate.successes || 0;
+            }
+
+            // Board popularity chart
+            displayBarChart('board-chart', data.board_stats || []);
+
+            // Version popularity chart
+            displayBarChart('version-chart', data.version_stats || []);
+
+            // Flash events breakdown
+            displayBarChart('flash-events-chart', data.flash_events || []);
+
+            // Country distribution
+            displayCountryChart('country-chart', data.country_stats || []);
+
+            // Activity timeline
+            displayTimeline('activity-timeline', data.recent_activity || []);
+
+            // Error table
+            displayErrorTable(data.common_errors || []);
+        }
+
+        function displayBarChart(elementId, data) {
+            const container = document.getElementById(elementId);
+            container.innerHTML = '';
+
+            if (data.length === 0) {
+                container.innerHTML = '<p style="color: #888; padding: 20px;">No data available</p>';
+                return;
+            }
+
+            const maxCount = Math.max(...data.map(item => item.count));
+
+            data.forEach(item => {
+                const percentage = (item.count / maxCount) * 100;
+                const label = item.board || item.version || item.event_name || 'Unknown';
+                
+                const barItem = document.createElement('div');
+                barItem.className = 'bar-item';
+                barItem.innerHTML = `
+                    <div class="bar-label">${label}</div>
+                    <div class="bar-bg">
+                        <div class="bar-fill" style="width: ${percentage}%">${item.count}</div>
+                    </div>
+                `;
+                container.appendChild(barItem);
+            });
+        }
+
+        function displayCountryChart(elementId, data) {
+            const container = document.getElementById(elementId);
+            container.innerHTML = '';
+
+            if (data.length === 0) {
+                container.innerHTML = '<p style="color: #888; padding: 20px;">No data available</p>';
+                return;
+            }
+
+            // Country code to name mapping
+            const countryNames = {
+                'US': 'United States', 'GB': 'United Kingdom', 'CA': 'Canada',
+                'AU': 'Australia', 'DE': 'Germany', 'FR': 'France', 'NL': 'Netherlands',
+                'IT': 'Italy', 'ES': 'Spain', 'SE': 'Sweden', 'NO': 'Norway',
+                'DK': 'Denmark', 'FI': 'Finland', 'PL': 'Poland', 'CZ': 'Czech Republic',
+                'BE': 'Belgium', 'AT': 'Austria', 'CH': 'Switzerland', 'IE': 'Ireland',
+                'NZ': 'New Zealand', 'JP': 'Japan', 'KR': 'South Korea', 'CN': 'China',
+                'IN': 'India', 'BR': 'Brazil', 'MX': 'Mexico', 'AR': 'Argentina',
+                'SG': 'Singapore', 'HK': 'Hong Kong', 'TW': 'Taiwan'
+            };
+
+            const maxCount = Math.max(...data.map(item => item.count));
+
+            data.forEach(item => {
+                const percentage = (item.count / maxCount) * 100;
+                const countryCode = item.country;
+                const countryName = countryNames[countryCode] || countryCode;
+                const flag = countryCode ? String.fromCodePoint(...[...countryCode].map(c => 127397 + c.charCodeAt())) : '';
+                
+                const barItem = document.createElement('div');
+                barItem.className = 'bar-item';
+                barItem.innerHTML = `
+                    <div class="bar-label">${flag} ${countryName}</div>
+                    <div class="bar-bg">
+                        <div class="bar-fill" style="width: ${percentage}%">${item.count}</div>
+                    </div>
+                `;
+                container.appendChild(barItem);
+            });
+        }
+
+        function displayTimeline(elementId, data) {
+            const container = document.getElementById(elementId);
+            container.innerHTML = '';
+
+            if (data.length === 0) {
+                container.innerHTML = '<p style="color: #888; padding: 20px;">No recent activity</p>';
+                return;
+            }
+
+            data.forEach(item => {
+                const timelineItem = document.createElement('div');
+                timelineItem.className = 'timeline-item';
+                timelineItem.innerHTML = `
+                    <span>${item.date}</span>
+                    <span class="timeline-date">${item.count} events</span>
+                `;
+                container.appendChild(timelineItem);
+            });
+        }
+
+        function displayErrorTable(errors) {
+            const tbody = document.querySelector('#error-table tbody');
+            tbody.innerHTML = '';
+
+            if (errors.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #888;">No errors recorded</td></tr>';
+                return;
+            }
+
+            errors.forEach(error => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${error.error_message || 'Unknown'}</td>
+                    <td>${error.board || '-'}</td>
+                    <td>${error.version || '-'}</td>
+                    <td><span class="error">${error.count}</span></td>
+                    <td>${new Date(error.last_occurred).toLocaleString()}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Load stats on page load
+        loadStats();
+
+        // Auto-refresh every 5 minutes
+        setInterval(loadStats, 5 * 60 * 1000);
+    </script>
+</body>
+</html>
