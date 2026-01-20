@@ -82,7 +82,7 @@ class AnalyticsTracker {
 
 // Create and export a singleton instance
 // Replace this URL with your deployed Cloudflare Worker URL
-const ANALYTICS_API = 'https://fpvgate-analytics.workers.dev';
+const ANALYTICS_API = 'https://fpvgate-analytics.fpvgate-analytics.workers.dev';
 
 const analytics = new AnalyticsTracker(ANALYTICS_API);
 
