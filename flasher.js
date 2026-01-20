@@ -270,7 +270,7 @@ function generateManifest() {
     // Get board-specific prefix for asset names
     const boardPrefixes = {
         'esp32s3': 'ESP32S3-8MB',
-        'esp32s3supermini': 'ESP32S3-SuperMini-4MB',
+        'esp32s3supermini': version === 'v1.5.3' ? 'ESP32S3SuperMini-4MB' : 'ESP32S3-SuperMini-4MB',
         'esp32c3': 'ESP32C3',
         'lilygo': 'LilyGO-T-Energy-S3',
         'esp32c6': 'ESP32C6'
