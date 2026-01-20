@@ -2,6 +2,8 @@
 
 Official website and web-based flasher for [FPVGate](https://github.com/LouisHitchcock/FPVGate) - Personal FPV Lap Timer for ESP32-S3.
 
+[![Ko-fi](https://img.shields.io/badge/Support%20on-Ko--fi-FF5E5B?style=for-the-badge&logo=ko-fi&logoColor=white)](https://ko-fi.com/louishitchcock)
+
 ## Features
 
 - **Homepage**: Project information, features, supported hardware
@@ -105,3 +107,4 @@ Licensed under CC BY-NC-SA 4.0, matching the FPVGate project license.
 - [FPVGate Repository](https://github.com/LouisHitchcock/FPVGate)
 - [Documentation](https://github.com/LouisHitchcock/FPVGate/tree/main/docs)
 - [Issues](https://github.com/LouisHitchcock/FPVGate/issues)
+- [Support Development](https://ko-fi.com/louishitchcock)

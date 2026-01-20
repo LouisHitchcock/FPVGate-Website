@@ -86,6 +86,22 @@ body {
     color: white;
 }
 
+.nav-links .btn-kofi {
+    background: #FF5E5B;
+    padding: 0.5rem 1.5rem;
+    border-radius: 5px;
+    color: white;
+    display: flex;
+    align-items: center;
+    transition: all 0.3s;
+}
+
+.nav-links .btn-kofi:hover {
+    background: #ff4542;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 94, 91, 0.3);
+}
+
 /* Hero Section */
 .hero {
     padding: 6rem 0;
@@ -962,6 +978,15 @@ footer p {
 
 .footer-links a:hover {
     text-decoration: underline;
+}
+
+.footer-links .kofi-link {
+    color: #FF5E5B;
+    font-weight: 600;
+}
+
+.footer-links .kofi-link:hover {
+    color: #ff4542;
 }
 
 /* Ghost Button */
