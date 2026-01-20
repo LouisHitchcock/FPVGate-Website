@@ -259,6 +259,12 @@
                 <div class="bar-chart" id="flash-events-chart"></div>
             </div>
 
+            <!-- Country Distribution -->
+            <div class="chart-container">
+                <h2>Geographic Distribution</h2>
+                <div class="bar-chart" id="country-chart"></div>
+            </div>
+
             <!-- Common Errors -->
             <div class="chart-container">
                 <h2>Common Errors</h2>
@@ -324,6 +330,9 @@
             // Flash events breakdown
             displayBarChart('flash-events-chart', data.flash_events || []);
 
+            // Country distribution
+            displayCountryChart('country-chart', data.country_stats || []);
+
             // Activity timeline
             displayTimeline('activity-timeline', data.recent_activity || []);
 
@@ -350,6 +359,47 @@
                 barItem.className = 'bar-item';
                 barItem.innerHTML = `
                     <div class="bar-label">${label}</div>
+                    <div class="bar-bg">
+                        <div class="bar-fill" style="width: ${percentage}%">${item.count}</div>
+                    </div>
+                `;
+                container.appendChild(barItem);
+            });
+        }
+
+        function displayCountryChart(elementId, data) {
+            const container = document.getElementById(elementId);
+            container.innerHTML = '';
+
+            if (data.length === 0) {
+                container.innerHTML = '<p style="color: #888; padding: 20px;">No data available</p>';
+                return;
+            }
+
+            // Country code to name mapping
+            const countryNames = {
+                'US': 'United States', 'GB': 'United Kingdom', 'CA': 'Canada',
+                'AU': 'Australia', 'DE': 'Germany', 'FR': 'France', 'NL': 'Netherlands',
+                'IT': 'Italy', 'ES': 'Spain', 'SE': 'Sweden', 'NO': 'Norway',
+                'DK': 'Denmark', 'FI': 'Finland', 'PL': 'Poland', 'CZ': 'Czech Republic',
+                'BE': 'Belgium', 'AT': 'Austria', 'CH': 'Switzerland', 'IE': 'Ireland',
+                'NZ': 'New Zealand', 'JP': 'Japan', 'KR': 'South Korea', 'CN': 'China',
+                'IN': 'India', 'BR': 'Brazil', 'MX': 'Mexico', 'AR': 'Argentina',
+                'SG': 'Singapore', 'HK': 'Hong Kong', 'TW': 'Taiwan'
+            };
+
+            const maxCount = Math.max(...data.map(item => item.count));
+
+            data.forEach(item => {
+                const percentage = (item.count / maxCount) * 100;
+                const countryCode = item.country;
+                const countryName = countryNames[countryCode] || countryCode;
+                const flag = countryCode ? String.fromCodePoint(...[...countryCode].map(c => 127397 + c.charCodeAt())) : '';
+                
+                const barItem = document.createElement('div');
+                barItem.className = 'bar-item';
+                barItem.innerHTML = `
+                    <div class="bar-label">${flag} ${countryName}</div>
                     <div class="bar-bg">
                         <div class="bar-fill" style="width: ${percentage}%">${item.count}</div>
                     </div>

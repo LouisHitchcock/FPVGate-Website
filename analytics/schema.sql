@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS analytics_events (
   error_message TEXT,
   user_agent TEXT,
   referrer TEXT,
+  country TEXT,
   ip_hash TEXT,
   timestamp TEXT NOT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -19,6 +20,7 @@ CREATE INDEX IF NOT EXISTS idx_event_name ON analytics_events(event_name);
 CREATE INDEX IF NOT EXISTS idx_timestamp ON analytics_events(timestamp);
 CREATE INDEX IF NOT EXISTS idx_board ON analytics_events(board);
 CREATE INDEX IF NOT EXISTS idx_version ON analytics_events(version);
+CREATE INDEX IF NOT EXISTS idx_country ON analytics_events(country);
 CREATE INDEX IF NOT EXISTS idx_ip_hash ON analytics_events(ip_hash);
 
 -- Index for date-based queries

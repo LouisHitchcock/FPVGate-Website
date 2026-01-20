@@ -39,6 +39,7 @@ export default {
           error_message: data.error_message || null,
           user_agent: request.headers.get('User-Agent') || null,
           referrer: data.referrer || request.headers.get('Referer') || null,
+          country: request.cf?.country || null,  // Cloudflare provides country code
           timestamp: new Date().toISOString(),
           // Optional: track IP for unique users (can be hashed for privacy)
           ip_hash: await hashIP(request.headers.get('CF-Connecting-IP'))
@@ -47,8 +48,8 @@ export default {
         // Insert into D1 database
         await env.DB.prepare(
           `INSERT INTO analytics_events 
-          (event_name, board, version, expert_mode, error_message, user_agent, referrer, ip_hash, timestamp) 
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          (event_name, board, version, expert_mode, error_message, user_agent, referrer, country, ip_hash, timestamp) 
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         ).bind(
           event.event_name,
           event.board,
@@ -57,6 +58,7 @@ export default {
           event.error_message,
           event.user_agent,
           event.referrer,
+          event.country,
           event.ip_hash,
           event.timestamp
         ).run();
@@ -178,6 +180,19 @@ async function getStats(db) {
       AND ip_hash IS NOT NULL
   `).first();
   results.unique_users_30d = uniqueUsers.count;
+
+  // Country breakdown
+  const countryStats = await db.prepare(`
+    SELECT 
+      country,
+      COUNT(*) as count
+    FROM analytics_events
+    WHERE country IS NOT NULL
+    GROUP BY country
+    ORDER BY count DESC
+    LIMIT 20
+  `).all();
+  results.country_stats = countryStats.results;
 
   return results;
 }
