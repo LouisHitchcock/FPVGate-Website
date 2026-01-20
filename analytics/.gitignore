@@ -1,0 +1,22 @@
+# Wrangler
+.wrangler/
+worker-configuration.d.ts
+.dev.vars
+
+# Node modules (if you install any dependencies)
+node_modules/
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+
+# Backups
+*.sql.backup
+backup.sql

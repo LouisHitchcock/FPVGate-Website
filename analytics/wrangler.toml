@@ -1,0 +1,9 @@
+name = "fpvgate-analytics"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# D1 Database binding
+[[d1_databases]]
+binding = "fpvgate_analytics_db"
+database_name = "fpvgate-analytics-db"
+database_id = "823b938f-0e51-4657-a797-2ff6ca74f09a"

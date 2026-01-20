@@ -182,6 +182,13 @@ function setupEventListeners() {
     boardSelect.addEventListener('change', (e) => {
         selectedBoard = e.target.value;
         updateFlashSection();
+        
+        // Track board selection
+        if (window.fpvgateAnalytics && selectedBoard) {
+            window.fpvgateAnalytics.track('board_selected', {
+                board: selectedBoard
+            });
+        }
     });
     
     versionSelect.addEventListener('change', (e) => {
@@ -189,6 +196,13 @@ function setupEventListeners() {
         selectedVersion = releases.find(r => r.tag_name === version);
         updateVersionInfo();
         updateFlashSection();
+        
+        // Track version selection
+        if (window.fpvgateAnalytics && selectedVersion) {
+            window.fpvgateAnalytics.track('version_selected', {
+                version: selectedVersion.tag_name
+            });
+        }
     });
 }
 
@@ -310,6 +324,13 @@ function setupBetaMode() {
     
     betaModeToggle.addEventListener('change', (e) => {
         betaMode = e.target.checked;
+        
+        // Track expert mode toggle
+        if (window.fpvgateAnalytics) {
+            window.fpvgateAnalytics.track('expert_mode_toggled', {
+                enabled: betaMode
+            });
+        }
         
         // Show/hide expert-only sections
         betaOnlySections.forEach(section => {
@@ -466,13 +487,43 @@ async function startFlashing() {
                 progressTitle.style.color = 'var(--error-color)';
                 showError(error.message);
                 connectButton.style.display = 'block';
+                
+                // Track flash failure
+                if (window.fpvgateAnalytics) {
+                    window.fpvgateAnalytics.track('flash_failed', {
+                        board: selectedBoard,
+                        version: selectedVersion.tag_name,
+                        expert_mode: betaMode,
+                        error_message: error.message
+                    });
+                }
             },
             onComplete: () => {
                 progressTitle.textContent = 'Flash Complete!';
                 progressTitle.style.color = 'var(--success-color)';
                 postFlashActions.style.display = 'block';
+                
+                // Track flash success
+                if (window.fpvgateAnalytics) {
+                    window.fpvgateAnalytics.track('flash_complete', {
+                        board: selectedBoard,
+                        version: selectedVersion.tag_name,
+                        expert_mode: betaMode
+                    });
+                }
             }
         });
+        
+        // Track flash start
+        if (window.fpvgateAnalytics) {
+            window.fpvgateAnalytics.track('flash_started', {
+                board: selectedBoard,
+                version: selectedVersion.tag_name,
+                expert_mode: betaMode,
+                erase_flash: flashOptions.eraseFlash,
+                verify_flash: flashOptions.verifyFlash
+            });
+        }
         
         // Connect to device
         progressTitle.textContent = 'Connecting to Device...';
@@ -491,6 +542,16 @@ async function startFlashing() {
         progressTitle.style.color = 'var(--error-color)';
         showError(error.message || 'An error occurred during flashing');
         connectButton.style.display = 'block';
+        
+        // Track flash failure (catch-all)
+        if (window.fpvgateAnalytics) {
+            window.fpvgateAnalytics.track('flash_failed', {
+                board: selectedBoard,
+                version: selectedVersion?.tag_name,
+                expert_mode: betaMode,
+                error_message: error.message || 'Unknown error'
+            });
+        }
     }
 }
 
