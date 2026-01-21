@@ -21,7 +21,7 @@ const BOARD_CONFIGS = {
             { path: 'bootloader.bin', offset: 0x0 },
             { path: 'partitions.bin', offset: 0x8000 },
             { path: 'firmware.bin', offset: 0x10000 },
-            { path: 'littlefs.bin', offset: 0x210000 }
+            { path: 'littlefs.bin', offset: 0x290000 }
         ]
     },
     esp32c3: {
