@@ -1,4 +1,5 @@
 // FPVGate Web Flasher
+// Version: 2026-01-21-v2 - Fixed ESP32-S3 Super Mini filesystem offset to 0x290000
 const GITHUB_API = 'https://api.github.com/repos/LouisHitchcock/FPVGate/releases';
 const BOARDS_CONFIG_URL = 'https://raw.githubusercontent.com/LouisHitchcock/FPVGate/main/boards.json';
 
@@ -73,6 +74,7 @@ let ALL_BOARDS = [];
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', async () => {
+    console.log('FPVGate Flasher v2026-01-21-v2 - Super Mini FS offset: 0x290000');
     await loadBoardConfigurations();
     await loadReleases();
     setupEventListeners();
