@@ -11,9 +11,9 @@
       "expert_mode": 0
     },
     {
-      "value": "esp32c3",
-      "label": "ESP32-C3",
-      "expert_mode": 1
+      "value": "seeedxiaos3",
+      "label": "Seeed Studio XIAO ESP32S3 (8MB)",
+      "expert_mode": 0
     },
     {
       "value": "esp32c6",

@@ -393,9 +393,19 @@
                     <div class="metric-label">Completion percentage</div>
                 </div>
                 <div class="metric-card">
-                    <h3>Unique Users</h3>
+                    <h3>Unique Users (30d)</h3>
                     <div class="metric-value" id="unique-users">-</div>
-                    <div class="metric-label">In selected range</div>
+                    <div class="metric-label">Total active users</div>
+                </div>
+                <div class="metric-card">
+                    <h3>New Users (30d)</h3>
+                    <div class="metric-value" id="new-users">-</div>
+                    <div class="metric-label">First time visitors</div>
+                </div>
+                <div class="metric-card">
+                    <h3>Returning Users (30d)</h3>
+                    <div class="metric-value" id="returning-users">-</div>
+                    <div class="metric-label">Users who came back</div>
                 </div>
                 <div class="metric-card">
                     <h3>Total Flashes</h3>
@@ -437,6 +447,12 @@
             <div class="chart-card full-width">
                 <h2>Flash Events</h2>
                 <canvas id="flash-events-chart"></canvas>
+            </div>
+
+            <!-- User Recency -->
+            <div class="chart-card">
+                <h2>User Activity Recency</h2>
+                <canvas id="recency-chart"></canvas>
             </div>
 
             <!-- Error Table -->
@@ -583,6 +599,8 @@
         function displayStats(data) {
             document.getElementById('total-events').textContent = (data.total_events || 0).toLocaleString();
             document.getElementById('unique-users').textContent = (data.unique_users_30d || 0).toLocaleString();
+            document.getElementById('new-users').textContent = (data.new_users_30d || 0).toLocaleString();
+            document.getElementById('returning-users').textContent = (data.returning_users_30d || 0).toLocaleString();
             
             if (data.success_rate) {
                 document.getElementById('success-rate').textContent = data.success_rate.rate;
@@ -602,6 +620,7 @@
             createBoardChart(data.board_stats || []);
             createVersionChart(data.version_stats || []);
             createFlashEventsChart(data.flash_events || []);
+            createRecencyChart(data.users_by_recency || []);
             displayErrorTable(data.common_errors || []);
         }
 
@@ -845,6 +864,59 @@
                             beginAtZero: true,
                             grid: { color: '#e2e8f0' },
                             ticks: { color: '#718096' }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#718096' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createRecencyChart(recencyData) {
+            const ctx = document.getElementById('recency-chart');
+            
+            if (charts.recency) charts.recency.destroy();
+
+            const recencyOrder = ['last_day', 'last_week', 'last_month', 'older'];
+            const recencyLabels = {
+                'last_day': 'Last 24 Hours',
+                'last_week': 'Last 7 Days',
+                'last_month': 'Last 30 Days',
+                'older': 'More than 30 Days'
+            };
+
+            // Create map and order data
+            const dataMap = {};
+            recencyData.forEach(item => {
+                dataMap[item.recency] = item.count;
+            });
+
+            const orderedData = recencyOrder.map(key => ({
+                label: recencyLabels[key],
+                value: dataMap[key] || 0
+            }));
+
+            charts.recency = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: orderedData.map(item => item.label),
+                    datasets: [{
+                        label: 'Users',
+                        data: orderedData.map(item => item.value),
+                        backgroundColor: ['#48bb78', '#4299e1', '#ed8936', '#a0aec0']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: '#e2e8f0' },
+                            ticks: { color: '#718096', precision: 0 }
                         },
                         x: {
                             grid: { display: false },

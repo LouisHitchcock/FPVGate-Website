@@ -1,0 +1,16 @@
+FPVGate v1.5.4 - Flash Instructions (ESP32-S3 Super Mini, 4MB)
+
+Using esptool.py:
+1) Install: pip install esptool
+2) Connect the board via USB
+3) Run:
+   esptool.py --chip esp32s3 --port COMx --baud 460800 write_flash -z \
+     0x0000   ESP32S3-SuperMini-4MB-bootloader.bin \
+     0x8000   ESP32S3-SuperMini-4MB-partitions.bin \
+     0x10000  ESP32S3-SuperMini-4MB-firmware.bin \
+     0x290000 ESP32S3-SuperMini-4MB-littlefs.bin
+
+Notes:
+- Replace COMx with your serial port.
+- LittleFS offset for 4MB Super Mini is 0x290000.
+- After flashing, the device will reboot automatically.

@@ -1,0 +1,16 @@
+FPVGate v1.5.4 - Flash Instructions (ESP32-S3 DevKitC-1, 8MB)
+
+Using esptool.py:
+1) Install: pip install esptool
+2) Connect the board via USB
+3) Run:
+   esptool.py --chip esp32s3 --port COMx --baud 460800 write_flash -z \
+     0x0000   ESP32S3-8MB-bootloader.bin \
+     0x8000   ESP32S3-8MB-partitions.bin \
+     0x10000  ESP32S3-8MB-firmware.bin \
+     0x410000 ESP32S3-8MB-littlefs.bin
+
+Notes:
+- Replace COMx with your serial port.
+- LittleFS offset for 8MB is 0x410000.
+- After flashing, the device will reboot automatically.

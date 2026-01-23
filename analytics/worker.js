@@ -181,13 +181,14 @@ async function getStats(db) {
   `).first();
   results.unique_users_30d = uniqueUsers.count;
 
-  // Country breakdown
+  // Country breakdown (unique users per country)
   const countryStats = await db.prepare(`
     SELECT 
       country,
-      COUNT(*) as count
+      COUNT(DISTINCT ip_hash) as count
     FROM analytics_events
     WHERE country IS NOT NULL
+      AND ip_hash IS NOT NULL
     GROUP BY country
     ORDER BY count DESC
     LIMIT 20
@@ -245,6 +246,61 @@ async function getDetailedStats(db) {
       rate: (successRate.successes / (successRate.successes + successRate.failures) * 100).toFixed(2) + '%'
     };
   }
+
+  // New users in last 30 days (users whose first event was in the last 30 days)
+  const newUsers = await db.prepare(`
+    SELECT COUNT(DISTINCT ip_hash) as count
+    FROM analytics_events
+    WHERE ip_hash IN (
+      SELECT ip_hash
+      FROM analytics_events
+      WHERE ip_hash IS NOT NULL
+      GROUP BY ip_hash
+      HAVING MIN(timestamp) >= datetime('now', '-30 days')
+    )
+  `).first();
+  stats.new_users_30d = newUsers.count;
+
+  // Returning users in last 30 days (users who had events before AND during last 30 days)
+  const returningUsers = await db.prepare(`
+    SELECT COUNT(DISTINCT ip_hash) as count
+    FROM analytics_events
+    WHERE ip_hash IN (
+      SELECT ip_hash
+      FROM analytics_events
+      WHERE ip_hash IS NOT NULL
+      GROUP BY ip_hash
+      HAVING MIN(timestamp) < datetime('now', '-30 days')
+        AND MAX(timestamp) >= datetime('now', '-30 days')
+    )
+  `).first();
+  stats.returning_users_30d = returningUsers.count;
+
+  // Users by recency (last seen)
+  const usersByRecency = await db.prepare(`
+    WITH user_last_seen AS (
+      SELECT 
+        ip_hash,
+        country,
+        MAX(timestamp) as last_seen,
+        MIN(timestamp) as first_seen,
+        COUNT(*) as event_count
+      FROM analytics_events
+      WHERE ip_hash IS NOT NULL
+      GROUP BY ip_hash
+    )
+    SELECT 
+      CASE 
+        WHEN last_seen >= datetime('now', '-1 day') THEN 'last_day'
+        WHEN last_seen >= datetime('now', '-7 days') THEN 'last_week'
+        WHEN last_seen >= datetime('now', '-30 days') THEN 'last_month'
+        ELSE 'older'
+      END as recency,
+      COUNT(*) as count
+    FROM user_last_seen
+    GROUP BY recency
+  `).all();
+  stats.users_by_recency = usersByRecency.results;
 
   return stats;
 }
