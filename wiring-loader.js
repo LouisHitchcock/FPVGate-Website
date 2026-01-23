@@ -2,7 +2,7 @@
 const boards = [
     { value: 'esp32s3', label: 'ESP32-S3 DevKitC-1 (8MB Flash) - Recommended', file: 'ESP32-S3-DevKitC-1.md', expertMode: false },
     { value: 'esp32s3supermini', label: 'ESP32-S3 Super Mini (4MB Flash)', file: 'ESP32-S3-SuperMini.md', expertMode: false },
-    { value: 'esp32c3', label: 'ESP32-C3', file: 'ESP32-C3.md', expertMode: true },
+    { value: 'seeedxiaos3', label: 'Seeed Studio XIAO ESP32S3 (8MB)', file: 'Seeed-XIAO-ESP32S3.md', expertMode: false },
     { value: 'lilygo', label: 'LilyGO T-Energy S3', file: 'LilyGO-T-Energy-S3.md', expertMode: true }
 ];
 

@@ -25,6 +25,16 @@ const BOARD_CONFIGS = {
             { path: 'littlefs.bin', offset: 0x290000 }
         ]
     },
+    seeedxiaos3: {
+        name: 'Seeed Studio XIAO ESP32S3 (8MB)',
+        chipFamily: 'ESP32-S3',
+        parts: [
+            { path: 'bootloader.bin', offset: 0x0 },
+            { path: 'partitions.bin', offset: 0x8000 },
+            { path: 'firmware.bin', offset: 0x10000 },
+            { path: 'littlefs.bin', offset: 0x410000 }
+        ]
+    },
     esp32c3: {
         name: 'ESP32-C3',
         chipFamily: 'ESP32-C3',
@@ -115,7 +125,7 @@ function useFallbackBoards() {
     ALL_BOARDS = [
         { value: 'esp32s3', label: 'ESP32-S3 DevKitC-1 (8MB Flash) - Recommended', expert_mode: 0 },
         { value: 'esp32s3supermini', label: 'ESP32-S3 Super Mini (4MB Flash)', expert_mode: 0 },
-        { value: 'esp32c3', label: 'ESP32-C3', expert_mode: 1 },
+        { value: 'seeedxiaos3', label: 'Seeed Studio XIAO ESP32S3 (8MB)', expert_mode: 0 },
         { value: 'esp32c6', label: 'ESP32-C6', expert_mode: 1 },
         { value: 'lilygo', label: 'LilyGO T-Energy S3', expert_mode: 1 }
     ];
@@ -273,7 +283,7 @@ function generateManifest() {
     const boardPrefixes = {
         'esp32s3': 'ESP32S3-8MB',
         'esp32s3supermini': version === 'v1.5.3' ? 'ESP32S3SuperMini-4MB' : 'ESP32S3-SuperMini-4MB',
-        'esp32c3': 'ESP32C3',
+        'seeedxiaos3': 'SeeedXIAO-ESP32S3',
         'lilygo': 'LilyGO-T-Energy-S3',
         'esp32c6': 'ESP32C6'
     };
