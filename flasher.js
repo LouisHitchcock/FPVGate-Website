@@ -1,43 +1,52 @@
 // FPVGate Web Flasher
-// Version: 2026-01-21-v2 - Fixed ESP32-S3 Super Mini filesystem offset to 0x290000
+// Version: 2026-02-03 - New standardized firmware structure
 const GITHUB_API = 'https://api.github.com/repos/LouisHitchcock/FPVGate/releases';
 const BOARDS_CONFIG_URL = 'https://raw.githubusercontent.com/LouisHitchcock/FPVGate/main/boards.json';
 
-// Board configurations
+// Board configurations with standardized structure
+// Maps board ID -> firmware directory, file prefix, chip family, and flash offsets
 const BOARD_CONFIGS = {
     esp32s3: {
         name: 'ESP32-S3 DevKitC-1 (8MB)',
         chipFamily: 'ESP32-S3',
+        firmwareDir: 'ESP32S3-Devkit-C1',
+        filePrefix: 'S3_Devkit',
         parts: [
             { path: 'bootloader.bin', offset: 0x0 },
             { path: 'partitions.bin', offset: 0x8000 },
             { path: 'firmware.bin', offset: 0x10000 },
-            { path: 'littlefs.bin', offset: 0x410000 }
+            { path: 'filesystem.bin', offset: 0x410000 }
         ]
     },
     esp32s3supermini: {
         name: 'ESP32-S3 Super Mini (4MB)',
         chipFamily: 'ESP32-S3',
+        firmwareDir: 'ESP32S3-Supermini',
+        filePrefix: 'S3_Supermini',
         parts: [
             { path: 'bootloader.bin', offset: 0x0 },
             { path: 'partitions.bin', offset: 0x8000 },
             { path: 'firmware.bin', offset: 0x10000 },
-            { path: 'littlefs.bin', offset: 0x290000 }
+            { path: 'filesystem.bin', offset: 0x290000 }
         ]
     },
     seeedxiaos3: {
         name: 'Seeed Studio XIAO ESP32S3 (8MB)',
         chipFamily: 'ESP32-S3',
+        firmwareDir: 'XIAO-S3',
+        filePrefix: 'XIAO_S3',
         parts: [
             { path: 'bootloader.bin', offset: 0x0 },
             { path: 'partitions.bin', offset: 0x8000 },
             { path: 'firmware.bin', offset: 0x10000 },
-            { path: 'littlefs.bin', offset: 0x410000 }
+            { path: 'filesystem.bin', offset: 0x410000 }
         ]
     },
     esp32c3: {
         name: 'ESP32-C3',
         chipFamily: 'ESP32-C3',
+        firmwareDir: 'ESP32C3',
+        filePrefix: 'ESP32C3',
         parts: [
             { path: 'bootloader.bin', offset: 0x0 },
             { path: 'partitions.bin', offset: 0x8000 },
@@ -47,20 +56,13 @@ const BOARD_CONFIGS = {
     lilygo: {
         name: 'LilyGO T-Energy S3',
         chipFamily: 'ESP32-S3',
+        firmwareDir: 'LilyGO-T-Energy-S3',
+        filePrefix: 'LilyGO',
         parts: [
             { path: 'bootloader.bin', offset: 0x0 },
             { path: 'partitions.bin', offset: 0x8000 },
             { path: 'firmware.bin', offset: 0x10000 },
-            { path: 'littlefs.bin', offset: 0x410000 }
-        ]
-    },
-    esp32c6: {
-        name: 'ESP32-C6',
-        chipFamily: 'ESP32-C6',
-        parts: [
-            { path: 'bootloader.bin', offset: 0x0 },
-            { path: 'partitions.bin', offset: 0x8000 },
-            { path: 'firmware.bin', offset: 0x10000 }
+            { path: 'filesystem.bin', offset: 0x410000 }
         ]
     }
 };
@@ -84,7 +86,7 @@ let ALL_BOARDS = [];
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('FPVGate Flasher v2026-01-21-v2 - Super Mini FS offset: 0x290000');
+    console.log('FPVGate Flasher v2026-02-03 - Standardized firmware structure');
     await loadBoardConfigurations();
     await loadReleases();
     setupEventListeners();
@@ -126,7 +128,7 @@ function useFallbackBoards() {
         { value: 'esp32s3', label: 'ESP32-S3 DevKitC-1 (8MB Flash) - Recommended', expert_mode: 0 },
         { value: 'esp32s3supermini', label: 'ESP32-S3 Super Mini (4MB Flash)', expert_mode: 0 },
         { value: 'seeedxiaos3', label: 'Seeed Studio XIAO ESP32S3 (8MB)', expert_mode: 0 },
-        { value: 'esp32c6', label: 'ESP32-C6', expert_mode: 1 },
+        { value: 'esp32c3', label: 'ESP32-C3', expert_mode: 1 },
         { value: 'lilygo', label: 'LilyGO T-Energy S3', expert_mode: 1 }
     ];
     
@@ -279,25 +281,15 @@ function generateManifest() {
     const boardConfig = BOARD_CONFIGS[selectedBoard];
     const version = selectedVersion.tag_name;
     
-    // Get board-specific prefix for asset names
-    const boardPrefixes = {
-        'esp32s3': 'ESP32S3-8MB',
-        'esp32s3supermini': version === 'v1.5.3' ? 'ESP32S3SuperMini-4MB' : 'ESP32S3-SuperMini-4MB',
-        'seeedxiaos3': 'SeeedXIAO-ESP32S3',
-        'lilygo': 'LilyGO-T-Energy-S3',
-        'esp32c6': 'ESP32C6'
-    };
-    
-    const boardPrefix = boardPrefixes[selectedBoard];
-    
-    // Use local firmware files hosted on the website (avoids CORS issues)
+    // Use new standardized firmware structure
+    // firmware/v1.5.7/ESP32S3-Devkit-C1/S3_Devkit_bootloader.bin
     const baseUrl = new URL(window.location.href);
-    const firmwareBaseUrl = new URL(`firmware/${version}/`, baseUrl).href;
+    const firmwareBaseUrl = new URL(`firmware/${version}/${boardConfig.firmwareDir}/`, baseUrl).href;
     
-    // Map parts to local firmware URLs with board prefix
+    // Map parts to local firmware URLs with standardized naming
     const parts = boardConfig.parts.map(part => {
         return {
-            path: `${firmwareBaseUrl}${boardPrefix}-${part.path}`,
+            path: `${firmwareBaseUrl}${boardConfig.filePrefix}_${part.path}`,
             offset: part.offset
         };
     });
@@ -316,6 +308,7 @@ function generateManifest() {
         ]
     };
     
+    console.log('Generated manifest:', manifest);
     return manifest;
 }
 
