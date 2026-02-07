@@ -3,9 +3,85 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Documentation - FPVGate</title>
+    <title>FPVGate Documentation | FPV Lap Timer Setup & Calibration Guide</title>
+    <meta name="description" content="Step-by-step FPVGate docs: hardware wiring, flashing firmware, configuration, calibration, race use, and troubleshooting for the RSSI FPV lap timer.">
+    <link rel="canonical" href="https://fpvgate.xyz/docs.html">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="FPVGate Documentation | FPV Lap Timer Setup & Calibration Guide">
+    <meta property="og:description" content="Hardware wiring, web flasher steps, configuration, calibration, racing workflow, and troubleshooting for FPVGate RSSI lap timer.">
+    <meta property="og:url" content="https://fpvgate.xyz/docs.html">
+    <meta property="og:image" content="https://fpvgate.xyz/logo-black.png">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="FPVGate Documentation | FPV Lap Timer Setup & Calibration">
+    <meta name="twitter:description" content="Complete guide: hardware setup, flashing, configuration, calibration, racing, and troubleshooting for FPVGate.">
+    <meta name="twitter:image" content="https://fpvgate.xyz/logo-black.png">
+
     <link rel="icon" type="image/png" href="logo-black.png">
     <link rel="stylesheet" href="styles.css">
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "TechArticle",
+          "headline": "FPVGate Documentation | FPV Lap Timer Setup & Calibration Guide",
+          "description": "Hardware wiring, flashing firmware, configuration, calibration, racing workflow, and troubleshooting for the FPVGate RSSI lap timer.",
+          "proficiencyLevel": "Intermediate",
+          "articleSection": ["Getting Started", "Hardware Setup", "Flashing Firmware", "Configuration", "Calibration", "Racing", "Troubleshooting"],
+          "url": "https://fpvgate.xyz/docs.html",
+          "mainEntityOfPage": "https://fpvgate.xyz/docs.html",
+          "publisher": {
+            "@type": "Organization",
+            "name": "FPVGate",
+            "url": "https://fpvgate.xyz/",
+            "logo": "https://fpvgate.xyz/logo-black.png"
+          }
+        },
+        {
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "Why can't I connect to the FPVGate WiFi?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Wait 30 seconds after boot for the access point to start, check the serial monitor for errors, and confirm firmware flashed correctly."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Why is FPVGate not detecting laps?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Verify the RX5808 module is SPI modded, ensure the configured VTx frequency matches your drone, rerun the calibration wizard, and confirm the drone is powered."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How do I fix false lap detections?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Increase enter/exit RSSI thresholds, move the gate farther from the flight area, or lower transmitter power if the signal is too strong."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Why doesn't the race start beep play on my phone?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Disable silent mode, ensure media volume is up, and on iOS make sure the hardware silent switch is off; the countdown tone needs media/ringer audio."
+              }
+            }
+          ]
+        }
+      ]
+    }
+    </script>
 </head>
 <body>
     <nav class="navbar">

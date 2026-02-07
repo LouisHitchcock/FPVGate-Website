@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /analytics/
+
+Sitemap: https://fpvgate.xyz/sitemap.xml
