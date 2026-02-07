@@ -1,0 +1,8 @@
+# Supported Boards for this Release
+# Format: [board_id] Board Name (beta: yes/no)
+============================================================
+
+[esp32s3_devkit] ESP32-S3 DevKitC-1 (8MB) (beta: no)
+[esp32s3_supermini] ESP32-S3 Super Mini (4MB) (beta: no)
+[xiao_s3] Seeed Studio XIAO ESP32S3 (beta: no)
+[lilygo_t_energy_s3] LilyGo T-Energy S3 (beta: no)
