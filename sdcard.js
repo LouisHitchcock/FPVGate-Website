@@ -134,6 +134,23 @@ async function startSetup() {
             startIn: 'desktop'
         });
         
+        // Safety check: warn about potentially dangerous folder selections
+        const folderName = dirHandle.name.toLowerCase();
+        const dangerousFolders = ['windows', 'program files', 'program files (x86)', 'users', 'system32', 'appdata', 'documents', 'desktop', 'downloads', 'pictures', 'videos', 'music'];
+        
+        if (dangerousFolders.includes(folderName)) {
+            const proceed = confirm(`Warning: You selected "${dirHandle.name}" which appears to be a system folder.\n\nAre you sure this is your SD card?\n\nClick OK only if you're certain this is your SD card.`);
+            if (!proceed) {
+                return;
+            }
+        }
+        
+        // Confirm the selection
+        const confirmed = confirm(`You selected: ${dirHandle.name}\n\nFPVGate SD card files will be extracted to this location.\n\nIs this your SD card?`);
+        if (!confirmed) {
+            return;
+        }
+        
         // Hide button, show progress
         selectFolderButton.style.display = 'none';
         setupProgress.style.display = 'block';
