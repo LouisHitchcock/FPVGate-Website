@@ -12,7 +12,6 @@ async function setupSDCardSection() {
     const versionSelect = document.getElementById('sdcard-version-select');
     const sdcardSetupButton = document.getElementById('sdcard-setup-button');
     const gotoSdcard = document.getElementById('goto-sdcard');
-    const openDeviceFinal = document.getElementById('open-device-final');
     
     // Load releases for SD card section
     await loadSDCardReleases();
@@ -23,17 +22,10 @@ async function setupSDCardSection() {
     // Setup button click handler
     sdcardSetupButton.addEventListener('click', startSDCardSetup);
     
-    // Scroll to SD card section after flash
+    // Scroll to SD card section after flash complete
     if (gotoSdcard) {
         gotoSdcard.addEventListener('click', () => {
             document.getElementById('sdcard-section').scrollIntoView({ behavior: 'smooth' });
-        });
-    }
-    
-    // Open device interface
-    if (openDeviceFinal) {
-        openDeviceFinal.addEventListener('click', () => {
-            window.open('http://fpvgate.local', '_blank');
         });
     }
 }
