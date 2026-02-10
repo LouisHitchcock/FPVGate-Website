@@ -1,24 +1,24 @@
-// SD Card Setup - Integrated into Flasher Page
-// Uses the version selected in the flasher dropdown
+// SD Card Setup - Separate section on Flasher Page
+// Has its own version selector
+
+const SDCARD_GITHUB_API = 'https://api.github.com/repos/LouisHitchcock/FPVGate/releases';
+let sdcardReleases = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     setupSDCardSection();
 });
 
-function setupSDCardSection() {
-    const versionSelect = document.getElementById('version-select');
-    const sdcardReady = document.getElementById('sdcard-ready');
-    const sdcardVersion = document.getElementById('sdcard-version');
-    const sdcardDownload = document.getElementById('sdcard-download');
+async function setupSDCardSection() {
+    const versionSelect = document.getElementById('sdcard-version-select');
     const sdcardSetupButton = document.getElementById('sdcard-setup-button');
     const gotoSdcard = document.getElementById('goto-sdcard');
     const openDeviceFinal = document.getElementById('open-device-final');
     
+    // Load releases for SD card section
+    await loadSDCardReleases();
+    
     // Update SD card section when version changes
     versionSelect.addEventListener('change', updateSDCardSection);
-    
-    // Initial update
-    updateSDCardSection();
     
     // Setup button click handler
     sdcardSetupButton.addEventListener('click', startSDCardSetup);
@@ -38,25 +38,62 @@ function setupSDCardSection() {
     }
 }
 
+async function loadSDCardReleases() {
+    const versionSelect = document.getElementById('sdcard-version-select');
+    const versionInfo = document.getElementById('sdcard-version-info');
+    
+    try {
+        const response = await fetch(SDCARD_GITHUB_API);
+        if (!response.ok) throw new Error('Failed to fetch releases');
+        
+        const data = await response.json();
+        sdcardReleases = data.filter(release => !release.draft && release.assets.length > 0);
+        
+        versionSelect.innerHTML = '<option value="">Choose version...</option>';
+        sdcardReleases.forEach(release => {
+            const option = document.createElement('option');
+            option.value = release.tag_name;
+            option.textContent = `${release.tag_name}${release.prerelease ? ' (Pre-release)' : ''}${release.tag_name === sdcardReleases[0].tag_name ? ' (Latest)' : ''}`;
+            versionSelect.appendChild(option);
+        });
+        
+        // Auto-select latest stable
+        if (sdcardReleases.length > 0) {
+            const latestStable = sdcardReleases.find(r => !r.prerelease) || sdcardReleases[0];
+            versionSelect.value = latestStable.tag_name;
+            updateSDCardSection();
+        }
+    } catch (error) {
+        console.error('Error loading SD card releases:', error);
+        versionSelect.innerHTML = '<option value="">Failed to load versions</option>';
+    }
+}
+
 function updateSDCardSection() {
-    const versionSelect = document.getElementById('version-select');
+    const versionSelect = document.getElementById('sdcard-version-select');
     const sdcardReady = document.getElementById('sdcard-ready');
-    const sdcardVersion = document.getElementById('sdcard-version');
     const sdcardDownload = document.getElementById('sdcard-download');
+    const versionInfo = document.getElementById('sdcard-version-info');
     
     const version = versionSelect.value;
+    const release = sdcardReleases.find(r => r.tag_name === version);
     
     if (version) {
         sdcardReady.style.display = 'block';
-        sdcardVersion.textContent = version;
         sdcardDownload.href = `${window.location.origin}/firmware/${version}/SD_Card.zip`;
+        
+        if (release) {
+            const date = new Date(release.published_at).toLocaleDateString();
+            versionInfo.textContent = `Released: ${date}${release.prerelease ? ' (Pre-release)' : ''}`;
+        }
     } else {
         sdcardReady.style.display = 'none';
+        versionInfo.textContent = '';
     }
 }
 
 async function startSDCardSetup() {
-    const versionSelect = document.getElementById('version-select');
+    const versionSelect = document.getElementById('sdcard-version-select');
     const version = versionSelect.value;
     
     if (!version) {
