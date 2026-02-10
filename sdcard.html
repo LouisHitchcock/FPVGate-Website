@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FPVGate SD Card Setup | Prepare Your SD Card</title>
+    <meta name="description" content="Prepare your SD card for FPVGate with the correct folder structure and audio files. Select your SD card folder and we'll set it up automatically.">
+    <link rel="canonical" href="https://fpvgate.xyz/sdcard.html">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="FPVGate SD Card Setup">
+    <meta property="og:description" content="One-click SD card preparation for FPVGate. Select your SD card and get the correct folder structure instantly.">
+    <meta property="og:url" content="https://fpvgate.xyz/sdcard.html">
+    <meta property="og:image" content="https://fpvgate.xyz/logo-black.png">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="FPVGate SD Card Setup">
+    <meta name="twitter:description" content="Prepare your SD card for FPVGate with the correct folder structure and audio files.">
+    <meta name="twitter:image" content="https://fpvgate.xyz/logo-black.png">
+
+    <link rel="icon" type="image/png" href="logo-black.png">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <img src="logo-white.png" alt="FPVGate Logo" class="nav-logo">
+                <h1>FPVGate</h1>
+            </div>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="docs.html">Documentation</a>
+                <a href="flasher.html">Flash Firmware</a>
+                <a href="sdcard.html">SD Card Setup</a>
+                <a href="https://github.com/LouisHitchcock/FPVGate" target="_blank">GitHub</a>
+                <a href="https://ko-fi.com/louishitchcock" class="btn-kofi" target="_blank" title="Support on Ko-fi">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M23.881 8.948c-.773-4.085-4.859-4.593-4.859-4.593H.723c-.604 0-.679.798-.679.798s-.082 7.324-.022 11.822c.164 2.424 2.586 2.672 2.586 2.672s8.267-.023 11.966-.049c2.438-.426 2.683-2.566 2.658-3.734 4.352.24 7.422-2.831 6.649-6.916zm-11.062 3.511c-1.246 1.453-4.011 3.976-4.011 3.976s-.121.119-.31.023c-.076-.057-.108-.09-.108-.09-.443-.441-3.368-3.049-4.034-3.954-.709-.965-1.041-2.7-.091-3.71.951-1.01 3.005-1.086 4.363.407 0 0 1.565-1.782 3.468-.963 1.904.82 1.832 3.011.723 4.311zm6.173.478c-.928.116-1.682.028-1.682.028V7.284h1.77s1.971.551 1.971 2.638c0 1.913-.985 2.667-2.059 3.015z"/>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="flasher-section">
+        <div class="container">
+            <h1>SD Card Setup</h1>
+            <p class="subtitle">Prepare your SD card with the correct folder structure and audio files</p>
+
+            <div class="alert alert-info" id="browser-warning" style="display: none;">
+                <strong>Browser Not Supported!</strong> Please use Chrome, Edge, or Opera browser. The File System Access API is required.
+            </div>
+
+            <div class="flasher-container">
+                <div class="flasher-main">
+                    <div class="flasher-config">
+                        <div class="form-group">
+                            <label for="version-select">1. Select Version</label>
+                            <select id="version-select" class="form-control">
+                                <option value="">Loading versions...</option>
+                            </select>
+                            <small id="version-info" class="version-info"></small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>2. Setup Options</label>
+                            
+                            <div class="flash-option-item">
+                                <div class="option-info">
+                                    <span class="option-title">Clear Existing Files</span>
+                                    <small>Remove existing FPVGate files before copying (recommended)</small>
+                                </div>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="clear-existing-toggle" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div id="setup-section" style="display: none;">
+                            <div class="flash-ready-card">
+                                <h3>3. Ready to Setup</h3>
+                                <div class="flash-summary">
+                                    <div class="summary-item">
+                                        <span class="summary-label">Version:</span>
+                                        <span id="selected-version" class="summary-value"></span>
+                                    </div>
+                                </div>
+                                <button id="select-folder-button" class="btn btn-large btn-primary btn-flash">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px;">
+                                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                                    </svg>
+                                    Select SD Card Folder
+                                </button>
+                                <small style="display: block; margin-top: 0.5rem; color: var(--text-secondary);">
+                                    You'll be prompted to select your SD card's root folder
+                                </small>
+                            </div>
+
+                            <div id="setup-progress" class="flash-progress" style="display: none;">
+                                <h4 id="progress-title">Preparing...</h4>
+                                <div class="progress-bar-container">
+                                    <div id="progress-bar" class="progress-bar"></div>
+                                </div>
+                                <p id="progress-status" class="progress-status"></p>
+                                <div id="progress-log" class="progress-log"></div>
+                            </div>
+
+                            <div class="post-flash-actions" id="post-setup-actions" style="display: none;">
+                                <h4>SD Card Ready!</h4>
+                                <p>Your SD card is now prepared for FPVGate. Insert it into your device and you're ready to go!</p>
+                            </div>
+                        </div>
+
+                        <div id="loading-section" style="display: none;">
+                            <div class="loading-spinner"></div>
+                            <p>Downloading SD card files...</p>
+                        </div>
+
+                        <div id="error-section" class="alert alert-error" style="display: none;">
+                            <strong>Error:</strong> <span id="error-message"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flasher-sidebar">
+                    <div class="info-card">
+                        <h3>Requirements</h3>
+                        <ul>
+                            <li>MicroSD card (any size, 1GB+ recommended)</li>
+                            <li>SD card formatted as FAT32</li>
+                            <li>Chrome, Edge, or Opera browser</li>
+                            <li>SD card reader connected to your computer</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-card">
+                        <h3>What Gets Installed</h3>
+                        <ul>
+                            <li>Voice announcement audio files</li>
+                            <li>Multiple voice options</li>
+                            <li>Correct folder structure</li>
+                            <li>Config templates (if included)</li>
+                        </ul>
+                    </div>
+
+                    <div class="info-card">
+                        <h3>Alternative Method</h3>
+                        <p>You can also manually download the SD_Card.zip from the <a href="https://github.com/LouisHitchcock/FPVGate/releases" target="_blank">GitHub releases</a> and extract it to your SD card.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>Made with care for the FPV community</p>
+            <p>Licensed under CC BY-NC-SA 4.0</p>
+        </div>
+    </footer>
+
+    <!-- JSZip library for extracting ZIP files -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="sdcard.js"></script>
+</body>
+</html>
