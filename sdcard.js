@@ -65,7 +65,7 @@ async function loadReleases() {
             versionSelect.value = latestStable.tag_name;
             selectedVersion = latestStable;
             updateVersionInfo();
-            updateDownloadLink();
+            updateSetupSection();
         }
         
     } catch (error) {
