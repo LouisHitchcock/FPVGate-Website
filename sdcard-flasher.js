@@ -24,7 +24,6 @@ async function setupSDCardSection() {
 
 async function loadSDCardReleases() {
     const versionSelect = document.getElementById('sdcard-version-select');
-    const versionInfo = document.getElementById('sdcard-version-info');
     
     try {
         const response = await fetch(SDCARD_GITHUB_API);
@@ -57,22 +56,14 @@ function updateSDCardSection() {
     const versionSelect = document.getElementById('sdcard-version-select');
     const sdcardReady = document.getElementById('sdcard-ready');
     const sdcardDownload = document.getElementById('sdcard-download');
-    const versionInfo = document.getElementById('sdcard-version-info');
     
     const version = versionSelect.value;
-    const release = sdcardReleases.find(r => r.tag_name === version);
     
     if (version) {
         sdcardReady.style.display = 'block';
         sdcardDownload.href = `${window.location.origin}/firmware/${version}/SD_Card.zip`;
-        
-        if (release) {
-            const date = new Date(release.published_at).toLocaleDateString();
-            versionInfo.textContent = `Released: ${date}${release.prerelease ? ' (Pre-release)' : ''}`;
-        }
     } else {
         sdcardReady.style.display = 'none';
-        versionInfo.textContent = '';
     }
 }
 
