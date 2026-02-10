@@ -235,7 +235,10 @@
                             <div class="progress-bar-container" style="height: 6px;">
                                 <div id="sdcard-progress-bar" class="progress-bar"></div>
                             </div>
-                            <small id="sdcard-progress-title" style="color: var(--text-secondary);">Working...</small>
+                            <small style="color: var(--text-secondary); display: flex; justify-content: space-between;">
+                                <span id="sdcard-progress-title">Working...</span>
+                                <span id="sdcard-progress-percent">0%</span>
+                            </small>
                         </div>
                         <div id="sdcard-complete" style="display: none; margin-top: 0.5rem; color: var(--success-color); font-size: 0.85rem;">
                             ✓ SD Card Ready!

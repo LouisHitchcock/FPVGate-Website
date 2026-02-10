@@ -120,6 +120,7 @@
                         <a href="#getting-started">Getting Started</a>
                         <a href="#hardware">Hardware Setup</a>
                         <a href="#flashing">Flashing Firmware</a>
+                        <a href="#sdcard">SD Card Setup</a>
                         <a href="#configuration">Configuration</a>
                         <a href="#calibration">Calibration</a>
                         <a href="#racing">Using the Timer</a>
@@ -189,6 +190,44 @@
                         <a href="flasher.html" class="btn btn-primary">Go to Web Flasher</a>
                     </section>
 
+                    <section id="sdcard" class="doc-section">
+                        <h2>SD Card Setup</h2>
+                        <p>FPVGate uses an SD card to store voice announcement files and race data. Setting up the SD card correctly is essential for audio features.</p>
+                        
+                        <div class="info-box">
+                            <h4>SD Card Requirements</h4>
+                            <ul>
+                                <li><strong>Format:</strong> FAT32</li>
+                                <li><strong>Size:</strong> 1GB - 32GB recommended</li>
+                                <li><strong>Speed:</strong> Class 10 or higher for best performance</li>
+                            </ul>
+                        </div>
+
+                        <h3>Automatic Setup (Recommended)</h3>
+                        <p>Use the SD Card Setup tool on the <a href="flasher.html">Flasher page</a> to automatically download and extract the correct folder structure to your SD card:</p>
+                        <ol>
+                            <li>Insert your FAT32-formatted SD card into your computer</li>
+                            <li>Go to the <a href="flasher.html">Web Flasher</a> page</li>
+                            <li>Find the "SD Card Setup" section in the sidebar</li>
+                            <li>Select your firmware version</li>
+                            <li>Click "Select SD Card & Setup" and choose your SD card folder</li>
+                            <li>The tool will download and extract all required files automatically</li>
+                        </ol>
+
+                        <h3>Manual Setup</h3>
+                        <p>Alternatively, you can manually set up the SD card:</p>
+                        <ol>
+                            <li>Download the <code>SD_Card.zip</code> from the <a href="https://github.com/LouisHitchcock/FPVGate/releases" target="_blank">GitHub releases</a> page</li>
+                            <li>Extract the contents to the root of your SD card</li>
+                            <li>Ensure the folder structure matches the expected layout (audio files in the correct directories)</li>
+                        </ol>
+
+                        <div class="warning-box">
+                            <h4>Important</h4>
+                            <p>Make sure to use the SD_Card.zip that matches your firmware version. Each release may have different audio files or folder structures.</p>
+                        </div>
+                    </section>
+
                     <section id="configuration" class="doc-section">
                         <h2>Configuration</h2>
                         <p>After flashing, connect to the FPVGate WiFi network and access the web interface.</p>
@@ -199,9 +238,12 @@
                                 <li>Connect to WiFi network: <code>FPVGate_XXXX</code></li>
                                 <li>Password: <code>fpvgate1</code></li>
                                 <li>Open browser to: <code>http://fpvgate.local</code> or <code>http://192.168.4.1</code></li>
-                                <li>Go to Configuration → Set your VTx frequency</li>
+                            <li>Go to Configuration → Set your VTx frequency</li>
                                 <li>Configure LED settings (if using RGB LEDs)</li>
                                 <li>Set up voice announcements (optional)</li>
+                                <li>Choose a theme in Settings (v1.5.7+)</li>
+                                <li>Configure battery monitoring if using a voltage divider (v1.5.6+)</li>
+                                <li>Adjust audio volume controls for beeps and announcements (v1.6.0+)</li>
                             </ol>
                         </div>
                     </section>
@@ -253,6 +295,16 @@
                             <li>Gap analysis</li>
                             <li>Voice announcements for each lap</li>
                             <li>LED feedback (if configured)</li>
+                            <li>On-screen displays (OSD) for live stats</li>
+                        </ul>
+
+                        <h3>Multi-Timer Race Sync</h3>
+                        <p>FPVGate v1.6.0 introduces race synchronization for multi-timer setups:</p>
+                        <ul>
+                            <li>Connect multiple FPVGate timers via WiFi</li>
+                            <li>Configure one as Master and others as Slaves</li>
+                            <li>Synchronized race start, stop, and lap events across all timers</li>
+                            <li>Automatic discovery and connection management</li>
                         </ul>
 
                         <h3>After Race</h3>

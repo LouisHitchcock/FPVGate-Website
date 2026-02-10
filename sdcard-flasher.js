@@ -212,4 +212,6 @@ async function writeFile(dirHandle, filePath, content) {
 
 function updateProgress(progressBar, percent) {
     progressBar.style.width = `${percent}%`;
+    const percentEl = document.getElementById('sdcard-progress-percent');
+    if (percentEl) percentEl.textContent = `${percent}%`;
 }
