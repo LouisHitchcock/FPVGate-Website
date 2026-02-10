@@ -1,11 +1,10 @@
 // FPVGate SD Card Setup Tool
-// User downloads ZIP from GitHub, uploads it here, and we extract to their SD card
+// Downloads SD_Card.zip from local firmware folder and extracts to user's SD card
 
 const GITHUB_API = 'https://api.github.com/repos/LouisHitchcock/FPVGate/releases';
 
 let releases = [];
 let selectedVersion = null;
-let uploadedZipFile = null;
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', async () => {
@@ -79,29 +78,13 @@ async function loadReleases() {
 // Setup event listeners
 function setupEventListeners() {
     const versionSelect = document.getElementById('version-select');
-    const selectZipButton = document.getElementById('select-zip-button');
-    const zipFileInput = document.getElementById('zip-file-input');
     const selectFolderButton = document.getElementById('select-folder-button');
     
     versionSelect.addEventListener('change', (e) => {
         const version = e.target.value;
         selectedVersion = releases.find(r => r.tag_name === version);
         updateVersionInfo();
-        updateDownloadLink();
-    });
-    
-    selectZipButton.addEventListener('click', () => {
-        zipFileInput.click();
-    });
-    
-    zipFileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            uploadedZipFile = file;
-            document.getElementById('zip-file-name').textContent = file.name;
-            document.getElementById('zip-file-name').style.color = 'var(--success-color)';
-            selectFolderButton.disabled = false;
-        }
+        updateSetupSection();
     });
     
     selectFolderButton.addEventListener('click', startSetup);
@@ -119,27 +102,18 @@ function updateVersionInfo() {
     }
 }
 
-// Update download link for selected version
-function updateDownloadLink() {
-    const downloadLink = document.getElementById('download-link');
-    const downloadInfo = document.getElementById('download-info');
+// Update setup section visibility
+function updateSetupSection() {
+    const setupSection = document.getElementById('setup-section');
+    const errorSection = document.getElementById('error-section');
+    
+    errorSection.style.display = 'none';
     
     if (selectedVersion) {
-        const sdCardAsset = selectedVersion.assets.find(a => 
-            a.name === 'SD_Card.zip' || a.name.toLowerCase().includes('sd_card')
-        );
-        
-        if (sdCardAsset) {
-            downloadLink.href = sdCardAsset.browser_download_url;
-            downloadLink.style.display = 'inline-block';
-            downloadInfo.textContent = `Version ${selectedVersion.tag_name} | Size: ${formatBytes(sdCardAsset.size)}`;
-        } else {
-            downloadLink.style.display = 'none';
-            downloadInfo.textContent = 'No SD_Card.zip found for this version';
-        }
+        setupSection.style.display = 'block';
+        document.getElementById('selected-version').textContent = selectedVersion.tag_name;
     } else {
-        downloadLink.style.display = 'none';
-        downloadInfo.textContent = '';
+        setupSection.style.display = 'none';
     }
 }
 
@@ -152,11 +126,6 @@ async function startSetup() {
     const progressLog = document.getElementById('progress-log');
     const postSetupActions = document.getElementById('post-setup-actions');
     const errorSection = document.getElementById('error-section');
-    
-    if (!uploadedZipFile) {
-        showError('Please select a ZIP file first');
-        return;
-    }
     
     try {
         // Request folder access
@@ -177,14 +146,22 @@ async function startSetup() {
         progressLog.innerHTML = '';
         
         log(progressLog, `Selected folder: ${dirHandle.name}`);
-        log(progressLog, `Processing: ${uploadedZipFile.name}`);
         
-        // Read the ZIP file
-        progressTitle.textContent = 'Reading ZIP File...';
+        // Download SD_Card.zip from local firmware folder (same origin, no CORS)
+        progressTitle.textContent = 'Downloading SD Card Files...';
+        const version = selectedVersion.tag_name;
+        const sdCardUrl = `${window.location.origin}/firmware/${version}/SD_Card.zip`;
+        log(progressLog, `Downloading from ${sdCardUrl}...`);
         updateProgress(progressBar, 10);
         
-        const zipData = await uploadedZipFile.arrayBuffer();
-        updateProgress(progressBar, 20);
+        const response = await fetch(sdCardUrl);
+        if (!response.ok) {
+            throw new Error(`SD_Card.zip not found for ${version}. Try a different version.`);
+        }
+        
+        const zipData = await response.arrayBuffer();
+        updateProgress(progressBar, 30);
+        log(progressLog, 'Download complete');
         
         // Extract ZIP file
         progressTitle.textContent = 'Extracting Files...';
