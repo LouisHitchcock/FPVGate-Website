@@ -11,7 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
 async function setupSDCardSection() {
     const versionSelect = document.getElementById('sdcard-version-select');
     const sdcardSetupButton = document.getElementById('sdcard-setup-button');
-    const gotoSdcard = document.getElementById('goto-sdcard');
     
     // Load releases for SD card section
     await loadSDCardReleases();
@@ -21,13 +20,6 @@ async function setupSDCardSection() {
     
     // Setup button click handler
     sdcardSetupButton.addEventListener('click', startSDCardSetup);
-    
-    // Scroll to SD card section after flash complete
-    if (gotoSdcard) {
-        gotoSdcard.addEventListener('click', () => {
-            document.getElementById('sdcard-section').scrollIntoView({ behavior: 'smooth' });
-        });
-    }
 }
 
 async function loadSDCardReleases() {
@@ -89,7 +81,7 @@ async function startSDCardSetup() {
     const version = versionSelect.value;
     
     if (!version) {
-        alert('Please select a firmware version first.');
+        alert('Please select a version first.');
         return;
     }
     
@@ -97,7 +89,6 @@ async function startSDCardSetup() {
     const sdcardProgress = document.getElementById('sdcard-progress');
     const progressTitle = document.getElementById('sdcard-progress-title');
     const progressBar = document.getElementById('sdcard-progress-bar');
-    const progressLog = document.getElementById('sdcard-progress-log');
     const sdcardComplete = document.getElementById('sdcard-complete');
     const sdcardError = document.getElementById('sdcard-error');
     const sdcardErrorMessage = document.getElementById('sdcard-error-message');
@@ -114,11 +105,11 @@ async function startSDCardSetup() {
         const dangerousFolders = ['windows', 'program files', 'program files (x86)', 'users', 'system32', 'appdata', 'documents', 'desktop', 'downloads', 'pictures', 'videos', 'music'];
         
         if (dangerousFolders.includes(folderName)) {
-            const proceed = confirm(`Warning: You selected "${dirHandle.name}" which appears to be a system folder.\n\nAre you sure this is your SD card?`);
+            const proceed = confirm(`Warning: "${dirHandle.name}" looks like a system folder.\n\nAre you sure this is your SD card?`);
             if (!proceed) return;
         }
         
-        const confirmed = confirm(`You selected: ${dirHandle.name}\n\nFPVGate SD card files will be extracted here.\n\nIs this your SD card?`);
+        const confirmed = confirm(`Extract to: ${dirHandle.name}\n\nIs this your SD card?`);
         if (!confirmed) return;
         
         // Show progress
@@ -127,18 +118,11 @@ async function startSDCardSetup() {
         sdcardComplete.style.display = 'none';
         sdcardError.style.display = 'none';
         
-        progressBar.style.width = '0%';
-        progressBar.textContent = '0%';
-        progressLog.innerHTML = '';
-        
-        log(progressLog, `Selected folder: ${dirHandle.name}`);
-        
-        // Download SD_Card.zip
-        progressTitle.textContent = 'Downloading SD Card Files...';
-        const sdCardUrl = `${window.location.origin}/firmware/${version}/SD_Card.zip`;
-        log(progressLog, `Downloading from ${sdCardUrl}...`);
+        progressTitle.textContent = 'Downloading...';
         updateProgress(progressBar, 10);
         
+        // Download SD_Card.zip
+        const sdCardUrl = `${window.location.origin}/firmware/${version}/SD_Card.zip`;
         const response = await fetch(sdCardUrl);
         if (!response.ok) {
             throw new Error(`SD_Card.zip not found for ${version}.`);
@@ -146,24 +130,17 @@ async function startSDCardSetup() {
         
         const zipData = await response.arrayBuffer();
         updateProgress(progressBar, 30);
-        log(progressLog, 'Download complete');
         
         // Extract ZIP
-        progressTitle.textContent = 'Extracting Files...';
-        log(progressLog, 'Extracting ZIP archive...');
-        
+        progressTitle.textContent = 'Extracting...';
         const zip = await JSZip.loadAsync(zipData);
         const files = Object.keys(zip.files);
-        log(progressLog, `Found ${files.length} items in archive`);
         
         // Detect root folder to strip
         const rootFolder = detectRootFolder(files);
-        if (rootFolder) {
-            log(progressLog, `Stripping root folder: ${rootFolder}`);
-        }
         
         // Write files
-        progressTitle.textContent = 'Writing Files...';
+        progressTitle.textContent = 'Writing...';
         const totalFiles = files.filter(f => !zip.files[f].dir).length;
         let processedFiles = 0;
         
@@ -181,15 +158,13 @@ async function startSDCardSetup() {
             await writeFile(dirHandle, targetPath, content);
             
             processedFiles++;
-            const progress = 30 + Math.round((processedFiles / totalFiles) * 65);
+            const progress = 30 + Math.round((processedFiles / totalFiles) * 70);
             updateProgress(progressBar, progress);
         }
         
         // Complete
         updateProgress(progressBar, 100);
-        progressTitle.textContent = 'Setup Complete!';
-        progressTitle.style.color = 'var(--success-color)';
-        log(progressLog, `Successfully wrote ${processedFiles} files to SD card`);
+        sdcardProgress.style.display = 'none';
         sdcardComplete.style.display = 'block';
         
     } catch (error) {
@@ -201,8 +176,7 @@ async function startSDCardSetup() {
             return;
         }
         
-        progressTitle.textContent = 'Setup Failed';
-        progressTitle.style.color = 'var(--error-color)';
+        sdcardProgress.style.display = 'none';
         sdcardErrorMessage.textContent = error.message;
         sdcardError.style.display = 'block';
         sdcardReady.style.display = 'block';
@@ -247,12 +221,4 @@ async function writeFile(dirHandle, filePath, content) {
 
 function updateProgress(progressBar, percent) {
     progressBar.style.width = `${percent}%`;
-    progressBar.textContent = `${percent}%`;
-}
-
-function log(container, message) {
-    const entry = document.createElement('div');
-    entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
-    container.appendChild(entry);
-    container.scrollTop = container.scrollHeight;
 }
