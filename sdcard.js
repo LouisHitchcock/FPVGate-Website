@@ -1,13 +1,11 @@
 // FPVGate SD Card Setup Tool
-// Uses File System Access API to write SD card contents directly
+// User downloads ZIP from GitHub, uploads it here, and we extract to their SD card
 
 const GITHUB_API = 'https://api.github.com/repos/LouisHitchcock/FPVGate/releases';
 
 let releases = [];
 let selectedVersion = null;
-let setupOptions = {
-    clearExisting: true
-};
+let uploadedZipFile = null;
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', async () => {
@@ -16,7 +14,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Check browser support
     if (!('showDirectoryPicker' in window)) {
         showBrowserWarning();
-        return;
     }
     
     await loadReleases();
@@ -28,12 +25,6 @@ function showBrowserWarning() {
     const warningDiv = document.getElementById('browser-warning');
     warningDiv.style.display = 'block';
     warningDiv.className = 'alert alert-error';
-    
-    // Disable the setup section
-    const setupSection = document.getElementById('setup-section');
-    if (setupSection) {
-        setupSection.style.display = 'none';
-    }
 }
 
 // Load releases from GitHub API
@@ -75,7 +66,7 @@ async function loadReleases() {
             versionSelect.value = latestStable.tag_name;
             selectedVersion = latestStable;
             updateVersionInfo();
-            updateSetupSection();
+            updateDownloadLink();
         }
         
     } catch (error) {
@@ -88,21 +79,30 @@ async function loadReleases() {
 // Setup event listeners
 function setupEventListeners() {
     const versionSelect = document.getElementById('version-select');
-    const clearToggle = document.getElementById('clear-existing-toggle');
+    const selectZipButton = document.getElementById('select-zip-button');
+    const zipFileInput = document.getElementById('zip-file-input');
     const selectFolderButton = document.getElementById('select-folder-button');
     
     versionSelect.addEventListener('change', (e) => {
         const version = e.target.value;
         selectedVersion = releases.find(r => r.tag_name === version);
         updateVersionInfo();
-        updateSetupSection();
+        updateDownloadLink();
     });
     
-    if (clearToggle) {
-        clearToggle.addEventListener('change', (e) => {
-            setupOptions.clearExisting = e.target.checked;
-        });
-    }
+    selectZipButton.addEventListener('click', () => {
+        zipFileInput.click();
+    });
+    
+    zipFileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            uploadedZipFile = file;
+            document.getElementById('zip-file-name').textContent = file.name;
+            document.getElementById('zip-file-name').style.color = 'var(--success-color)';
+            selectFolderButton.disabled = false;
+        }
+    });
     
     selectFolderButton.addEventListener('click', startSetup);
 }
@@ -113,28 +113,33 @@ function updateVersionInfo() {
     
     if (selectedVersion) {
         const date = new Date(selectedVersion.published_at).toLocaleDateString();
-        const sdCardAsset = selectedVersion.assets.find(a => 
-            a.name === 'SD_Card.zip' || a.name.toLowerCase().includes('sd_card')
-        );
-        const sizeInfo = sdCardAsset ? ` | Size: ${formatBytes(sdCardAsset.size)}` : '';
-        versionInfo.textContent = `Released: ${date}${selectedVersion.prerelease ? ' (Pre-release)' : ''}${sizeInfo}`;
+        versionInfo.textContent = `Released: ${date}${selectedVersion.prerelease ? ' (Pre-release)' : ''}`;
     } else {
         versionInfo.textContent = '';
     }
 }
 
-// Update setup section visibility
-function updateSetupSection() {
-    const setupSection = document.getElementById('setup-section');
-    const errorSection = document.getElementById('error-section');
-    
-    errorSection.style.display = 'none';
+// Update download link for selected version
+function updateDownloadLink() {
+    const downloadLink = document.getElementById('download-link');
+    const downloadInfo = document.getElementById('download-info');
     
     if (selectedVersion) {
-        setupSection.style.display = 'block';
-        document.getElementById('selected-version').textContent = selectedVersion.tag_name;
+        const sdCardAsset = selectedVersion.assets.find(a => 
+            a.name === 'SD_Card.zip' || a.name.toLowerCase().includes('sd_card')
+        );
+        
+        if (sdCardAsset) {
+            downloadLink.href = sdCardAsset.browser_download_url;
+            downloadLink.style.display = 'inline-block';
+            downloadInfo.textContent = `Version ${selectedVersion.tag_name} | Size: ${formatBytes(sdCardAsset.size)}`;
+        } else {
+            downloadLink.style.display = 'none';
+            downloadInfo.textContent = 'No SD_Card.zip found for this version';
+        }
     } else {
-        setupSection.style.display = 'none';
+        downloadLink.style.display = 'none';
+        downloadInfo.textContent = '';
     }
 }
 
@@ -144,14 +149,17 @@ async function startSetup() {
     const setupProgress = document.getElementById('setup-progress');
     const progressTitle = document.getElementById('progress-title');
     const progressBar = document.getElementById('progress-bar');
-    const progressStatus = document.getElementById('progress-status');
     const progressLog = document.getElementById('progress-log');
     const postSetupActions = document.getElementById('post-setup-actions');
     const errorSection = document.getElementById('error-section');
     
+    if (!uploadedZipFile) {
+        showError('Please select a ZIP file first');
+        return;
+    }
+    
     try {
         // Request folder access
-        log(progressLog, 'Requesting folder access...');
         const dirHandle = await window.showDirectoryPicker({
             mode: 'readwrite',
             startIn: 'desktop'
@@ -169,55 +177,23 @@ async function startSetup() {
         progressLog.innerHTML = '';
         
         log(progressLog, `Selected folder: ${dirHandle.name}`);
+        log(progressLog, `Processing: ${uploadedZipFile.name}`);
         
-        // Find SD_Card.zip asset
-        progressTitle.textContent = 'Finding SD Card Files...';
-        const sdCardAsset = selectedVersion.assets.find(a => 
-            a.name === 'SD_Card.zip' || a.name.toLowerCase().includes('sd_card')
-        );
-        
-        if (!sdCardAsset) {
-            throw new Error('SD_Card.zip not found in this release. Please try a different version or download manually from GitHub.');
-        }
-        
-        // Download the ZIP file using GitHub API (avoids CORS issues)
-        progressTitle.textContent = 'Downloading SD Card Files...';
-        log(progressLog, `Downloading ${sdCardAsset.name} (${formatBytes(sdCardAsset.size)})...`);
+        // Read the ZIP file
+        progressTitle.textContent = 'Reading ZIP File...';
         updateProgress(progressBar, 10);
         
-        // Use the GitHub API endpoint with Accept header for binary download
-        // This endpoint supports CORS unlike the direct browser_download_url
-        const apiDownloadUrl = `https://api.github.com/repos/LouisHitchcock/FPVGate/releases/assets/${sdCardAsset.id}`;
-        
-        const zipResponse = await fetch(apiDownloadUrl, {
-            headers: {
-                'Accept': 'application/octet-stream'
-            }
-        });
-        
-        if (!zipResponse.ok) {
-            throw new Error(`Failed to download SD card files (HTTP ${zipResponse.status})`);
-        }
-        
-        const zipBlob = await zipResponse.blob();
-        updateProgress(progressBar, 30);
-        log(progressLog, 'Download complete');
+        const zipData = await uploadedZipFile.arrayBuffer();
+        updateProgress(progressBar, 20);
         
         // Extract ZIP file
         progressTitle.textContent = 'Extracting Files...';
         log(progressLog, 'Extracting ZIP archive...');
         
-        const zip = await JSZip.loadAsync(zipBlob);
+        const zip = await JSZip.loadAsync(zipData);
         const files = Object.keys(zip.files);
         log(progressLog, `Found ${files.length} items in archive`);
-        updateProgress(progressBar, 40);
-        
-        // Clear existing files if option is enabled
-        if (setupOptions.clearExisting) {
-            progressTitle.textContent = 'Preparing SD Card...';
-            log(progressLog, 'Clearing existing FPVGate files...');
-            await clearExistingFiles(dirHandle, progressLog);
-        }
+        updateProgress(progressBar, 30);
         
         // Write files to SD card
         progressTitle.textContent = 'Writing Files...';
@@ -239,7 +215,7 @@ async function startSetup() {
             await writeFile(dirHandle, filePath, content, progressLog);
             
             processedFiles++;
-            const progress = 40 + Math.round((processedFiles / totalFiles) * 55);
+            const progress = 30 + Math.round((processedFiles / totalFiles) * 65);
             updateProgress(progressBar, progress);
         }
         
@@ -255,7 +231,6 @@ async function startSetup() {
         
         // Handle user cancellation gracefully
         if (error.name === 'AbortError') {
-            log(progressLog, 'Setup cancelled by user');
             selectFolderButton.style.display = 'block';
             setupProgress.style.display = 'none';
             return;
@@ -297,21 +272,6 @@ async function writeFile(dirHandle, filePath, content, progressLog) {
     } catch (e) {
         console.error(`Failed to write file ${fileName}:`, e);
         throw new Error(`Failed to write file: ${fileName}`);
-    }
-}
-
-// Clear existing FPVGate-related files
-async function clearExistingFiles(dirHandle, progressLog) {
-    // Common FPVGate directories to clear
-    const dirsToCheck = ['audio', 'voices', 'sounds', 'config'];
-    
-    for (const dirName of dirsToCheck) {
-        try {
-            await dirHandle.removeEntry(dirName, { recursive: true });
-            log(progressLog, `Removed existing ${dirName} folder`);
-        } catch (e) {
-            // Directory doesn't exist, that's fine
-        }
     }
 }
 
