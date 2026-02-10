@@ -172,6 +172,12 @@ async function startSetup() {
         log(progressLog, `Found ${files.length} items in archive`);
         updateProgress(progressBar, 30);
         
+        // Detect if ZIP has a root folder (e.g., "SD_Card/") that should be stripped
+        const rootFolder = detectRootFolder(files);
+        if (rootFolder) {
+            log(progressLog, `Stripping root folder: ${rootFolder}`);
+        }
+        
         // Write files to SD card
         progressTitle.textContent = 'Writing Files...';
         const totalFiles = files.filter(f => !zip.files[f].dir).length;
@@ -185,11 +191,22 @@ async function startSetup() {
                 continue;
             }
             
+            // Strip root folder if present
+            let targetPath = filePath;
+            if (rootFolder && filePath.startsWith(rootFolder)) {
+                targetPath = filePath.substring(rootFolder.length);
+            }
+            
+            // Skip if path is empty after stripping
+            if (!targetPath || targetPath === '') {
+                continue;
+            }
+            
             // Get the file content
             const content = await zipEntry.async('arraybuffer');
             
             // Write the file
-            await writeFile(dirHandle, filePath, content, progressLog);
+            await writeFile(dirHandle, targetPath, content, progressLog);
             
             processedFiles++;
             const progress = 30 + Math.round((processedFiles / totalFiles) * 65);
@@ -250,6 +267,32 @@ async function writeFile(dirHandle, filePath, content, progressLog) {
         console.error(`Failed to write file ${fileName}:`, e);
         throw new Error(`Failed to write file: ${fileName}`);
     }
+}
+
+// Detect if all files in ZIP share a common root folder
+function detectRootFolder(files) {
+    // Filter out empty entries
+    const nonEmptyFiles = files.filter(f => f && f.length > 0);
+    if (nonEmptyFiles.length === 0) return null;
+    
+    // Get the first path component of each file
+    const firstComponents = nonEmptyFiles.map(f => {
+        const normalized = f.replace(/\\/g, '/');
+        const parts = normalized.split('/').filter(p => p.length > 0);
+        return parts[0] || null;
+    }).filter(c => c !== null);
+    
+    if (firstComponents.length === 0) return null;
+    
+    // Check if all files start with the same folder
+    const firstFolder = firstComponents[0];
+    const allSameRoot = firstComponents.every(c => c === firstFolder);
+    
+    if (allSameRoot) {
+        return firstFolder + '/';
+    }
+    
+    return null;
 }
 
 // Utility functions
