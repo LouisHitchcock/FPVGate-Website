@@ -125,9 +125,9 @@ async function loadBoardConfigurations() {
 // Fallback board configurations if GitHub fetch fails
 function useFallbackBoards() {
     ALL_BOARDS = [
-        { value: 'esp32s3', label: 'ESP32-S3 DevKitC-1 (8MB Flash) - Recommended', expert_mode: 0 },
-        { value: 'esp32s3supermini', label: 'ESP32-S3 Super Mini (4MB Flash)', expert_mode: 0 },
-        { value: 'seeedxiaos3', label: 'Seeed Studio XIAO ESP32S3 (8MB)', expert_mode: 0 },
+        { value: 'seeedxiaos3', label: 'Seeed Studio XIAO ESP32S3 (8MB) - Recommended', expert_mode: 0 },
+        { value: 'esp32s3', label: 'ESP32-S3 DevKitC-1 (8MB Flash)', expert_mode: 0 },
+        { value: 'esp32s3supermini', label: 'ESP32-S3 Super Mini (4MB Flash)', expert_mode: 1 },
         { value: 'esp32c3', label: 'ESP32-C3', expert_mode: 1 },
         { value: 'lilygo', label: 'LilyGO T-Energy S3', expert_mode: 1 }
     ];
