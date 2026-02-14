@@ -124,6 +124,7 @@
                         <a href="#configuration">Configuration</a>
                         <a href="#calibration">Calibration</a>
                         <a href="#racing">Using the Timer</a>
+                        <a href="#multipilot">Multi-Pilot Setup</a>
                         <a href="#screenshots">Screenshots</a>
                         <a href="#troubleshooting">Troubleshooting</a>
                     </nav>
@@ -235,15 +236,16 @@
                         <div class="config-steps">
                             <h3>First-Time Setup</h3>
                             <ol>
-                                <li>Connect to WiFi network: <code>FPVGate_XXXX</code></li>
+                                <li>Connect to WiFi network: <code>FPVGate</code> (v1.6.1+) or <code>FPVGate_XXXX</code></li>
                                 <li>Password: <code>fpvgate1</code></li>
-                                <li>Open browser to: <code>http://fpvgate.local</code> or <code>http://192.168.4.1</code></li>
+                                <li>Open browser to: <code>http://fpvgate.local</code> (all devices now use this simplified hostname)</li>
                             <li>Go to Configuration → Set your VTx frequency</li>
                                 <li>Configure LED settings (if using RGB LEDs)</li>
                                 <li>Set up voice announcements (optional)</li>
                                 <li>Choose a theme in Settings (v1.5.7+)</li>
                                 <li>Configure battery monitoring if using a voltage divider (v1.5.6+)</li>
                                 <li>Adjust audio volume controls for beeps and announcements (v1.6.0+)</li>
+                                <li>iOS Safari is fully supported with improved hostname handling (v1.6.1+)</li>
                             </ol>
                         </div>
                     </section>
@@ -299,13 +301,7 @@
                         </ul>
 
                         <h3>Multi-Timer Race Sync</h3>
-                        <p>FPVGate v1.6.0 introduces race synchronization for multi-timer setups:</p>
-                        <ul>
-                            <li>Connect multiple FPVGate timers via WiFi</li>
-                            <li>Configure one as Master and others as Slaves</li>
-                            <li>Synchronized race start, stop, and lap events across all timers</li>
-                            <li>Automatic discovery and connection management</li>
-                        </ul>
+                        <p>FPVGate v1.6.1 brings powerful multi-pilot racing capabilities. See the <a href="#multipilot">Multi-Pilot Setup</a> section for detailed instructions.</p>
 
                         <h3>After Race</h3>
                         <ul>
@@ -314,6 +310,69 @@
                             <li>Compare with previous sessions</li>
                             <li>Edit laps if needed (Marshalling Mode)</li>
                         </ul>
+                    </section>
+
+                    <section id="multipilot" class="doc-section">
+                        <h2>Multi-Pilot Setup</h2>
+                        <p>FPVGate supports synchronizing multiple timers for multi-pilot racing. Each pilot has their own FPVGate device, and one device acts as the Master to control the race.</p>
+                        
+                        <div class="info-box">
+                            <h4>Sync Modes</h4>
+                            <ul>
+                                <li><strong>Personal Mode</strong> (default) - Single pilot timing, no sync required</li>
+                                <li><strong>Master Mode</strong> - Controls race start/stop, receives all pilots' lap data, shows multi-pilot comparison view</li>
+                                <li><strong>Slave Mode</strong> - Follows Master's commands, sends lap times to Master automatically</li>
+                            </ul>
+                        </div>
+
+                        <h3>Step 1: Connect All Devices to Same Network</h3>
+                        <p>All FPVGate devices must be on the same WiFi network:</p>
+                        <ul>
+                            <li><strong>Option A:</strong> Connect all devices to your home/external WiFi network via Configuration → WiFi & Connection</li>
+                            <li><strong>Option B:</strong> Keep one device in AP mode (FPVGate network), connect all other devices and your phone to that network</li>
+                        </ul>
+
+                        <h3>Step 2: Add Sync Devices (on Master)</h3>
+                        <ol>
+                            <li>Go to Configuration → WiFi & Connection → Race Synchronization</li>
+                            <li>Find the "Add Device" input field</li>
+                            <li>Enter each slave device's IP address (e.g., <code>192.168.4.100</code>)</li>
+                            <li>Click "Add Device" - it will appear in the sync devices list</li>
+                        </ol>
+
+                        <h3>Step 3: Set Device Roles</h3>
+                        <p>For each device in the list:</p>
+                        <ul>
+                            <li><strong>This Device:</strong> Set to "Master" on the controlling timer</li>
+                            <li><strong>Other Devices:</strong> Set to "Slave"</li>
+                        </ul>
+                        <p>Role options: <strong>Disabled</strong> (not syncing), <strong>Master</strong> (controls race), <strong>Slave</strong> (follows master)</p>
+
+                        <h3>Step 4: Test Connections</h3>
+                        <p>Click "Test All Connections" to verify all devices can communicate:</p>
+                        <ul>
+                            <li><strong>Green checkmark</strong> = Ready to race</li>
+                            <li><strong>Red X</strong> = Check network connectivity</li>
+                        </ul>
+
+                        <h3>Racing in Multi-Pilot Mode</h3>
+                        <p>Once configured:</p>
+                        <ul>
+                            <li>Start/Stop race from the <strong>Master device only</strong> - all slaves sync automatically</li>
+                            <li>Each pilot's laps appear side-by-side in the Master's race view</li>
+                            <li>Lap Times Chart and Consistency Chart compare all pilots</li>
+                            <li>Voice announcements include all pilots' lap times</li>
+                            <li>Race history saves complete multi-pilot data</li>
+                        </ul>
+
+                        <div class="warning-box">
+                            <h4>Troubleshooting Multi-Pilot</h4>
+                            <ul>
+                                <li><strong>Devices not connecting:</strong> Ensure all on same network subnet, check firewall allows port 80</li>
+                                <li><strong>Lap times not showing:</strong> Confirm slave is set to "Slave" role and master's IP is correct</li>
+                                <li><strong>Race not syncing:</strong> Master must be set to "Master" role, test connections first</li>
+                            </ul>
+                        </div>
                     </section>
 
                     <section id="screenshots" class="doc-section">
@@ -400,6 +459,17 @@
                                 <li>Check SD card contents match required structure</li>
                                 <li>Try different SD card</li>
                                 <li>Check audio files in Configuration menu</li>
+                            </ul>
+                        </div>
+
+                        <div class="trouble-item">
+                            <h4>Voice announcements not working on iOS Safari</h4>
+                            <ul>
+                                <li><strong>Enable audio first:</strong> Go to Configuration → TTS Settings and click "Enable Voice"</li>
+                                <li><strong>Test the voice:</strong> Click "Test Voice" to trigger audio permission - this is required on iOS Safari</li>
+                                <li>iOS Safari requires user interaction before audio can play - the Enable/Test buttons provide this</li>
+                                <li>Make sure your device is not on silent mode (check the physical mute switch)</li>
+                                <li>If still not working, try refreshing the page and repeating the Enable → Test sequence</li>
                             </ul>
                         </div>
                     </section>

@@ -15,8 +15,8 @@ GPIO36   ────────────────────── SCK
 GPIO35   ────────────────────── MOSI
 GPIO37   ────────────────────── MISO
 GPIO2    ─────────────────────────────────── LED (External)
-GPIO48   ─────────────────────────────────── WS2812 RGB LED
-GPIO5    ─────────────────────────────────── Buzzer (3.3V-5V)
+GPIO5    ─────────────────────────────────── WS2812 RGB LED
+GPIO6    ─────────────────────────────────── Buzzer (3.3V-5V)
 GPIO1    ─────────────────────────────────── Battery Voltage (via divider)
 GPIO9    ─────────────────────────────────── Mode Switch
 GND      ────── GND           ─── GND      ─── GND
@@ -31,9 +31,9 @@ GND      ────── GND           ─── GND      ─── GND
 | **RX5808 Module** | Yes | 5.8GHz receiver ([SPI mod required](https://sheaivey.github.io/rx5808-pro-diversity/docs/rx5808-spi-mod.html)) |
 | **MicroSD Card** | Yes | FAT32, 1GB+ for audio storage |
 | **5V Power Supply** | Yes | USB power or any 5V power source |
-| **WS2812 RGB LEDs** | Optional | 1-2 LEDs for visual feedback (GPIO48) |
+| **WS2812 RGB LEDs** | Optional | 1-2 LEDs for visual feedback (GPIO5) |
 | **External LED** | Optional | Single LED for basic status (GPIO2) |
-| **Active Buzzer** | Optional | 3.3V-5V for audio beeps (GPIO5) |
+| **Active Buzzer** | Optional | 3.3V-5V for audio beeps (GPIO6) |
 | **Mode Switch** | Optional | LOW=WiFi, HIGH=RotorHazard mode (GPIO9) |
 
 ## Pin Details
@@ -51,11 +51,11 @@ GND      ────── GND           ─── GND      ─── GND
 - **MISO (GPIO37)**: Master in, slave out
 
 ### Visual Feedback
-- **GPIO48**: WS2812/NeoPixel RGB LED (addressable)
+- **GPIO5**: WS2812/NeoPixel RGB LED (addressable)
 - **GPIO2**: External single LED (basic status)
 
 ### Audio & Control
-- **GPIO5**: Active buzzer output
+- **GPIO6**: Active buzzer output
 - **GPIO9**: Mode selection switch (LOW=WiFi, HIGH=RotorHazard)
 - **GPIO1**: Battery voltage input (requires 2:1 voltage divider for LiPo monitoring)
 
