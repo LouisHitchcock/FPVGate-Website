@@ -1,0 +1,6 @@
+Supported Boards for FPVGate v1.6.1:
+
+- ESP32-S3 DevKitC-1 (8MB Flash) - Recommended
+- ESP32-S3 SuperMini (4MB Flash) - Compact
+- LilyGo T-Energy S3 - Integrated battery management
+- Seeed XIAO ESP32S3 - Ultra-compact
