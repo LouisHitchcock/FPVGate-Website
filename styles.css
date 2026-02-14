@@ -1080,7 +1080,6 @@ footer p {
     width: 100%;
     max-width: 400px;
     height: auto;
-    filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.3));
 }
 
 /* Feature Icons */
