@@ -1,0 +1,10 @@
+FPVGate v1.6.2 - Supported Boards
+
+Recommended:
+  - ESP32-S3 DevKitC-1 (8MB Flash)
+  - Seeed Studio XIAO ESP32S3 (8MB)
+
+Expert Mode:
+  - ESP32-S3 Super Mini (4MB Flash)
+  - LilyGO T-Energy S3
+  - Waveshare ESP32-S3-LCD-2 (16MB Flash)

@@ -152,6 +152,11 @@
                         <h2>Hardware Setup</h2>
                         <p>FPVGate supports multiple ESP32 boards. Select your board below to see the wiring diagram:</p>
                         
+                        <div class="warning-box ESP32S3SuperminiWarn" style="margin-top: 1rem;">
+                            <h4>Note on ESP32-S3 Super Mini</h4>
+                            <p>Through testing, the ESP32-S3 Super Mini has proven unreliable due to inconsistent board quality from various suppliers. Some revisions experience frequent brownouts under load. This board is still available under Expert Mode in the flasher, but is not recommended for new builds.</p>
+                        </div>
+
                         <div id="wiring-diagram-container"></div>
                         
                         <div class="warning-box" style="margin-top: 2rem;">
@@ -159,10 +164,6 @@
                             <p>The RX5808 module must be SPI modded to work with FPVGate. See the <a href="https://sheaivey.github.io/rx5808-pro-diversity/docs/rx5808-spi-mod.html" target="_blank">SPI mod guide</a>.</p>
                         </div>
 
-                        <div class="warning-box" style="margin-top: 1rem;">
-                            <h4>Note on ESP32-S3 Super Mini</h4>
-                            <p>Through testing, the ESP32-S3 Super Mini has proven unreliable due to inconsistent board quality from various suppliers. Some revisions experience frequent brownouts under load. This board is still available under Expert Mode in the flasher, but is not recommended for new builds.</p>
-                        </div>
                     </section>
 
                     <section id="flashing" class="doc-section">

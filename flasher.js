@@ -21,8 +21,8 @@ const BOARD_CONFIGS = {
     esp32s3supermini: {
         name: 'ESP32-S3 Super Mini (4MB)',
         chipFamily: 'ESP32-S3',
-        firmwareDir: 'ESP32S3-Supermini',
-        filePrefix: 'S3_Supermini',
+        firmwareDir: 'ESP32S3-SuperMini',
+        filePrefix: 'S3_SuperMini',
         parts: [
             { path: 'bootloader.bin', offset: 0x0 },
             { path: 'partitions.bin', offset: 0x8000 },
@@ -56,8 +56,8 @@ const BOARD_CONFIGS = {
     lilygo: {
         name: 'LilyGO T-Energy S3',
         chipFamily: 'ESP32-S3',
-        firmwareDir: 'LilyGO-T-Energy-S3',
-        filePrefix: 'LilyGO',
+        firmwareDir: 'LilyGo-T-Energy-S3',
+        filePrefix: 'LilyGo_T_Energy_S3',
         parts: [
             { path: 'bootloader.bin', offset: 0x0 },
             { path: 'partitions.bin', offset: 0x8000 },
