@@ -71,6 +71,8 @@ let releases = [];
 let selectedBoard = null;
 let selectedVersion = null;
 let betaMode = false;
+let preReleaseMode = false;
+let preReleaseVersions = [];
 let flashOptions = {
     eraseFlash: false,
     verifyFlash: true
@@ -91,6 +93,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadReleases();
     setupEventListeners();
     setupBetaMode();
+    setupPreReleaseMode();
     setupCustomFirmwareUpload();
     setupEraseFlashButton();
     setupPostFlashActions();
@@ -207,7 +210,18 @@ function setupEventListeners() {
     
     versionSelect.addEventListener('change', (e) => {
         const version = e.target.value;
-        selectedVersion = releases.find(r => r.tag_name === version);
+        // Check if this is a pre-release version
+        const preRelease = preReleaseVersions.find(v => v.tag === version);
+        if (preRelease) {
+            selectedVersion = {
+                tag_name: preRelease.tag,
+                published_at: preRelease.date,
+                prerelease: true,
+                isLocalPreRelease: true
+            };
+        } else {
+            selectedVersion = releases.find(r => r.tag_name === version);
+        }
         updateVersionInfo();
         updateFlashSection();
         
@@ -283,8 +297,10 @@ function generateManifest() {
     
     // Use new standardized firmware structure
     // firmware/v1.5.7/ESP32S3-Devkit-C1/S3_Devkit_bootloader.bin
+    // Pre-release firmware uses preRelease/ folder instead of firmware/
     const baseUrl = new URL(window.location.href);
-    const firmwareBaseUrl = new URL(`firmware/${version}/${boardConfig.firmwareDir}/`, baseUrl).href;
+    const firmwareFolder = selectedVersion.isLocalPreRelease ? 'preRelease' : 'firmware';
+    const firmwareBaseUrl = new URL(`${firmwareFolder}/${version}/${boardConfig.firmwareDir}/`, baseUrl).href;
     
     // Map parts to local firmware URLs with standardized naming
     const parts = boardConfig.parts.map(part => {
@@ -366,6 +382,100 @@ function setupBetaMode() {
             }
         }
     });
+}
+
+// Pre-Release Mode Setup
+function setupPreReleaseMode() {
+    const preReleaseModeToggle = document.getElementById('prerelease-mode');
+    const versionSelect = document.getElementById('version-select');
+
+    preReleaseModeToggle.addEventListener('change', async (e) => {
+        preReleaseMode = e.target.checked;
+
+        // Track pre-release mode toggle
+        if (window.fpvgateAnalytics) {
+            window.fpvgateAnalytics.track('prerelease_mode_toggled', {
+                enabled: preReleaseMode
+            });
+        }
+
+        if (preReleaseMode) {
+            await loadPreReleaseVersions();
+        } else {
+            removePreReleaseVersions();
+        }
+    });
+}
+
+// Store original release options so we can restore them
+let savedReleaseOptions = null;
+
+// Load pre-release versions from local index.json
+async function loadPreReleaseVersions() {
+    const versionSelect = document.getElementById('version-select');
+
+    try {
+        const response = await fetch('preRelease/index.json');
+        if (!response.ok) throw new Error('Failed to fetch pre-release index');
+
+        const data = await response.json();
+        preReleaseVersions = data.versions || [];
+
+        // Save the current release options before replacing
+        savedReleaseOptions = versionSelect.innerHTML;
+
+        // Clear dropdown and populate with pre-release versions only
+        versionSelect.innerHTML = '<option value="">Choose pre-release version...</option>';
+
+        if (preReleaseVersions.length === 0) {
+            versionSelect.innerHTML = '<option value="">No pre-release versions available</option>';
+            selectedVersion = null;
+            updateVersionInfo();
+            updateFlashSection();
+            return;
+        }
+
+        preReleaseVersions.forEach(version => {
+            const option = document.createElement('option');
+            option.value = version.tag;
+            option.textContent = `${version.tag} (Pre-Release)`;
+            option.dataset.date = version.date || '';
+            option.dataset.notes = version.notes || '';
+            versionSelect.appendChild(option);
+        });
+
+        // Reset current selection
+        selectedVersion = null;
+        updateVersionInfo();
+        updateFlashSection();
+
+    } catch (error) {
+        console.error('Error loading pre-release versions:', error);
+    }
+}
+
+// Restore original release versions in dropdown
+function removePreReleaseVersions() {
+    const versionSelect = document.getElementById('version-select');
+
+    // Restore the saved release options
+    if (savedReleaseOptions) {
+        versionSelect.innerHTML = savedReleaseOptions;
+        savedReleaseOptions = null;
+    }
+
+    // Re-select latest stable
+    if (releases.length > 0) {
+        const latestStable = releases.find(r => !r.prerelease) || releases[0];
+        versionSelect.value = latestStable.tag_name;
+        selectedVersion = latestStable;
+    } else {
+        selectedVersion = null;
+    }
+
+    preReleaseVersions = [];
+    updateVersionInfo();
+    updateFlashSection();
 }
 
 // Setup flash option toggles
