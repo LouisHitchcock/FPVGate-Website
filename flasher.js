@@ -65,8 +65,8 @@ const BOARD_CONFIGS = {
             { path: 'filesystem.bin', offset: 0x410000 }
         ]
     },
-    seeedxiaos3plus: {
-        name: 'Seeed Studio XIAO ESP32S3 Plus (8MB)',
+    xiaos3plus: {
+        name: 'XIAO ESP32S3 Plus (16MB Flash)',
         chipFamily: 'ESP32-S3',
         firmwareDir: 'XIAO-S3-Plus',
         filePrefix: 'XIAO_S3_Plus',
@@ -145,7 +145,7 @@ function useFallbackBoards() {
         { value: 'esp32s3supermini', label: 'ESP32-S3 Super Mini (4MB Flash)', expert_mode: 1 },
         { value: 'esp32c3', label: 'ESP32-C3', expert_mode: 1 },
         { value: 'lilygo', label: 'LilyGO T-Energy S3', expert_mode: 1 },
-        { value: 'seeedxiaos3plus', label: 'Seeed Studio XIAO ESP32S3 Plus (8MB)', expert_mode: 1 }
+        { value: 'xiaos3plus', label: 'XIAO ESP32S3 Plus (16MB Flash)', expert_mode: 0 }
     ];
     
     populateBoards();
