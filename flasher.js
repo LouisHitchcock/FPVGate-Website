@@ -65,18 +65,6 @@ const BOARD_CONFIGS = {
             { path: 'filesystem.bin', offset: 0x410000 }
         ]
     },
-    fpvgateaio: {
-        name: 'FPVGate AIO (XIAO ESP32S3, 8MB)',
-        chipFamily: 'ESP32-S3',
-        firmwareDir: 'FPVGateAIO',
-        filePrefix: 'FPVGateAIO',
-        parts: [
-            { path: 'bootloader.bin', offset: 0x0 },
-            { path: 'partitions.bin', offset: 0x8000 },
-            { path: 'firmware.bin', offset: 0x10000 },
-            { path: 'filesystem.bin', offset: 0x410000 }
-        ]
-    },
     xiaos3plus: {
         name: 'XIAO ESP32S3 Plus (16MB Flash)',
         chipFamily: 'ESP32-S3',
@@ -90,7 +78,7 @@ const BOARD_CONFIGS = {
         ]
     },
     fpvgateaiov3: {
-        name: 'FPVGate AIO V3 (XIAO ESP32S3, 8MB)',
+        name: 'FPVGate AIO V3 (8MB)',
         chipFamily: 'ESP32-S3',
         firmwareDir: 'FPVGate-AIO-V3',
         filePrefix: 'FPVGate_AIO_V3',
@@ -170,7 +158,7 @@ function useFallbackBoards() {
         { value: 'esp32c3', label: 'ESP32-C3', expert_mode: 1 },
         { value: 'lilygo', label: 'LilyGO T-Energy S3', expert_mode: 1 },
         { value: 'xiaos3plus', label: 'XIAO ESP32S3 Plus (16MB Flash)', expert_mode: 1 },
-        { value: 'fpvgateaiov3', label: 'FPVGate AIO V3 (XIAO ESP32S3, 8MB) - Coming Soon', expert_mode: 0 }
+        { value: 'fpvgateaiov3', label: 'FPVGate AIO V3 (8MB) - Coming Soon', expert_mode: 0 }
     ];
     
     populateBoards();
