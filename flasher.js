@@ -217,7 +217,7 @@ async function loadReleases() {
         if (!response.ok) throw new Error('Failed to fetch releases');
         
         const data = await response.json();
-        releases = data.filter(release => !release.draft && release.assets.length > 0);
+        releases = data.filter(release => !release.draft && !release.prerelease && release.assets.length > 0);
         
         // Populate version dropdown
         versionSelect.innerHTML = '<option value="">Choose firmware version...</option>';
