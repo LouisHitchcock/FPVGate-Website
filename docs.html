@@ -125,6 +125,7 @@
                         <a href="#calibration">Calibration</a>
                         <a href="#racing">Using the Timer</a>
                         <a href="#multipilot">Multi-Pilot Setup</a>
+                        <a href="#rotorhazard">RotorHazard Integration</a>
                         <a href="#screenshots">Screenshots</a>
                         <a href="#troubleshooting">Troubleshooting</a>
                     </nav>
@@ -352,7 +353,7 @@
                             <li><strong>This Device:</strong> Set to "Master" on the controlling timer</li>
                             <li><strong>Other Devices:</strong> Set to "Slave"</li>
                         </ul>
-                        <p>Role options: <strong>Disabled</strong> (not syncing), <strong>Master</strong> (controls race), <strong>Slave</strong> (follows master)</p>
+                        <p>Role options: <strong>Personal</strong> (solo timing), <strong>Master</strong> (controls race), <strong>Slave</strong> (follows master), <strong>RotorHazard</strong> (syncs with RH server - see <a href="#rotorhazard">RotorHazard Integration</a>)</p>
 
                         <h3>Step 4: Test Connections</h3>
                         <p>Click "Test All Connections" to verify all devices can communicate:</p>
@@ -379,6 +380,62 @@
                                 <li><strong>Race not syncing:</strong> Master must be set to "Master" role, test connections first</li>
                             </ul>
                         </div>
+                    </section>
+
+                    <section id="rotorhazard" class="doc-section">
+                        <h2>RotorHazard Integration</h2>
+                        <p>FPVGate v1.7.0+ can operate as an external RSSI node for <a href="https://github.com/RotorHazard/RotorHazard" target="_blank">RotorHazard</a>, enabling bidirectional race control and lap submission.</p>
+
+                        <div class="info-box">
+                            <h4>Requirements</h4>
+                            <ul>
+                                <li>FPVGate firmware <strong>v1.7.0</strong> or later</li>
+                                <li>RotorHazard <strong>4.x</strong> (tested on 4.4.0+)</li>
+                                <li>FPVGate and RotorHazard on the <strong>same local network</strong></li>
+                                <li>The <a href="https://github.com/LouisHitchcock/fpvgate-rh-plugin" target="_blank">FPVGate RH Plugin</a> installed on the RH server</li>
+                            </ul>
+                        </div>
+
+                        <h3>How It Works</h3>
+                        <ul>
+                            <li><strong>FPVGate to RH:</strong> Gate crossings are submitted as laps; race start/stop commands are forwarded</li>
+                            <li><strong>RH to FPVGate:</strong> RotorHazard race events (stage, start, stop) are relayed back to control FPVGate</li>
+                            <li><strong>Clock Sync:</strong> NTP-style synchronization keeps timing aligned between both systems</li>
+                        </ul>
+
+                        <h3>Setup Steps</h3>
+                        <div class="steps-list">
+                            <div class="step-item">
+                                <div class="step-num">1</div>
+                                <div class="step-content">
+                                    <h4>Install the RH Plugin</h4>
+                                    <p>Clone the <a href="https://github.com/LouisHitchcock/fpvgate-rh-plugin" target="_blank">fpvgate-rh-plugin</a> into your RotorHazard <code>plugins/</code> directory and restart the server.</p>
+                                </div>
+                            </div>
+                            <div class="step-item">
+                                <div class="step-num">2</div>
+                                <div class="step-content">
+                                    <h4>Connect to Network</h4>
+                                    <p>Set FPVGate to Station mode (WiFi & Connection settings) so it joins the same network as the RH server.</p>
+                                </div>
+                            </div>
+                            <div class="step-item">
+                                <div class="step-num">3</div>
+                                <div class="step-content">
+                                    <h4>Enable RotorHazard Mode</h4>
+                                    <p>In Sync settings, set this device's role to <strong>RotorHazard</strong>. Enter the RH Host IP and select the node seat (0-7).</p>
+                                </div>
+                            </div>
+                            <div class="step-item">
+                                <div class="step-num">4</div>
+                                <div class="step-content">
+                                    <h4>Verify & Sync</h4>
+                                    <p>Click <strong>Refresh</strong> to check the connection status, then <strong>Sync Now</strong> to synchronize clocks. RTT under 10ms is ideal.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p style="margin-top: 1rem;">For full technical details, endpoint reference, and troubleshooting, see the <a href="https://github.com/LouisHitchcock/FPVGate/blob/main/docs/ROTORHAZARD_INTEGRATION.md" target="_blank">complete RotorHazard Integration guide</a>.</p>
                     </section>
 
                     <section id="screenshots" class="doc-section">
