@@ -74,7 +74,7 @@ const BOARD_CONFIGS = {
             { path: 'bootloader.bin', offset: 0x0 },
             { path: 'partitions.bin', offset: 0x8000 },
             { path: 'firmware.bin', offset: 0x10000 },
-            { path: 'filesystem.bin', offset: 0x610000 }
+            { path: 'filesystem.bin', offset: 0x410000 }
         ]
     },
     fpvgateaiov3: {
