@@ -1,6 +1,11 @@
 {
     "versions": [
         {
+            "tag": "v1.7.0-Touch",
+            "date": "2026-03-20",
+            "notes": "Touchscreen LCD pre-release (Waveshare LCD, NovaBlade)"
+        },
+        {
             "tag": "v1.7.0-alpha-1",
             "date": "2026-03-01",
             "notes": ""
