@@ -158,7 +158,7 @@ function useFallbackBoards() {
         { value: 'esp32c3', label: 'ESP32-C3', expert_mode: 1 },
         { value: 'lilygo', label: 'LilyGO T-Energy S3', expert_mode: 1 },
         { value: 'xiaos3plus', label: 'XIAO ESP32S3 Plus (16MB Flash)', expert_mode: 1 },
-        { value: 'fpvgateaiov3', label: 'FPVGate AIO V3 (8MB) - Coming Soon', expert_mode: 0 }
+        { value: 'fpvgateaiov3', label: 'FPVGate AIO V3 (8MB) - Coming Soon', expert_mode: 1 }
     ];
     
     populateBoards();
