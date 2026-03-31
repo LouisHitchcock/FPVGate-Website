@@ -149,6 +149,18 @@ export default {
                 if (inventoryLogMatch && request.method === 'GET') {
                     return await handleGetInventoryLog(inventoryLogMatch[1], env, corsHeaders);
                 }
+
+                // POST /api/inventory/:productId/archive - Toggle archive
+                const archiveMatch = url.pathname.match(/^\/api\/inventory\/([\w-]+)\/archive$/);
+                if (archiveMatch && request.method === 'POST') {
+                    return await handleArchiveProduct(archiveMatch[1], request, env, corsHeaders);
+                }
+
+                // DELETE /api/inventory/:productId - Delete product
+                const deleteMatch = url.pathname.match(/^\/api\/inventory\/([\w-]+)$/);
+                if (deleteMatch && request.method === 'DELETE') {
+                    return await handleDeleteProduct(deleteMatch[1], env, corsHeaders);
+                }
             }
 
             return new Response('Not Found', { status: 404, headers: corsHeaders });
@@ -681,7 +693,7 @@ async function handleCancelOrder(orderId, request, env, corsHeaders) {
 
 async function handleListInventory(env, corsHeaders) {
     const result = await env.DB.prepare(
-        'SELECT * FROM inventory ORDER BY product_name ASC'
+        'SELECT * FROM inventory ORDER BY active DESC, product_name ASC'
     ).all();
 
     return jsonResponse({ products: result.results }, corsHeaders);
@@ -767,6 +779,32 @@ async function handleGetInventoryLog(productId, env, corsHeaders) {
     ).bind(productId).all();
 
     return jsonResponse({ log: result.results }, corsHeaders);
+}
+
+async function handleArchiveProduct(productId, request, env, corsHeaders) {
+    const body = await request.json();
+    const active = body.active !== undefined ? (body.active ? 1 : 0) : 0;
+
+    const result = await env.DB.prepare(
+        'UPDATE inventory SET active = ?, updated_at = datetime(\'now\') WHERE product_id = ?'
+    ).bind(active, productId).run();
+
+    if (result.meta.changes === 0) {
+        return jsonResponse({ error: 'Product not found' }, corsHeaders, 404);
+    }
+
+    return jsonResponse({ success: true, active: !!active }, corsHeaders);
+}
+
+async function handleDeleteProduct(productId, env, corsHeaders) {
+    await env.DB.prepare('DELETE FROM inventory_log WHERE product_id = ?').bind(productId).run();
+    const result = await env.DB.prepare('DELETE FROM inventory WHERE product_id = ?').bind(productId).run();
+
+    if (result.meta.changes === 0) {
+        return jsonResponse({ error: 'Product not found' }, corsHeaders, 404);
+    }
+
+    return jsonResponse({ success: true }, corsHeaders);
 }
 
 // --- Helpers ---
