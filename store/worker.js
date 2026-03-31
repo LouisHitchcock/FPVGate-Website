@@ -50,7 +50,7 @@ export default {
 
             if (url.pathname === '/products' && request.method === 'GET') {
                 const result = await env.DB.prepare(
-                    'SELECT product_id, product_name, price, description, image_url, weight, max_quantity, stock_quantity, low_stock_threshold, active FROM inventory WHERE active = 1 ORDER BY product_name ASC'
+                    'SELECT product_id, product_name, price, description, image_url, images, weight, max_quantity, stock_quantity, low_stock_threshold, active FROM inventory WHERE active = 1 ORDER BY product_name ASC'
                 ).all();
 
                 const baseUrl = url.origin;

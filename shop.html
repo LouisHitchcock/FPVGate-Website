@@ -33,11 +33,6 @@
                 <a href="docs.html">Documentation</a>
                 <a href="flasher.html">Flash Firmware</a>
                 <a href="https://github.com/LouisHitchcock/FPVGate" target="_blank">GitHub</a>
-                <a href="https://ko-fi.com/louishitchcock" class="btn-kofi" target="_blank" title="Support on Ko-fi">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M23.881 8.948c-.773-4.085-4.859-4.593-4.859-4.593H.723c-.604 0-.679.798-.679.798s-.082 7.324-.022 11.822c.164 2.424 2.586 2.672 2.586 2.672s8.267-.023 11.966-.049c2.438-.426 2.683-2.566 2.658-3.734 4.352.24 7.422-2.831 6.649-6.916zm-11.062 3.511c-1.246 1.453-4.011 3.976-4.011 3.976s-.121.119-.31.023c-.076-.057-.108-.09-.108-.09-.443-.441-3.368-3.049-4.034-3.954-.709-.965-1.041-2.7-.091-3.71.951-1.01 3.005-1.086 4.363.407 0 0 1.565-1.782 3.468-.963 1.904.82 1.832 3.011.723 4.311zm6.173.478c-.928.116-1.682.028-1.682.028V7.284h1.77s1.971.551 1.971 2.638c0 1.913-.985 2.667-2.059 3.015z"/>
-                    </svg>
-                </a>
                 <button class="snipcart-checkout btn-cart" title="View Cart">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
                         <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
@@ -65,6 +60,21 @@
             </div>
         </div>
     </section>
+
+    <!-- Product Detail Modal -->
+    <div class="product-modal-overlay" id="product-modal" onclick="if(event.target===this)closeProductModal()">
+        <div class="product-modal">
+            <button class="product-modal-close" onclick="closeProductModal()">&times;</button>
+            <div class="product-modal-image" id="modal-image"></div>
+            <div class="product-modal-body">
+                <h2 id="modal-name"></h2>
+                <div class="modal-price" id="modal-price"></div>
+                <div class="modal-description" id="modal-description"></div>
+                <div class="modal-stock" id="modal-stock"></div>
+                <div class="modal-actions" id="modal-actions"></div>
+            </div>
+        </div>
+    </div>
 
     <section class="store-info">
         <div class="container">
@@ -124,15 +134,16 @@
                 grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-secondary);">No products available right now.</div>';
                 return;
             }
+            window._shopProducts = products;
             grid.innerHTML = products.map((p,pi) => `
-                <div class="product-card">
+                <div class="product-card" onclick="openProductModal(${pi})" style="cursor:pointer">
                     <div class="product-image">
                         ${p.images && p.images.length > 1
                             ? `<div class="carousel" id="carousel-${pi}">
                                 <div class="carousel-track" style="transform:translateX(0)">${p.images.map(img => `<div class="carousel-slide"><img src="${img}" alt="${p.name}"></div>`).join('')}</div>
-                                <button class="carousel-btn carousel-prev" onclick="moveCarousel(${pi},-1)">&#8249;</button>
-                                <button class="carousel-btn carousel-next" onclick="moveCarousel(${pi},1)">&#8250;</button>
-                                <div class="carousel-dots">${p.images.map((_,i) => `<button class="carousel-dot${i===0?' active':''}" onclick="goToSlide(${pi},${i})"></button>`).join('')}</div>
+                                <button class="carousel-btn carousel-prev" onclick="event.stopPropagation();moveCarousel(${pi},-1)">&#8249;</button>
+                                <button class="carousel-btn carousel-next" onclick="event.stopPropagation();moveCarousel(${pi},1)">&#8250;</button>
+                                <div class="carousel-dots">${p.images.map((_,i) => `<button class="carousel-dot${i===0?' active':''}" onclick="event.stopPropagation();goToSlide(${pi},${i})"></button>`).join('')}</div>
                             </div>`
                             : p.images && p.images.length === 1
                                 ? `<img src="${p.images[0]}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;">`
@@ -154,7 +165,7 @@
                         ${p.stock <= 0 ? '<p style="color:var(--error-color);font-weight:600;margin-top:8px;">Out of Stock</p>' : ''}
                         <div class="product-price-row">
                             <span class="product-price">&pound;${p.price.toFixed(2)}</span>
-                            <button class="btn btn-primary snipcart-add-item"
+                            <button class="btn btn-primary snipcart-add-item" onclick="event.stopPropagation()"
                                 data-item-id="${p.id}"
                                 data-item-name="${p.name}"
                                 data-item-price="${p.price}"
@@ -175,6 +186,81 @@
         }
     }
     loadProducts();
+    // --- Product Modal ---
+    let modalCarouselState = 0;
+    function openProductModal(pi) {
+        const p = window._shopProducts[pi];
+        if (!p) return;
+        const modal = document.getElementById('product-modal');
+        const imgEl = document.getElementById('modal-image');
+
+        if (p.images && p.images.length > 1) {
+            imgEl.innerHTML = `<div class="carousel" id="modal-carousel">
+                <div class="carousel-track" style="transform:translateX(0)">${p.images.map(img => `<div class="carousel-slide"><img src="${img}" alt="${p.name}"></div>`).join('')}</div>
+                <button class="carousel-btn carousel-prev" onclick="event.stopPropagation();moveModalCarousel(-1)">&#8249;</button>
+                <button class="carousel-btn carousel-next" onclick="event.stopPropagation();moveModalCarousel(1)">&#8250;</button>
+                <div class="carousel-dots">${p.images.map((_,i) => `<button class="carousel-dot${i===0?' active':''}" onclick="event.stopPropagation();goToModalSlide(${i})"></button>`).join('')}</div>
+            </div>`;
+            modalCarouselState = 0;
+        } else if ((p.images && p.images.length === 1) || p.image) {
+            const src = (p.images && p.images[0]) || p.image;
+            imgEl.innerHTML = `<img src="${src}" alt="${p.name}">`;
+        } else {
+            imgEl.innerHTML = `<div class="product-image-placeholder" style="height:100%"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg><span>No Image</span></div>`;
+        }
+
+        document.getElementById('modal-name').textContent = p.name;
+        document.getElementById('modal-price').innerHTML = '&pound;' + p.price.toFixed(2);
+        document.getElementById('modal-description').textContent = p.description;
+        document.getElementById('modal-stock').textContent = p.stock <= 0 ? 'Out of Stock' : '';
+        document.getElementById('modal-actions').innerHTML = `
+            <button class="btn btn-primary snipcart-add-item"
+                data-item-id="${p.id}"
+                data-item-name="${p.name}"
+                data-item-price="${p.price}"
+                data-item-url="/products"
+                data-item-description="${p.description}"
+                data-item-image="${p.image || ''}"
+                data-item-weight="${p.weight}"
+                data-item-max-quantity="${p.maxQuantity}"
+                ${p.stock <= 0 ? 'disabled' : ''}>
+                ${p.stock <= 0 ? 'Out of Stock' : 'Add to Cart'}
+            </button>`;
+
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeProductModal() {
+        document.getElementById('product-modal').classList.remove('active');
+        document.body.style.overflow = '';
+    }
+
+    function moveModalCarousel(dir) {
+        const c = document.getElementById('modal-carousel');
+        if (!c) return;
+        const total = c.querySelectorAll('.carousel-slide').length;
+        modalCarouselState += dir;
+        if (modalCarouselState < 0) modalCarouselState = total - 1;
+        if (modalCarouselState >= total) modalCarouselState = 0;
+        goToModalSlide(modalCarouselState);
+    }
+
+    function goToModalSlide(idx) {
+        const c = document.getElementById('modal-carousel');
+        if (!c) return;
+        modalCarouselState = idx;
+        c.querySelector('.carousel-track').style.transform = 'translateX(-' + idx * 100 + '%)';
+        c.querySelectorAll('.carousel-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (!document.getElementById('product-modal').classList.contains('active')) return;
+        if (e.key === 'Escape') closeProductModal();
+        if (e.key === 'ArrowLeft') moveModalCarousel(-1);
+        if (e.key === 'ArrowRight') moveModalCarousel(1);
+    });
+
     const carouselState={};
     function moveCarousel(pi,dir){const c=document.getElementById('carousel-'+pi);if(!c)return;const slides=c.querySelectorAll('.carousel-slide');const total=slides.length;carouselState[pi]=(carouselState[pi]||0)+dir;if(carouselState[pi]<0)carouselState[pi]=total-1;if(carouselState[pi]>=total)carouselState[pi]=0;goToSlide(pi,carouselState[pi])}
     function goToSlide(pi,idx){const c=document.getElementById('carousel-'+pi);if(!c)return;carouselState[pi]=idx;c.querySelector('.carousel-track').style.transform='translateX(-'+idx*100+'%)';c.querySelectorAll('.carousel-dot').forEach((d,i)=>d.classList.toggle('active',i===idx))}
