@@ -1,0 +1,14 @@
+name = "fpvgate-store"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+# D1 Database binding
+[[d1_databases]]
+binding = "DB"
+database_name = "fpvgate-store-db"
+database_id = "5e54869f-c57a-4bbc-a0be-e2e86853e801"
+
+# Secrets (set via `wrangler secret put`):
+# SHIPPO_API_TOKEN - Shippo API token
+# SNIPCART_SECRET_KEY - Snipcart secret API key
+# ADMIN_TOKEN - Token for admin portal authentication
