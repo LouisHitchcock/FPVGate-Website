@@ -179,3 +179,10 @@ tr.clickable { cursor: pointer; }
 .empty-state { text-align: center; padding: 60px 20px; color: #a0aec0; }
 .error-text { color: #e53e3e; }
 .success-text { color: #48bb78; }
+
+/* Image gallery in edit modal */
+.img-thumb { position: relative; width: 80px; height: 80px; border-radius: 6px; overflow: hidden; border: 1px solid #e2e8f0; }
+.img-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.img-thumb .img-delete { position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.6); color: #fff; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; }
+.img-thumb .img-delete:hover { background: #e53e3e; }
+.img-thumb .img-badge { position: absolute; bottom: 2px; left: 2px; background: rgba(0,0,0,0.6); color: #fff; font-size: 9px; padding: 1px 5px; border-radius: 3px; }

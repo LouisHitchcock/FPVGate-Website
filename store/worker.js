@@ -35,6 +35,17 @@ export default {
                 return await handleOrderWebhook(request, env, corsHeaders);
             }
 
+            // --- Public Image Serve ---
+            const imageMatch = url.pathname.match(/^\/images\/(.+)$/);
+            if (imageMatch && request.method === 'GET') {
+                const obj = await env.IMAGES.get(decodeURIComponent(imageMatch[1]));
+                if (!obj) return new Response('Not Found', { status: 404, headers: corsHeaders });
+                const headers = new Headers(corsHeaders);
+                headers.set('Content-Type', obj.httpMetadata?.contentType || 'image/jpeg');
+                headers.set('Cache-Control', 'public, max-age=31536000');
+                return new Response(obj.body, { headers });
+            }
+
             // --- Public Products API (for Snipcart validation + shop page) ---
 
             if (url.pathname === '/products' && request.method === 'GET') {
@@ -42,18 +53,23 @@ export default {
                     'SELECT product_id, product_name, price, description, image_url, weight, max_quantity, stock_quantity, low_stock_threshold, active FROM inventory WHERE active = 1 ORDER BY product_name ASC'
                 ).all();
 
-                const products = (result.results || []).map(p => ({
-                    id: p.product_id,
-                    name: p.product_name,
-                    price: p.price,
-                    url: '/products',
-                    description: p.description || '',
-                    image: p.image_url || '',
-                    stock: p.stock_quantity,
-                    lowStockThreshold: p.low_stock_threshold,
-                    weight: p.weight || 100,
-                    maxQuantity: p.max_quantity || 5
-                }));
+                const baseUrl = url.origin;
+                const products = (result.results || []).map(p => {
+                    const imgs = JSON.parse(p.images || '[]');
+                    return {
+                        id: p.product_id,
+                        name: p.product_name,
+                        price: p.price,
+                        url: '/products',
+                        description: p.description || '',
+                        image: imgs.length > 0 ? `${baseUrl}/images/${imgs[0]}` : (p.image_url || ''),
+                        images: imgs.map(k => `${baseUrl}/images/${k}`),
+                        stock: p.stock_quantity,
+                        lowStockThreshold: p.low_stock_threshold,
+                        weight: p.weight || 100,
+                        maxQuantity: p.max_quantity || 5
+                    };
+                });
 
                 return jsonResponse(products, corsHeaders);
             }
@@ -156,6 +172,24 @@ export default {
                 const inventoryLogMatch = url.pathname.match(/^\/api\/inventory\/([\w-]+)\/log$/);
                 if (inventoryLogMatch && request.method === 'GET') {
                     return await handleGetInventoryLog(inventoryLogMatch[1], env, corsHeaders);
+                }
+
+                // POST /api/inventory/:productId/images - Upload image
+                const imgUploadMatch = url.pathname.match(/^\/api\/inventory\/([\w-]+)\/images$/);
+                if (imgUploadMatch && request.method === 'POST') {
+                    return await handleImageUpload(imgUploadMatch[1], request, env, corsHeaders);
+                }
+
+                // DELETE /api/inventory/:productId/images/:index - Delete image
+                const imgDeleteMatch = url.pathname.match(/^\/api\/inventory\/([\w-]+)\/images\/(\d+)$/);
+                if (imgDeleteMatch && request.method === 'DELETE') {
+                    return await handleImageDelete(imgDeleteMatch[1], parseInt(imgDeleteMatch[2]), env, corsHeaders);
+                }
+
+                // POST /api/inventory/:productId/images/reorder - Reorder images
+                const imgReorderMatch = url.pathname.match(/^\/api\/inventory\/([\w-]+)\/images\/reorder$/);
+                if (imgReorderMatch && request.method === 'POST') {
+                    return await handleImageReorder(imgReorderMatch[1], request, env, corsHeaders);
                 }
 
                 // POST /api/inventory/:productId/archive - Toggle archive
@@ -789,6 +823,66 @@ async function handleGetInventoryLog(productId, env, corsHeaders) {
     ).bind(productId).all();
 
     return jsonResponse({ log: result.results }, corsHeaders);
+}
+
+// --- Image Management ---
+
+async function handleImageUpload(productId, request, env, corsHeaders) {
+    const product = await env.DB.prepare('SELECT images FROM inventory WHERE product_id = ?').bind(productId).first();
+    if (!product) return jsonResponse({ error: 'Product not found' }, corsHeaders, 404);
+
+    const images = JSON.parse(product.images || '[]');
+    if (images.length >= 8) return jsonResponse({ error: 'Maximum 8 images per product' }, corsHeaders, 400);
+
+    const formData = await request.formData();
+    const file = formData.get('image');
+    if (!file) return jsonResponse({ error: 'No image provided' }, corsHeaders, 400);
+    if (file.size > 5 * 1024 * 1024) return jsonResponse({ error: 'Image must be under 5MB' }, corsHeaders, 400);
+
+    const ext = file.name.split('.').pop().toLowerCase();
+    const key = `${productId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+
+    await env.IMAGES.put(key, file.stream(), {
+        httpMetadata: { contentType: file.type }
+    });
+
+    images.push(key);
+    await env.DB.prepare('UPDATE inventory SET images = ?, updated_at = datetime(\'now\') WHERE product_id = ?')
+        .bind(JSON.stringify(images), productId).run();
+
+    return jsonResponse({ success: true, key, index: images.length - 1 }, corsHeaders);
+}
+
+async function handleImageDelete(productId, index, env, corsHeaders) {
+    const product = await env.DB.prepare('SELECT images FROM inventory WHERE product_id = ?').bind(productId).first();
+    if (!product) return jsonResponse({ error: 'Product not found' }, corsHeaders, 404);
+
+    const images = JSON.parse(product.images || '[]');
+    if (index < 0 || index >= images.length) return jsonResponse({ error: 'Invalid image index' }, corsHeaders, 400);
+
+    const key = images[index];
+    await env.IMAGES.delete(key);
+    images.splice(index, 1);
+
+    await env.DB.prepare('UPDATE inventory SET images = ?, updated_at = datetime(\'now\') WHERE product_id = ?')
+        .bind(JSON.stringify(images), productId).run();
+
+    return jsonResponse({ success: true }, corsHeaders);
+}
+
+async function handleImageReorder(productId, request, env, corsHeaders) {
+    const product = await env.DB.prepare('SELECT images FROM inventory WHERE product_id = ?').bind(productId).first();
+    if (!product) return jsonResponse({ error: 'Product not found' }, corsHeaders, 404);
+
+    const images = JSON.parse(product.images || '[]');
+    const { order } = await request.json();
+    if (!Array.isArray(order) || order.length !== images.length) return jsonResponse({ error: 'Invalid order array' }, corsHeaders, 400);
+
+    const reordered = order.map(i => images[i]);
+    await env.DB.prepare('UPDATE inventory SET images = ?, updated_at = datetime(\'now\') WHERE product_id = ?')
+        .bind(JSON.stringify(reordered), productId).run();
+
+    return jsonResponse({ success: true }, corsHeaders);
 }
 
 async function handleArchiveProduct(productId, request, env, corsHeaders) {

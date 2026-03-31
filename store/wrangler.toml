@@ -8,6 +8,11 @@ binding = "DB"
 database_name = "fpvgate-store-db"
 database_id = "5e54869f-c57a-4bbc-a0be-e2e86853e801"
 
+# R2 bucket for product images
+[[r2_buckets]]
+binding = "IMAGES"
+bucket_name = "fpvgate-product-images"
+
 # Secrets (set via `wrangler secret put`):
 # SHIPPO_API_TOKEN - Shippo API token
 # SNIPCART_SECRET_KEY - Snipcart secret API key
