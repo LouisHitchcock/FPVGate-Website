@@ -7,3 +7,6 @@ compatibility_date = "2024-01-01"
 binding = "DB"
 database_name = "fpvgate-analytics-db"
 database_id = "823b938f-0e51-4657-a797-2ff6ca74f09a"
+
+# Secrets (set via `wrangler secret put`):
+# ADMIN_TOKEN - Token for admin portal authentication (shared with store worker)

@@ -7,7 +7,7 @@ export default {
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     };
 
     // Handle CORS preflight
@@ -82,6 +82,23 @@ export default {
         const detailedStats = await getDetailedStats(env.DB);
         
         return new Response(JSON.stringify(detailedStats), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      // GET /stats/live - Live stats for admin dashboard (requires auth)
+      if (url.pathname === '/stats/live' && request.method === 'GET') {
+        const authHeader = request.headers.get('Authorization');
+        const token = authHeader ? authHeader.replace('Bearer ', '') : '';
+        if (!env.ADMIN_TOKEN || token !== env.ADMIN_TOKEN) {
+          return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+            status: 401,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        const liveStats = await getLiveStats(env.DB);
+        return new Response(JSON.stringify(liveStats), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
@@ -196,6 +213,95 @@ async function getStats(db) {
   results.country_stats = countryStats.results;
 
   return results;
+}
+
+// Get live statistics for admin dashboard
+async function getLiveStats(db) {
+  const stats = {};
+
+  // Active store visitors (unique IPs with store_view in last 15 mins)
+  const storeVisitors = await db.prepare(`
+    SELECT COUNT(DISTINCT ip_hash) as count
+    FROM analytics_events
+    WHERE event_name = 'store_view'
+      AND timestamp >= datetime('now', '-15 minutes')
+      AND ip_hash IS NOT NULL
+  `).first();
+  stats.active_store_visitors = storeVisitors.count;
+
+  // Users with items in cart (cart_add in last 30 mins)
+  const cartUsers = await db.prepare(`
+    SELECT COUNT(DISTINCT ip_hash) as count
+    FROM analytics_events
+    WHERE event_name = 'cart_add'
+      AND timestamp >= datetime('now', '-30 minutes')
+      AND ip_hash IS NOT NULL
+  `).first();
+  stats.active_cart_users = cartUsers.count;
+
+  // Total active site viewers (any event in last 15 mins)
+  const totalViewers = await db.prepare(`
+    SELECT COUNT(DISTINCT ip_hash) as count
+    FROM analytics_events
+    WHERE timestamp >= datetime('now', '-15 minutes')
+      AND ip_hash IS NOT NULL
+  `).first();
+  stats.total_active_viewers = totalViewers.count;
+
+  // Geo-location of recent store visitors (last 1 hour)
+  const geoData = await db.prepare(`
+    SELECT
+      country,
+      COUNT(DISTINCT ip_hash) as visitors
+    FROM analytics_events
+    WHERE event_name IN ('store_view', 'page_view')
+      AND timestamp >= datetime('now', '-1 hour')
+      AND country IS NOT NULL
+      AND ip_hash IS NOT NULL
+    GROUP BY country
+    ORDER BY visitors DESC
+    LIMIT 30
+  `).all();
+  stats.geo_breakdown = geoData.results;
+
+  // 30-day conversion ratio
+  const storeVisitors30d = await db.prepare(`
+    SELECT COUNT(DISTINCT ip_hash) as count
+    FROM analytics_events
+    WHERE event_name = 'store_view'
+      AND timestamp >= datetime('now', '-30 days')
+      AND ip_hash IS NOT NULL
+  `).first();
+
+  const orders30d = await db.prepare(`
+    SELECT COUNT(DISTINCT ip_hash) as count
+    FROM analytics_events
+    WHERE event_name = 'order_completed'
+      AND timestamp >= datetime('now', '-30 days')
+      AND ip_hash IS NOT NULL
+  `).first();
+
+  stats.store_visitors_30d = storeVisitors30d.count;
+  stats.orders_30d = orders30d.count;
+  stats.conversion_rate_30d = storeVisitors30d.count > 0
+    ? ((orders30d.count / storeVisitors30d.count) * 100).toFixed(2)
+    : '0.00';
+
+  // Recent activity timeline (last 24h, hourly buckets)
+  const hourlyActivity = await db.prepare(`
+    SELECT
+      strftime('%Y-%m-%d %H:00', timestamp) as hour,
+      COUNT(DISTINCT ip_hash) as unique_visitors,
+      SUM(CASE WHEN event_name = 'store_view' THEN 1 ELSE 0 END) as store_views,
+      SUM(CASE WHEN event_name = 'cart_add' THEN 1 ELSE 0 END) as cart_adds
+    FROM analytics_events
+    WHERE timestamp >= datetime('now', '-24 hours')
+    GROUP BY hour
+    ORDER BY hour DESC
+  `).all();
+  stats.hourly_activity = hourlyActivity.results;
+
+  return stats;
 }
 
 // Get detailed statistics

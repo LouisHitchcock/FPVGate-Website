@@ -1,4 +1,4 @@
-// Shippo API Client for FPVGate Store
+// Shippo API Client for FPVGate Shop
 // Handles shipping rate lookups and label purchases via Shippo's REST API
 
 const SHIPPO_API_BASE = 'https://api.goshippo.com';

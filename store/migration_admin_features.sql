@@ -1,32 +1,6 @@
--- FPVGate Shop Database Schema
-
-CREATE TABLE IF NOT EXISTS orders (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    snipcart_token TEXT UNIQUE NOT NULL,
-    invoice_number TEXT,
-    customer_name TEXT NOT NULL,
-    customer_email TEXT NOT NULL,
-    shipping_address TEXT NOT NULL,  -- JSON
-    billing_address TEXT,            -- JSON
-    items TEXT NOT NULL,             -- JSON
-    subtotal REAL NOT NULL,
-    shipping_fees REAL DEFAULT 0,
-    total REAL NOT NULL,
-    currency TEXT DEFAULT 'gbp',
-    shipping_method TEXT,
-    status TEXT DEFAULT 'new',       -- new, label_created, shipped, completed
-    tracking_number TEXT,
-    shippo_shipment_id TEXT,
-    shippo_transaction_id TEXT,
-    label_url TEXT,
-    notes TEXT,
-    created_at TEXT DEFAULT (datetime('now')),
-    updated_at TEXT DEFAULT (datetime('now'))
-);
-
-CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
-CREATE INDEX IF NOT EXISTS idx_orders_created ON orders(created_at);
-CREATE INDEX IF NOT EXISTS idx_orders_snipcart_token ON orders(snipcart_token);
+-- Migration: Add admin features tables
+-- Run against fpvgate-store-db D1 database:
+-- wrangler d1 execute fpvgate-store-db --file=./migration_admin_features.sql
 
 -- Order comments
 CREATE TABLE IF NOT EXISTS order_comments (
@@ -76,3 +50,7 @@ CREATE TABLE IF NOT EXISTS inventory_log (
 );
 
 CREATE INDEX IF NOT EXISTS idx_inventory_log_product ON inventory_log(product_id);
+
+-- Seed initial inventory for existing product
+INSERT OR IGNORE INTO inventory (product_id, product_name, sku, stock_quantity, low_stock_threshold)
+VALUES ('fpvgate-aio-v3', 'FPVGate AIO V3', 'FPVG-AIO-V3', 0, 5);

@@ -1,4 +1,4 @@
-// Cloudflare Worker - FPVGate Store API
+// Cloudflare Worker - FPVGate Shop API
 // Handles Snipcart webhooks, Shippo shipping integration, and admin API
 
 import {
@@ -73,6 +73,58 @@ export default {
                 const ratesMatch = url.pathname.match(/^\/api\/orders\/(\d+)\/rates$/);
                 if (ratesMatch && request.method === 'POST') {
                     return await handleGetOrderRates(ratesMatch[1], env, corsHeaders);
+                }
+
+                // GET /api/orders/:id/comments - List order comments
+                const commentsGetMatch = url.pathname.match(/^\/api\/orders\/(\d+)\/comments$/);
+                if (commentsGetMatch && request.method === 'GET') {
+                    return await handleGetComments(commentsGetMatch[1], env, corsHeaders);
+                }
+
+                // POST /api/orders/:id/comments - Add order comment
+                const commentsPostMatch = url.pathname.match(/^\/api\/orders\/(\d+)\/comments$/);
+                if (commentsPostMatch && request.method === 'POST') {
+                    return await handleAddComment(commentsPostMatch[1], request, env, corsHeaders);
+                }
+
+                // POST /api/orders/:id/refund - Issue refund via Snipcart
+                const refundMatch = url.pathname.match(/^\/api\/orders\/(\d+)\/refund$/);
+                if (refundMatch && request.method === 'POST') {
+                    return await handleRefundOrder(refundMatch[1], request, env, corsHeaders);
+                }
+
+                // GET /api/orders/:id/refunds - List refunds for an order
+                const refundsListMatch = url.pathname.match(/^\/api\/orders\/(\d+)\/refunds$/);
+                if (refundsListMatch && request.method === 'GET') {
+                    return await handleGetRefunds(refundsListMatch[1], env, corsHeaders);
+                }
+
+                // POST /api/orders/:id/cancel - Cancel order via Snipcart
+                const cancelMatch = url.pathname.match(/^\/api\/orders\/(\d+)\/cancel$/);
+                if (cancelMatch && request.method === 'POST') {
+                    return await handleCancelOrder(cancelMatch[1], request, env, corsHeaders);
+                }
+
+                // GET /api/inventory - List all inventory
+                if (url.pathname === '/api/inventory' && request.method === 'GET') {
+                    return await handleListInventory(env, corsHeaders);
+                }
+
+                // PUT /api/inventory/:productId - Update stock
+                const inventoryUpdateMatch = url.pathname.match(/^\/api\/inventory\/([\w-]+)$/);
+                if (inventoryUpdateMatch && request.method === 'PUT') {
+                    return await handleUpdateInventory(inventoryUpdateMatch[1], request, env, corsHeaders);
+                }
+
+                // POST /api/inventory - Add new product to inventory
+                if (url.pathname === '/api/inventory' && request.method === 'POST') {
+                    return await handleAddInventoryProduct(request, env, corsHeaders);
+                }
+
+                // GET /api/inventory/:productId/log - Get stock change history
+                const inventoryLogMatch = url.pathname.match(/^\/api\/inventory\/([\w-]+)\/log$/);
+                if (inventoryLogMatch && request.method === 'GET') {
+                    return await handleGetInventoryLog(inventoryLogMatch[1], env, corsHeaders);
                 }
             }
 
@@ -208,6 +260,24 @@ async function handleOrderWebhook(request, env, corsHeaders) {
         order.currency || 'gbp',
         order.shippingMethod || null
     ).run();
+
+    // Auto-decrement inventory
+    try {
+        for (const item of order.items) {
+            const productId = item.id || item.uniqueId;
+            if (productId) {
+                await env.DB.prepare(
+                    'UPDATE inventory SET stock_quantity = stock_quantity - ?, updated_at = datetime(\'now\') WHERE product_id = ?'
+                ).bind(item.quantity || 1, productId).run();
+
+                await env.DB.prepare(
+                    'INSERT INTO inventory_log (product_id, change_amount, reason) VALUES (?, ?, ?)'
+                ).bind(productId, -(item.quantity || 1), `Order #${order.invoiceNumber || order.token.slice(0, 8)}`).run();
+            }
+        }
+    } catch (e) {
+        console.error('Inventory update failed:', e.message);
+    }
 
     // Send Discord notification
     if (env.DISCORD_WEBHOOK_URL) {
@@ -374,7 +444,7 @@ async function handleUpdateStatus(orderId, request, env, corsHeaders) {
     const body = await request.json();
     const { status, trackingNumber, notes } = body;
 
-    const validStatuses = ['new', 'label_created', 'shipped', 'completed'];
+    const validStatuses = ['new', 'label_created', 'shipped', 'completed', 'cancelled', 'refunded'];
     if (!validStatuses.includes(status)) {
         return jsonResponse({ error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` }, corsHeaders, 400);
     }
@@ -402,6 +472,278 @@ async function handleUpdateStatus(orderId, request, env, corsHeaders) {
     }
 
     return jsonResponse({ success: true, status }, corsHeaders);
+}
+
+// --- Order Comments ---
+
+async function handleGetComments(orderId, env, corsHeaders) {
+    const result = await env.DB.prepare(
+        'SELECT * FROM order_comments WHERE order_id = ? ORDER BY created_at ASC'
+    ).bind(orderId).all();
+
+    return jsonResponse({ comments: result.results }, corsHeaders);
+}
+
+async function handleAddComment(orderId, request, env, corsHeaders) {
+    const body = await request.json();
+    const { comment } = body;
+
+    if (!comment || !comment.trim()) {
+        return jsonResponse({ error: 'Comment text is required' }, corsHeaders, 400);
+    }
+
+    const result = await env.DB.prepare(
+        'INSERT INTO order_comments (order_id, comment) VALUES (?, ?)'
+    ).bind(orderId, comment.trim()).run();
+
+    return jsonResponse({ success: true, id: result.meta.last_row_id }, corsHeaders);
+}
+
+// --- Refunds ---
+
+async function handleRefundOrder(orderId, request, env, corsHeaders) {
+    const order = await env.DB.prepare(
+        'SELECT * FROM orders WHERE id = ?'
+    ).bind(orderId).first();
+
+    if (!order) {
+        return jsonResponse({ error: 'Order not found' }, corsHeaders, 404);
+    }
+
+    const body = await request.json();
+    const { amount, comment } = body;
+
+    if (!amount || amount <= 0) {
+        return jsonResponse({ error: 'Valid refund amount is required' }, corsHeaders, 400);
+    }
+
+    if (amount > parseFloat(order.total)) {
+        return jsonResponse({ error: 'Refund amount exceeds order total' }, corsHeaders, 400);
+    }
+
+    let snipcartRefundId = null;
+    let refundedByGateway = false;
+
+    // Issue refund via Snipcart API
+    if (env.SNIPCART_SECRET_KEY && order.snipcart_token) {
+        try {
+            const credentials = btoa(env.SNIPCART_SECRET_KEY + ':');
+            const snipcartResp = await fetch(
+                `https://app.snipcart.com/api/v1/orders/${order.snipcart_token}/refunds`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Basic ${credentials}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ amount, comment: comment || '' })
+                }
+            );
+
+            if (snipcartResp.ok) {
+                const refundData = await snipcartResp.json();
+                snipcartRefundId = refundData.id;
+                refundedByGateway = refundData.refundedByPaymentGateway || false;
+            } else {
+                const errText = await snipcartResp.text();
+                return jsonResponse({ error: `Snipcart refund failed: ${errText}` }, corsHeaders, 502);
+            }
+        } catch (e) {
+            return jsonResponse({ error: `Snipcart refund failed: ${e.message}` }, corsHeaders, 502);
+        }
+    }
+
+    // Store refund locally
+    await env.DB.prepare(
+        'INSERT INTO order_refunds (order_id, snipcart_refund_id, amount, comment, refunded_by_gateway) VALUES (?, ?, ?, ?, ?)'
+    ).bind(orderId, snipcartRefundId, amount, comment || '', refundedByGateway ? 1 : 0).run();
+
+    // Update order status if full refund
+    const totalRefunds = await env.DB.prepare(
+        'SELECT SUM(amount) as total FROM order_refunds WHERE order_id = ?'
+    ).bind(orderId).first();
+
+    if (totalRefunds.total >= parseFloat(order.total)) {
+        await env.DB.prepare(
+            'UPDATE orders SET status = \'refunded\', updated_at = datetime(\'now\') WHERE id = ?'
+        ).bind(orderId).run();
+    }
+
+    return jsonResponse({
+        success: true,
+        snipcartRefundId,
+        refundedByGateway,
+        amount
+    }, corsHeaders);
+}
+
+async function handleGetRefunds(orderId, env, corsHeaders) {
+    const result = await env.DB.prepare(
+        'SELECT * FROM order_refunds WHERE order_id = ? ORDER BY created_at DESC'
+    ).bind(orderId).all();
+
+    return jsonResponse({ refunds: result.results }, corsHeaders);
+}
+
+// --- Order Cancellation ---
+
+async function handleCancelOrder(orderId, request, env, corsHeaders) {
+    const order = await env.DB.prepare(
+        'SELECT * FROM orders WHERE id = ?'
+    ).bind(orderId).first();
+
+    if (!order) {
+        return jsonResponse({ error: 'Order not found' }, corsHeaders, 404);
+    }
+
+    if (order.status === 'cancelled') {
+        return jsonResponse({ error: 'Order is already cancelled' }, corsHeaders, 400);
+    }
+
+    // Cancel via Snipcart API
+    if (env.SNIPCART_SECRET_KEY && order.snipcart_token) {
+        try {
+            const credentials = btoa(env.SNIPCART_SECRET_KEY + ':');
+            const snipcartResp = await fetch(
+                `https://app.snipcart.com/api/orders/${order.snipcart_token}`,
+                {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Basic ${credentials}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ status: 'Cancelled' })
+                }
+            );
+
+            if (!snipcartResp.ok) {
+                const errText = await snipcartResp.text();
+                console.error('Snipcart cancel failed:', errText);
+            }
+        } catch (e) {
+            console.error('Snipcart cancel failed:', e.message);
+        }
+    }
+
+    // Update local status
+    await env.DB.prepare(
+        'UPDATE orders SET status = \'cancelled\', updated_at = datetime(\'now\') WHERE id = ?'
+    ).bind(orderId).run();
+
+    // Restore inventory
+    try {
+        const items = JSON.parse(order.items);
+        for (const item of items) {
+            const productId = item.id;
+            if (productId) {
+                await env.DB.prepare(
+                    'UPDATE inventory SET stock_quantity = stock_quantity + ?, updated_at = datetime(\'now\') WHERE product_id = ?'
+                ).bind(item.quantity || 1, productId).run();
+
+                await env.DB.prepare(
+                    'INSERT INTO inventory_log (product_id, change_amount, reason) VALUES (?, ?, ?)'
+                ).bind(productId, item.quantity || 1, `Cancelled order #${order.invoice_number || order.id}`).run();
+            }
+        }
+    } catch (e) {
+        console.error('Inventory restore on cancel failed:', e.message);
+    }
+
+    return jsonResponse({ success: true, status: 'cancelled' }, corsHeaders);
+}
+
+// --- Inventory ---
+
+async function handleListInventory(env, corsHeaders) {
+    const result = await env.DB.prepare(
+        'SELECT * FROM inventory ORDER BY product_name ASC'
+    ).all();
+
+    return jsonResponse({ products: result.results }, corsHeaders);
+}
+
+async function handleUpdateInventory(productId, request, env, corsHeaders) {
+    const body = await request.json();
+    const { stock_quantity, low_stock_threshold, reason } = body;
+
+    const existing = await env.DB.prepare(
+        'SELECT * FROM inventory WHERE product_id = ?'
+    ).bind(productId).first();
+
+    if (!existing) {
+        return jsonResponse({ error: 'Product not found' }, corsHeaders, 404);
+    }
+
+    const updates = [];
+    const params = [];
+
+    if (stock_quantity !== undefined) {
+        updates.push('stock_quantity = ?');
+        params.push(stock_quantity);
+
+        // Log the change
+        const changeAmount = stock_quantity - existing.stock_quantity;
+        await env.DB.prepare(
+            'INSERT INTO inventory_log (product_id, change_amount, reason) VALUES (?, ?, ?)'
+        ).bind(productId, changeAmount, reason || 'Manual adjustment').run();
+    }
+
+    if (low_stock_threshold !== undefined) {
+        updates.push('low_stock_threshold = ?');
+        params.push(low_stock_threshold);
+    }
+
+    if (updates.length === 0) {
+        return jsonResponse({ error: 'No fields to update' }, corsHeaders, 400);
+    }
+
+    updates.push('updated_at = datetime(\'now\')');
+    params.push(productId);
+
+    await env.DB.prepare(
+        `UPDATE inventory SET ${updates.join(', ')} WHERE product_id = ?`
+    ).bind(...params).run();
+
+    return jsonResponse({ success: true }, corsHeaders);
+}
+
+async function handleAddInventoryProduct(request, env, corsHeaders) {
+    const body = await request.json();
+    const { product_id, product_name, sku, stock_quantity, low_stock_threshold } = body;
+
+    if (!product_id || !product_name) {
+        return jsonResponse({ error: 'product_id and product_name are required' }, corsHeaders, 400);
+    }
+
+    try {
+        await env.DB.prepare(
+            'INSERT INTO inventory (product_id, product_name, sku, stock_quantity, low_stock_threshold) VALUES (?, ?, ?, ?, ?)'
+        ).bind(product_id, product_name, sku || null, stock_quantity || 0, low_stock_threshold || 5).run();
+
+        // Log initial stock
+        if (stock_quantity && stock_quantity > 0) {
+            await env.DB.prepare(
+                'INSERT INTO inventory_log (product_id, change_amount, reason) VALUES (?, ?, ?)'
+            ).bind(product_id, stock_quantity, 'Initial stock').run();
+        }
+
+        return jsonResponse({ success: true }, corsHeaders);
+    } catch (e) {
+        if (e.message.includes('UNIQUE')) {
+            return jsonResponse({ error: 'Product already exists' }, corsHeaders, 409);
+        }
+        throw e;
+    }
+}
+
+async function handleGetInventoryLog(productId, env, corsHeaders) {
+    const result = await env.DB.prepare(
+        'SELECT * FROM inventory_log WHERE product_id = ? ORDER BY created_at DESC LIMIT 50'
+    ).bind(productId).all();
+
+    return jsonResponse({ log: result.results }, corsHeaders);
 }
 
 // --- Helpers ---
@@ -435,7 +777,7 @@ async function sendDiscordNotification(webhookUrl, order) {
                     { name: 'Items', value: itemList, inline: false },
                     { name: 'Ship To', value: address, inline: false }
                 ],
-                footer: { text: 'FPVGate Store' },
+                footer: { text: 'FPVGate Shop' },
                 timestamp: new Date().toISOString()
             }]
         })

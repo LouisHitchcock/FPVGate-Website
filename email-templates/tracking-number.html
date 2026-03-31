@@ -1,0 +1,91 @@
+---
+Subject: Tracking info for order {{{ order.invoiceNumber }}} - FPVGate
+---
+
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 14px; color: #2d3748; margin: 0; padding: 0; background-color: #f5f7fa;">
+    <center>
+        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f7fa; padding: 20px 0;">
+            <tr>
+                <td align="center">
+                    <table width="600" cellpadding="0" cellspacing="0" style="background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+
+                        <!-- Header -->
+                        <tr>
+                            <td style="background: #0b1120; padding: 30px 40px; text-align: center;">
+                                {{ #if settings.logoUrl }}
+                                <img src="{{ settings.logoUrl }}" style="max-height: 50px; margin-bottom: 10px;" />
+                                {{ /if }}
+                                <h1 style="color: #00d4ff; margin: 0; font-size: 22px; font-weight: 600; letter-spacing: 1px;">FPVGate</h1>
+                            </td>
+                        </tr>
+
+                        <!-- Content -->
+                        <tr>
+                            <td style="padding: 30px 40px;">
+                                <p style="margin: 0 0 15px; font-size: 16px;">
+                                    Hi {{ order.billingAddress.fullName }},
+                                </p>
+                                <p style="margin: 0 0 20px; color: #718096; line-height: 1.6;">
+                                    Your order <strong style="color: #1a202c;">{{ order.invoiceNumber }}</strong> has been shipped! Here are your tracking details.
+                                </p>
+
+                                <!-- Shipping Info -->
+                                <table width="100%" cellpadding="0" cellspacing="0" style="background: #f7fafc; border-radius: 6px; margin-bottom: 20px;">
+                                    <tr>
+                                        <td style="padding: 20px;">
+                                            {{ #if order.shippingInformation }}
+                                            <p style="margin: 0 0 8px; color: #718096; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Shipping Method</p>
+                                            <p style="margin: 0 0 15px; color: #1a202c; font-weight: 600;">
+                                                {{ #if order.shippingInformation.localizedMethod }}{{ order.shippingInformation.localizedMethod }}{{ else }}{{ order.shippingInformation.method }}{{ /if }}
+                                            </p>
+                                            {{ /if }}
+
+                                            {{ #with order.shippingInformation }}
+                                            <p style="margin: 0 0 8px; color: #718096; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Tracking Number</p>
+                                            <p style="margin: 0; font-size: 18px;">
+                                                {{ #if trackingUrl }}
+                                                <a href="{{ trackingUrl }}" target="_blank" style="color: #00d4ff; text-decoration: none; font-weight: 700;">{{ trackingNumber }}</a>
+                                                {{ else }}
+                                                <strong style="color: #1a202c;">{{ trackingNumber }}</strong>
+                                                {{ /if }}
+                                            </p>
+                                            {{ /with }}
+                                        </td>
+                                    </tr>
+                                </table>
+
+                                {{ #with order.shippingInformation }}
+                                {{ #if trackingUrl }}
+                                <table width="100%" cellpadding="0" cellspacing="0">
+                                    <tr>
+                                        <td align="center" style="padding-bottom: 10px;">
+                                            <a href="{{ trackingUrl }}" target="_blank" style="display: inline-block; background: #00d4ff; color: #0b1120; padding: 12px 30px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 14px;">Track Your Order</a>
+                                        </td>
+                                    </tr>
+                                </table>
+                                {{ /if }}
+                                {{ /with }}
+                            </td>
+                        </tr>
+
+                        <!-- Footer -->
+                        <tr>
+                            <td style="background: #f7fafc; padding: 25px 40px; text-align: center; border-top: 1px solid #e2e8f0;">
+                                <p style="margin: 0; color: #a0aec0; font-size: 12px;">
+                                    Need help? Visit <a href="https://fpvgate.xyz/docs.html" style="color: #00d4ff; text-decoration: none;">our documentation</a> or open an <a href="https://github.com/LouisHitchcock/FPVGate/issues" style="color: #00d4ff; text-decoration: none;">issue on GitHub</a>.
+                                </p>
+                                <p style="margin: 10px 0 0; color: #cbd5e0; font-size: 11px;">Made with care for the FPV community</p>
+                            </td>
+                        </tr>
+
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </center>
+</body>
+</html>

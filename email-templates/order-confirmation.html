@@ -1,0 +1,291 @@
+---
+Subject: Order {{{ order.invoiceNumber }}} - FPVGate
+---
+
+<!DOCTYPE html>
+<html>
+<head>
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; font-size: 14px; color: #2d3748; margin: 0; padding: 0; background-color: #f5f7fa;">
+    <center>
+        <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f7fa; padding: 20px 0;">
+            <tr>
+                <td align="center">
+                    <table width="600" cellpadding="0" cellspacing="0" style="background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+
+                        <!-- Header -->
+                        <tr>
+                            <td style="background: #0b1120; padding: 30px 40px; text-align: center;">
+                                {{ #if settings.logoUrl }}
+                                <img src="{{ settings.logoUrl }}" style="max-height: 50px; margin-bottom: 10px;" />
+                                {{ /if }}
+                                <h1 style="color: #00d4ff; margin: 0; font-size: 22px; font-weight: 600; letter-spacing: 1px;">FPVGate</h1>
+                            </td>
+                        </tr>
+
+                        <!-- Greeting -->
+                        {{ #if_eq context 'Email' }}
+                        <tr>
+                            <td style="padding: 30px 40px 10px;">
+                                <p style="margin: 0 0 10px; font-size: 16px;">
+                                    Hi {{ order.billingAddress.fullName }},
+                                </p>
+                                <p style="margin: 0; color: #718096;">
+                                    Thank you for your order! Here's your confirmation.
+                                </p>
+                            </td>
+                        </tr>
+                        {{ /if_eq }}
+
+                        <!-- Order Info Bar -->
+                        <tr>
+                            <td style="padding: 20px 40px;">
+                                <table width="100%" cellpadding="0" cellspacing="0" style="background: #f7fafc; border-radius: 6px;">
+                                    <tr>
+                                        <td style="padding: 15px;">
+                                            <span style="color: #718096; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Order Number</span><br />
+                                            <strong style="font-size: 16px; color: #1a202c;">{{ order.invoiceNumber }}</strong>
+                                        </td>
+                                        <td align="right" style="padding: 15px;">
+                                            <span style="color: #718096; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Date</span><br />
+                                            <strong style="font-size: 16px; color: #1a202c;">{{ date order.completionDate }}</strong>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+
+                        <!-- Custom Fields -->
+                        {{ #has_any order.customFields }}
+                        <tr>
+                            <td style="padding: 0 40px 20px;">
+                                <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; color: #718096; margin: 0 0 10px; font-weight: 600;">Order Details</h3>
+                                {{ #each order.customFields }}
+                                {{ #if_not_eq type 'hidden' }}
+                                <p style="margin: 4px 0; color: #4a5568;">{{ cleanHtml name }}: {{ cleanHtml value }}</p>
+                                {{ /if_not_eq }}
+                                {{ /each }}
+                            </td>
+                        </tr>
+                        {{ /has_any }}
+
+                        <!-- Items -->
+                        <tr>
+                            <td style="padding: 0 40px 20px;">
+                                <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; color: #718096; margin: 0 0 12px; font-weight: 600;">Items Ordered</h3>
+                                <table width="100%" cellpadding="0" cellspacing="0">
+                                    {{ #each order.items }}
+                                    <tr>
+                                        <td style="padding: 12px 0; border-bottom: 1px solid #e2e8f0;">
+                                            <strong style="color: #1a202c;">{{ this.name }}</strong>
+                                            {{ #has_any this.customFields }}
+                                            <br />
+                                            {{ #each this.customFields }}
+                                            {{ #if_not_eq type 'hidden' }}
+                                            <span style="color: #718096; font-size: 12px;">{{ cleanHtml name }}: {{ cleanHtml value }}</span>
+                                            {{ /if_not_eq }}
+                                            {{ /each }}
+                                            {{ /has_any }}
+                                            <br />
+                                            <span style="color: #a0aec0; font-size: 13px;">Qty: {{ this.quantity }}</span>
+                                        </td>
+                                        <td align="right" style="padding: 12px 0; border-bottom: 1px solid #e2e8f0; white-space: nowrap;">
+                                            <strong>{{ money this.totalPrice }}</strong>
+                                        </td>
+                                    </tr>
+                                    {{ /each }}
+
+                                    {{ #each order.discounts }}
+                                    <tr>
+                                        <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">
+                                            <span style="color: #718096;">{{ name }}</span>
+                                        </td>
+                                        <td align="right" style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #e53e3e;">
+                                            {{ money value }}
+                                        </td>
+                                    </tr>
+                                    {{ /each }}
+
+                                    {{ #if_not_eq order.summary.discountInducedTaxesVariation 0 }}
+                                    <tr>
+                                        <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">
+                                            <span style="color: #718096;">Tax adjustments</span>
+                                        </td>
+                                        <td align="right" style="padding: 8px 0; border-bottom: 1px solid #e2e8f0; color: #e53e3e;">
+                                            {{ money order.summary.discountInducedTaxesVariation }}
+                                        </td>
+                                    </tr>
+                                    {{ /if_not_eq }}
+
+                                    <tr>
+                                        <td style="padding: 12px 0 4px;">Subtotal</td>
+                                        <td align="right" style="padding: 12px 0 4px;">{{ money order.summary.subTotal }}</td>
+                                    </tr>
+
+                                    {{ #if order.shippingInformation }}
+                                    <tr>
+                                        <td style="padding: 4px 0; color: #718096;">
+                                            {{ #if order.shippingInformation.localizedMethod }}
+                                                {{ order.shippingInformation.localizedMethod }}
+                                            {{ else }}
+                                                {{ order.shippingInformation.method }}
+                                            {{ /if }}
+                                        </td>
+                                        <td align="right" style="padding: 4px 0; color: #718096;">
+                                            {{ money order.shippingInformation.fees }}
+                                        </td>
+                                    </tr>
+                                    {{ /if }}
+
+                                    {{ #has_any order.summary.taxes }}
+                                    {{ #each order.summary.taxes }}
+                                    <tr>
+                                        <td style="padding: 4px 0; color: #718096;">
+                                            {{ name }}
+                                            {{ #if numberForInvoice }}(<i>{{ numberForInvoice }}</i>){{ /if }}
+                                        </td>
+                                        <td align="right" style="padding: 4px 0; color: #718096;">{{ money amount }}</td>
+                                    </tr>
+                                    {{ /each }}
+                                    {{ /has_any }}
+
+                                    <tr>
+                                        <td style="padding: 14px 0 0; border-top: 2px solid #1a202c;">
+                                            <strong style="font-size: 16px; color: #1a202c;">Total</strong>
+                                        </td>
+                                        <td align="right" style="padding: 14px 0 0; border-top: 2px solid #1a202c;">
+                                            <strong style="font-size: 16px; color: #1a202c;">{{ money order.summary.total }}</strong>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+
+                        <!-- Addresses -->
+                        <tr>
+                            <td style="padding: 0 40px 20px;">
+                                <table width="100%" cellpadding="0" cellspacing="0">
+                                    <tr>
+                                        <td width="50%" valign="top" style="padding-right: 15px;">
+                                            <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; color: #718096; margin: 0 0 10px; font-weight: 600;">Billing Address</h3>
+                                            {{ #with order.billingAddress }}
+                                            <p style="margin: 0; line-height: 1.6; color: #4a5568; font-size: 13px;">
+                                                {{ fullName }}<br />
+                                                {{ #if company }}{{ company }}<br />{{ /if }}
+                                                {{ ../order.email }}<br /><br />
+                                                {{ address1 }}<br />
+                                                {{ #if address2 }}{{ address2 }}<br />{{ /if }}
+                                                {{ city }}{{ #if province }}, {{ province }}{{ /if }}, {{ country }}<br />
+                                                {{ postalCode }}<br />
+                                                {{ phone }}
+                                            </p>
+                                            {{ /with }}
+                                        </td>
+
+                                        {{ #if order.shippingAddress }}
+                                        <td width="50%" valign="top" style="padding-left: 15px;">
+                                            <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; color: #718096; margin: 0 0 10px; font-weight: 600;">Shipping To</h3>
+                                            {{ #with order.shippingAddress }}
+                                            <p style="margin: 0; line-height: 1.6; color: #4a5568; font-size: 13px;">
+                                                {{ fullName }}<br />
+                                                {{ #if company }}{{ company }}<br />{{ /if }}
+                                                {{ address1 }}<br />
+                                                {{ #if address2 }}{{ address2 }}<br />{{ /if }}
+                                                {{ city }}{{ #if province }}, {{ province }}{{ /if }}, {{ country }}<br />
+                                                {{ postalCode }}<br />
+                                                {{ phone }}
+                                            </p>
+                                            {{ /with }}
+                                        </td>
+                                        {{ /if }}
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+
+                        <!-- Refunds -->
+                        {{ #has_any order.refunds }}
+                        <tr>
+                            <td style="padding: 0 40px 20px;">
+                                <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; color: #718096; margin: 0 0 10px; font-weight: 600;">Refunds</h3>
+                                <table width="100%" cellpadding="0" cellspacing="0">
+                                    {{ #each order.refunds }}
+                                    <tr>
+                                        <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">{{ date creationDate }}</td>
+                                        <td align="right" style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">{{ money amount }}</td>
+                                    </tr>
+                                    {{ /each }}
+                                    <tr>
+                                        <td style="padding: 10px 0;"><strong>Adjusted total:</strong></td>
+                                        <td align="right" style="padding: 10px 0;"><strong>{{ money order.summary.adjustedTotal }}</strong></td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                        {{ /has_any }}
+
+                        <!-- Payment -->
+                        <tr>
+                            <td style="padding: 0 40px 20px;">
+                                <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; color: #718096; margin: 0 0 10px; font-weight: 600;">Payment</h3>
+                                <p style="margin: 0; color: #4a5568;">
+                                    {{ #if_eq order.paymentMethod 'CreditCard' }}
+                                    {{ #if order.card.last4digits }}
+                                    Card ending in {{ order.card.last4digits }}
+                                    {{ /if }}
+                                    {{ else }}
+                                    {{ #if_eq order.paymentMethod 'WillBePaidLater' }}Deferred{{ else }}{{ #if_eq order.paymentMethod 'Other' }}{{ order.paymentDetails.display }}{{ else }}{{ order.paymentMethod }}{{ /if_eq }}{{ /if_eq }}
+                                    {{ /if_eq }}
+                                    <br />
+                                    <span style="color: #a0aec0; font-size: 13px;">{{ date order.completionDate 'yyyy-MM-dd HH:mm:ss' }}</span>
+                                </p>
+                            </td>
+                        </tr>
+
+                        <!-- Recurring Payments -->
+                        {{ #has_any order.summary.upcomingPayments }}
+                        <tr>
+                            <td style="padding: 0 40px 20px;">
+                                <h3 style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; color: #718096; margin: 0 0 10px; font-weight: 600;">Recurring Payments</h3>
+                                <table width="100%" cellpadding="0" cellspacing="0">
+                                    {{ #each order.summary.upcomingPayments }}
+                                    <tr>
+                                        <td style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">{{ this.name }}</td>
+                                        <td align="right" style="padding: 8px 0; border-bottom: 1px solid #e2e8f0;">{{ date this.date 'yyyy-MM-dd HH:mm:ss' }}</td>
+                                    </tr>
+                                    {{ /each }}
+                                </table>
+                            </td>
+                        </tr>
+                        {{ /has_any }}
+
+                        <!-- Footer -->
+                        <tr>
+                            <td style="background: #f7fafc; padding: 25px 40px; text-align: center; border-top: 1px solid #e2e8f0;">
+                                {{ #if settings.signature }}
+                                <div style="margin-bottom: 15px; color: #4a5568; font-size: 13px;">
+                                    {{{ settings.signature }}}
+                                </div>
+                                {{ /if }}
+
+                                {{ #if settings.orderHistoryUrl }}
+                                <a href="{{ settings.orderHistoryUrl }}" target="_blank" style="display: inline-block; background: #00d4ff; color: #0b1120; padding: 10px 24px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 13px;">View Order History</a>
+                                <br /><br />
+                                {{ /if }}
+
+                                <p style="margin: 0; color: #a0aec0; font-size: 12px;">
+                                    Need help? Visit <a href="https://fpvgate.xyz/docs.html" style="color: #00d4ff; text-decoration: none;">our documentation</a> or open an <a href="https://github.com/LouisHitchcock/FPVGate/issues" style="color: #00d4ff; text-decoration: none;">issue on GitHub</a>.
+                                </p>
+                                <p style="margin: 10px 0 0; color: #cbd5e0; font-size: 11px;">
+                                    Made with care for the FPV community
+                                </p>
+                            </td>
+                        </tr>
+
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </center>
+</body>
+</html>

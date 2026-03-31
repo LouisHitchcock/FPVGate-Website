@@ -110,6 +110,41 @@ body {
     box-shadow: 0 5px 15px rgba(255, 94, 91, 0.3);
 }
 
+.nav-links .btn-cart {
+    background: rgba(0, 212, 255, 0.15);
+    border: 1px solid rgba(0, 212, 255, 0.3);
+    padding: 0.5rem 0.75rem;
+    border-radius: 5px;
+    color: var(--primary-color);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.nav-links .btn-cart:hover {
+    background: rgba(0, 212, 255, 0.25);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 212, 255, 0.2);
+}
+
+.nav-links .btn-cart .snipcart-items-count {
+    background: var(--primary-color);
+    color: #0a0e27;
+    font-size: 11px;
+    font-weight: 700;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+}
+
 /* Hero Section */
 .hero {
     padding: 6rem 0;
