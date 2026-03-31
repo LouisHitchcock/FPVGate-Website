@@ -180,6 +180,32 @@ tr.clickable { cursor: pointer; }
 .error-text { color: #e53e3e; }
 .success-text { color: #48bb78; }
 
+/* --- Tracking Timeline --- */
+.tracking-timeline { padding-left: 8px; }
+.tracking-event { display: flex; gap: 12px; position: relative; padding-bottom: 16px; }
+.tracking-event:last-child { padding-bottom: 0; }
+.tracking-event:last-child .tracking-line { display: none; }
+.tracking-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; background: #cbd5e0; }
+.tracking-line { position: absolute; left: 5px; top: 20px; bottom: 0; width: 2px; background: #e2e8f0; }
+.tracking-dot.tracking-delivered { background: #48bb78; }
+.tracking-dot.tracking-transit { background: #4299e1; }
+.tracking-dot.tracking-pre { background: #a0aec0; }
+.tracking-dot.tracking-returned { background: #ed8936; }
+.tracking-dot.tracking-failure { background: #e53e3e; }
+.tracking-dot.tracking-unknown { background: #cbd5e0; }
+.tracking-latest .tracking-dot { box-shadow: 0 0 0 3px rgba(66,153,225,.3); }
+.tracking-info { flex: 1; min-width: 0; }
+.tracking-status-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
+.tracking-badge { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .3px; padding: 2px 8px; border-radius: 4px; background: #e2e8f0; color: #4a5568; }
+.tracking-badge.tracking-delivered { background: #c6f6d5; color: #276749; }
+.tracking-badge.tracking-transit { background: #ebf8ff; color: #2b6cb0; }
+.tracking-badge.tracking-pre { background: #f7fafc; color: #718096; }
+.tracking-badge.tracking-returned { background: #fefcbf; color: #975a16; }
+.tracking-badge.tracking-failure { background: #fed7d7; color: #9b2c2c; }
+.tracking-date { font-size: 11px; color: #a0aec0; }
+.tracking-details { font-size: 13px; color: #4a5568; }
+.tracking-location { font-size: 12px; color: #a0aec0; margin-top: 2px; }
+
 /* Image gallery in edit modal */
 .img-thumb { position: relative; width: 80px; height: 80px; border-radius: 6px; overflow: hidden; border: 1px solid #e2e8f0; }
 .img-thumb img { width: 100%; height: 100%; object-fit: cover; }

@@ -108,61 +108,97 @@ export async function getShipmentRates(token, shipmentId) {
 }
 
 /**
- * Transform Shippo rates into Snipcart's expected format
+ * Transform Shippo rates into Stripe shipping_options format
+ * Returns array of objects for Stripe Checkout Session shipping_options
  */
-export function transformRatesForSnipcart(shippoRates) {
+export function transformRatesForStripe(shippoRates, currency = 'gbp') {
     return shippoRates
         .filter(rate => rate.amount && parseFloat(rate.amount) > 0)
         .map(rate => {
-            // Use a stable ID based on provider + service token so it matches
-            // across multiple Snipcart webhook calls (fetch + validation)
-            const serviceToken = rate.servicelevel?.token || rate.servicelevel?.name || 'standard';
-            const stableId = `${rate.provider}_${serviceToken}`.toLowerCase().replace(/[^a-z0-9_]/g, '_');
+            const name = `${rate.provider} - ${rate.servicelevel?.name || 'Standard'}`;
+            const days = rate.estimated_days;
             return {
-                cost: parseFloat(rate.amount),
-                description: `${rate.provider} - ${rate.servicelevel?.name || 'Standard'}`,
-                guaranteedDaysToDelivery: rate.estimated_days || null,
-                userDefinedId: stableId
+                shipping_rate_data: {
+                    type: 'fixed_amount',
+                    fixed_amount: {
+                        amount: Math.round(parseFloat(rate.amount) * 100), // Stripe uses pence/cents
+                        currency
+                    },
+                    display_name: name,
+                    delivery_estimate: days ? {
+                        minimum: { unit: 'business_day', value: Math.max(1, days - 1) },
+                        maximum: { unit: 'business_day', value: days + 1 }
+                    } : undefined
+                }
             };
         })
-        .sort((a, b) => a.cost - b.cost);
+        .sort((a, b) => a.shipping_rate_data.fixed_amount.amount - b.shipping_rate_data.fixed_amount.amount);
 }
 
 /**
  * Fallback flat rates when Shippo is unavailable
  */
-export function getFallbackRates(destinationCountry) {
+/**
+ * Fallback flat rates when Shippo is unavailable
+ * Returns rates in the same format as transformRatesForStripe
+ */
+export function getFallbackShippingOptions(destinationCountry, currency = 'gbp') {
+    const rates = [];
+
     if (destinationCountry === 'GB') {
-        return [{
-            cost: 1.85,
-            description: 'Royal Mail - UK Standard',
-            guaranteedDaysToDelivery: 3
-        }];
+        rates.push({ amount: 185, name: 'Royal Mail - UK Standard', minDays: 2, maxDays: 4 });
+    } else {
+        const europeCountries = [
+            'IE', 'FR', 'DE', 'DK', 'AT', 'BE', 'BG', 'HR', 'CY', 'CZ',
+            'EE', 'FI', 'GR', 'HU', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL',
+            'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'NO', 'CH', 'IS',
+            'TR', 'AL', 'AD', 'AM', 'AZ', 'BY', 'BA', 'GE', 'GI', 'GL',
+            'KZ', 'XK', 'KG', 'LI', 'MD', 'ME', 'MK', 'MC', 'RS', 'SM',
+            'TJ', 'TM', 'UA', 'UZ', 'VA', 'RU'
+        ];
+        if (europeCountries.includes(destinationCountry)) {
+            rates.push({ amount: 380, name: 'Royal Mail - International Standard (Europe)', minDays: 4, maxDays: 7 });
+        } else {
+            rates.push({ amount: 460, name: 'Royal Mail - International Standard (Worldwide)', minDays: 6, maxDays: 10 });
+        }
     }
 
-    // European countries
-    const europeCountries = [
-        'IE', 'FR', 'DE', 'DK', 'AT', 'BE', 'BG', 'HR', 'CY', 'CZ',
-        'EE', 'FI', 'GR', 'HU', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL',
-        'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'NO', 'CH', 'IS',
-        'TR', 'AL', 'AD', 'AM', 'AZ', 'BY', 'BA', 'GE', 'GI', 'GL',
-        'KZ', 'XK', 'KG', 'LI', 'MD', 'ME', 'MK', 'MC', 'RS', 'SM',
-        'TJ', 'TM', 'UA', 'UZ', 'VA', 'RU'
-    ];
+    return rates.map(r => ({
+        shipping_rate_data: {
+            type: 'fixed_amount',
+            fixed_amount: { amount: r.amount, currency },
+            display_name: r.name,
+            delivery_estimate: {
+                minimum: { unit: 'business_day', value: r.minDays },
+                maximum: { unit: 'business_day', value: r.maxDays }
+            }
+        }
+    }));
+}
 
-    if (europeCountries.includes(destinationCountry)) {
-        return [{
-            cost: 3.80,
-            description: 'Royal Mail - International Standard (Europe)',
-            guaranteedDaysToDelivery: 5
-        }];
-    }
+/**
+ * Create a RETURN shipment (addresses swapped: customer -> FPVGate)
+ * Returns the shipment object with rates array
+ */
+export async function getReturnRates(token, fromCustomerAddress, parcel = null) {
+    const shipment = await shippoRequest(token, '/shipments', 'POST', {
+        address_from: {
+            name: fromCustomerAddress.name || 'Customer',
+            street1: fromCustomerAddress.street1 || fromCustomerAddress.address1,
+            street2: fromCustomerAddress.street2 || fromCustomerAddress.address2 || '',
+            city: fromCustomerAddress.city,
+            state: fromCustomerAddress.state || fromCustomerAddress.province || '',
+            zip: fromCustomerAddress.zip || fromCustomerAddress.postalCode,
+            country: fromCustomerAddress.country,
+            phone: fromCustomerAddress.phone || '',
+            email: fromCustomerAddress.email || ''
+        },
+        address_to: FROM_ADDRESS,
+        parcels: [parcel || DEFAULT_PARCEL],
+        async: false
+    });
 
-    return [{
-        cost: 4.60,
-        description: 'Royal Mail - International Standard (Worldwide)',
-        guaranteedDaysToDelivery: 7
-    }];
+    return shipment;
 }
 
 export { FROM_ADDRESS, DEFAULT_PARCEL };

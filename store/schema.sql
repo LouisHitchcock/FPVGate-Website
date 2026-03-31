@@ -2,7 +2,8 @@
 
 CREATE TABLE IF NOT EXISTS orders (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    snipcart_token TEXT UNIQUE NOT NULL,
+    stripe_session_id TEXT UNIQUE,
+    stripe_payment_intent TEXT,
     invoice_number TEXT,
     customer_name TEXT NOT NULL,
     customer_email TEXT NOT NULL,
@@ -14,7 +15,7 @@ CREATE TABLE IF NOT EXISTS orders (
     total REAL NOT NULL,
     currency TEXT DEFAULT 'gbp',
     shipping_method TEXT,
-    status TEXT DEFAULT 'new',       -- new, label_created, shipped, completed
+    status TEXT DEFAULT 'new',       -- new, label_created, shipped, completed, cancelled, refunded
     tracking_number TEXT,
     shippo_shipment_id TEXT,
     shippo_transaction_id TEXT,
@@ -26,7 +27,7 @@ CREATE TABLE IF NOT EXISTS orders (
 
 CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status);
 CREATE INDEX IF NOT EXISTS idx_orders_created ON orders(created_at);
-CREATE INDEX IF NOT EXISTS idx_orders_snipcart_token ON orders(snipcart_token);
+CREATE INDEX IF NOT EXISTS idx_orders_stripe_session ON orders(stripe_session_id);
 
 -- Order comments
 CREATE TABLE IF NOT EXISTS order_comments (
@@ -43,7 +44,7 @@ CREATE INDEX IF NOT EXISTS idx_comments_order ON order_comments(order_id);
 CREATE TABLE IF NOT EXISTS order_refunds (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     order_id INTEGER NOT NULL,
-    snipcart_refund_id TEXT,
+    stripe_refund_id TEXT,
     amount REAL NOT NULL,
     comment TEXT,
     refunded_by_gateway INTEGER DEFAULT 0,
@@ -76,3 +77,46 @@ CREATE TABLE IF NOT EXISTS inventory_log (
 );
 
 CREATE INDEX IF NOT EXISTS idx_inventory_log_product ON inventory_log(product_id);
+
+-- Tracking events (from Shippo webhooks)
+CREATE TABLE IF NOT EXISTS tracking_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id INTEGER,
+    tracking_number TEXT NOT NULL,
+    carrier TEXT,
+    status TEXT NOT NULL,
+    substatus_code TEXT,
+    substatus_text TEXT,
+    status_details TEXT,
+    location_city TEXT,
+    location_state TEXT,
+    location_country TEXT,
+    location_zip TEXT,
+    status_date TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (order_id) REFERENCES orders(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_tracking_order ON tracking_events(order_id);
+CREATE INDEX IF NOT EXISTS idx_tracking_number ON tracking_events(tracking_number);
+
+-- Returns
+CREATE TABLE IF NOT EXISTS returns (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    order_id INTEGER NOT NULL,
+    reason TEXT,
+    status TEXT DEFAULT 'requested',
+    shippo_shipment_id TEXT,
+    shippo_transaction_id TEXT,
+    tracking_number TEXT,
+    label_url TEXT,
+    refund_amount REAL,
+    items TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now')),
+    FOREIGN KEY (order_id) REFERENCES orders(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_returns_order ON returns(order_id);
+CREATE INDEX IF NOT EXISTS idx_returns_tracking ON returns(tracking_number);
+CREATE INDEX IF NOT EXISTS idx_returns_status ON returns(status);

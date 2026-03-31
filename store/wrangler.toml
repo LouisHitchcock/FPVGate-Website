@@ -13,7 +13,12 @@ database_id = "5e54869f-c57a-4bbc-a0be-e2e86853e801"
 binding = "IMAGES"
 bucket_name = "fpvgate-product-images"
 
+[vars]
+FROM_EMAIL = "FPVGate <orders@fpvgate.xyz>"
+
 # Secrets (set via `wrangler secret put`):
 # SHIPPO_API_TOKEN - Shippo API token
-# SNIPCART_SECRET_KEY - Snipcart secret API key
+# STRIPE_SECRET_KEY - Stripe secret key (sk_live_... or sk_test_...)
+# STRIPE_WEBHOOK_SECRET - Stripe webhook signing secret (whsec_...)
 # ADMIN_TOKEN - Token for admin portal authentication
+# RESEND_API_KEY - Resend API key for transactional emails (re_...)
