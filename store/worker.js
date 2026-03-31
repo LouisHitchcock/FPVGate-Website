@@ -217,50 +217,50 @@ export default {
                     return await handleListInventory(env, corsHeaders);
                 }
 
-                const inventoryGetMatch = url.pathname.match(/^\/api\/inventory\/([\w-]+)$/);
+                const inventoryGetMatch = url.pathname.match(/^\/api\/inventory\/([^/]+)$/);
                 if (inventoryGetMatch && request.method === 'GET') {
-                    const product = await env.DB.prepare('SELECT * FROM inventory WHERE product_id = ?').bind(inventoryGetMatch[1]).first();
+                    const product = await env.DB.prepare('SELECT * FROM inventory WHERE product_id = ?').bind(decodeURIComponent(inventoryGetMatch[1])).first();
                     if (!product) return jsonResponse({ error: 'Product not found' }, corsHeaders, 404);
                     return jsonResponse(product, corsHeaders);
                 }
 
-                const inventoryUpdateMatch = url.pathname.match(/^\/api\/inventory\/([\w-]+)$/);
+                const inventoryUpdateMatch = url.pathname.match(/^\/api\/inventory\/([^/]+)$/);
                 if (inventoryUpdateMatch && request.method === 'PUT') {
-                    return await handleUpdateInventory(inventoryUpdateMatch[1], request, env, corsHeaders);
+                    return await handleUpdateInventory(decodeURIComponent(inventoryUpdateMatch[1]), request, env, corsHeaders);
                 }
 
                 if (url.pathname === '/api/inventory' && request.method === 'POST') {
                     return await handleAddInventoryProduct(request, env, corsHeaders);
                 }
 
-                const inventoryLogMatch = url.pathname.match(/^\/api\/inventory\/([\w-]+)\/log$/);
+                const inventoryLogMatch = url.pathname.match(/^\/api\/inventory\/([^/]+)\/log$/);
                 if (inventoryLogMatch && request.method === 'GET') {
-                    return await handleGetInventoryLog(inventoryLogMatch[1], env, corsHeaders);
+                    return await handleGetInventoryLog(decodeURIComponent(inventoryLogMatch[1]), env, corsHeaders);
                 }
 
-                const imgUploadMatch = url.pathname.match(/^\/api\/inventory\/([\w-]+)\/images$/);
+                const imgUploadMatch = url.pathname.match(/^\/api\/inventory\/([^/]+)\/images$/);
                 if (imgUploadMatch && request.method === 'POST') {
-                    return await handleImageUpload(imgUploadMatch[1], request, env, corsHeaders);
+                    return await handleImageUpload(decodeURIComponent(imgUploadMatch[1]), request, env, corsHeaders);
                 }
 
-                const imgDeleteMatch = url.pathname.match(/^\/api\/inventory\/([\w-]+)\/images\/(\d+)$/);
+                const imgDeleteMatch = url.pathname.match(/^\/api\/inventory\/([^/]+)\/images\/(\d+)$/);
                 if (imgDeleteMatch && request.method === 'DELETE') {
-                    return await handleImageDelete(imgDeleteMatch[1], parseInt(imgDeleteMatch[2]), env, corsHeaders);
+                    return await handleImageDelete(decodeURIComponent(imgDeleteMatch[1]), parseInt(imgDeleteMatch[2]), env, corsHeaders);
                 }
 
-                const imgReorderMatch = url.pathname.match(/^\/api\/inventory\/([\w-]+)\/images\/reorder$/);
+                const imgReorderMatch = url.pathname.match(/^\/api\/inventory\/([^/]+)\/images\/reorder$/);
                 if (imgReorderMatch && request.method === 'POST') {
-                    return await handleImageReorder(imgReorderMatch[1], request, env, corsHeaders);
+                    return await handleImageReorder(decodeURIComponent(imgReorderMatch[1]), request, env, corsHeaders);
                 }
 
-                const archiveMatch = url.pathname.match(/^\/api\/inventory\/([\w-]+)\/archive$/);
+                const archiveMatch = url.pathname.match(/^\/api\/inventory\/([^/]+)\/archive$/);
                 if (archiveMatch && request.method === 'POST') {
-                    return await handleArchiveProduct(archiveMatch[1], request, env, corsHeaders);
+                    return await handleArchiveProduct(decodeURIComponent(archiveMatch[1]), request, env, corsHeaders);
                 }
 
-                const deleteMatch = url.pathname.match(/^\/api\/inventory\/([\w-]+)$/);
+                const deleteMatch = url.pathname.match(/^\/api\/inventory\/([^/]+)$/);
                 if (deleteMatch && request.method === 'DELETE') {
-                    return await handleDeleteProduct(deleteMatch[1], env, corsHeaders);
+                    return await handleDeleteProduct(decodeURIComponent(deleteMatch[1]), env, corsHeaders);
                 }
             }
 

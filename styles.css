@@ -2130,9 +2130,9 @@ footer p {
 }
 
 /* Cart Slide-out Panel */
-.cart-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 1500; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+.cart-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 2500; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
 .cart-overlay.open { opacity: 1; pointer-events: all; }
-.cart-panel { position: fixed; top: 0; right: -400px; width: 400px; max-width: 100vw; height: 100vh; background: var(--card-bg); z-index: 1501; display: flex; flex-direction: column; transition: right 0.3s; border-left: 1px solid rgba(0,212,255,0.15); }
+.cart-panel { position: fixed; top: 0; right: -400px; width: 400px; max-width: 100vw; height: 100vh; background: var(--card-bg); z-index: 2501; display: flex; flex-direction: column; transition: right 0.3s; border-left: 1px solid rgba(0,212,255,0.15); }
 .cart-panel.open { right: 0; }
 .cart-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid rgba(0,212,255,0.1); }
 .cart-header h2 { font-size: 1.1rem; color: var(--text-primary); margin: 0; }
