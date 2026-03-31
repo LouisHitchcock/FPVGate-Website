@@ -35,6 +35,29 @@ export default {
                 return await handleOrderWebhook(request, env, corsHeaders);
             }
 
+            // --- Public Products API (for Snipcart validation + shop page) ---
+
+            if (url.pathname === '/products' && request.method === 'GET') {
+                const result = await env.DB.prepare(
+                    'SELECT product_id, product_name, price, description, image_url, weight, max_quantity, stock_quantity, low_stock_threshold, active FROM inventory WHERE active = 1 ORDER BY product_name ASC'
+                ).all();
+
+                const products = (result.results || []).map(p => ({
+                    id: p.product_id,
+                    name: p.product_name,
+                    price: p.price,
+                    url: '/products',
+                    description: p.description || '',
+                    image: p.image_url || '',
+                    stock: p.stock_quantity,
+                    lowStockThreshold: p.low_stock_threshold,
+                    weight: p.weight || 100,
+                    maxQuantity: p.max_quantity || 5
+                }));
+
+                return jsonResponse(products, corsHeaders);
+            }
+
             // --- Admin API (requires auth) ---
 
             if (url.pathname.startsWith('/api/')) {
@@ -711,7 +734,7 @@ async function handleUpdateInventory(productId, request, env, corsHeaders) {
 
 async function handleAddInventoryProduct(request, env, corsHeaders) {
     const body = await request.json();
-    const { product_id, product_name, sku, stock_quantity, low_stock_threshold } = body;
+    const { product_id, product_name, sku, stock_quantity, low_stock_threshold, price, description, image_url } = body;
 
     if (!product_id || !product_name) {
         return jsonResponse({ error: 'product_id and product_name are required' }, corsHeaders, 400);
@@ -719,8 +742,8 @@ async function handleAddInventoryProduct(request, env, corsHeaders) {
 
     try {
         await env.DB.prepare(
-            'INSERT INTO inventory (product_id, product_name, sku, stock_quantity, low_stock_threshold) VALUES (?, ?, ?, ?, ?)'
-        ).bind(product_id, product_name, sku || null, stock_quantity || 0, low_stock_threshold || 5).run();
+            'INSERT INTO inventory (product_id, product_name, sku, stock_quantity, low_stock_threshold, price, description, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+        ).bind(product_id, product_name, sku || null, stock_quantity || 0, low_stock_threshold || 5, price || 0, description || null, image_url || null).run();
 
         // Log initial stock
         if (stock_quantity && stock_quantity > 0) {
