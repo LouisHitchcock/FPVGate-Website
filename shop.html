@@ -18,8 +18,6 @@
     <link rel="icon" type="image/png" href="logo-black.png">
     <link rel="stylesheet" href="styles.css">
 
-    <!-- Snipcart Styles -->
-    <link rel="stylesheet" href="https://cdn.snipcart.com/themes/v3.7.1/default/snipcart.css" />
 </head>
 <body>
     <nav class="navbar">
@@ -33,12 +31,12 @@
                 <a href="docs.html">Documentation</a>
                 <a href="flasher.html">Flash Firmware</a>
                 <a href="https://github.com/LouisHitchcock/FPVGate" target="_blank">GitHub</a>
-                <button class="snipcart-checkout btn-cart" title="View Cart">
+                <button class="btn-cart" title="View Cart" onclick="toggleCart()">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
                         <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
                         <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
                     </svg>
-                    <span class="snipcart-items-count"></span>
+                    <span class="cart-count" id="cart-count">0</span>
                 </button>
             </div>
         </div>
@@ -108,27 +106,96 @@
         </div>
     </footer>
 
-    <!-- Snipcart -->
-    <div hidden id="snipcart" data-api-key="MjExOWVjM2ItYTE1Ni00YmI4LWIyNTMtYjExNjQ4N2IyYzViNjM5MDk5Nzc1NTk0MDc1MDc1" data-config-modal-style="side" data-currency="gbp"></div>
-    <script async src="https://cdn.snipcart.com/themes/v3.7.1/default/snipcart.js"></script>
+    <!-- Cart Slide-out Panel -->
+    <div class="cart-overlay" id="cart-overlay" onclick="toggleCart()"></div>
+    <div class="cart-panel" id="cart-panel">
+        <div class="cart-header">
+            <h2>Your Cart</h2>
+            <button class="cart-close" onclick="toggleCart()">&times;</button>
+        </div>
+        <div class="cart-items" id="cart-items"></div>
+        <div class="cart-footer" id="cart-footer" style="display:none">
+            <div class="cart-subtotal"><span>Subtotal</span><span id="cart-subtotal">0.00</span></div>
+            <button class="btn btn-primary" style="width:100%" onclick="window.location.href='checkout.html'">Checkout</button>
+        </div>
+    </div>
 
     <script>
-    // Test/Live mode toggle - use ?test in URL or localStorage flag from admin
-    (function() {
-        const LIVE_KEY = 'MjExOWVjM2ItYTE1Ni00YmI4LWIyNTMtYjExNjQ4N2IyYzViNjM5MDk5Nzc1NTk0MDc1MDc1';
-        const TEST_KEY = 'NTczM2M2NjYtMDM3MS00MzMzLWJiOTYtYmYyOTJhOWNkZjZkNjM5MDk5Nzc1NTk0MDc1MDc1';
-        const params = new URLSearchParams(window.location.search);
-        const isTest = params.has('test') || localStorage.getItem('fpvgate_snipcart_test') === 'true';
-        document.getElementById('snipcart').setAttribute('data-api-key', isTest ? TEST_KEY : LIVE_KEY);
-        if (isTest) document.title = '[TEST] ' + document.title;
-    })();
-    </script>
-    <script>
-    const PRODUCTS_API = 'https://fpvgate-store.fpvgate-analytics.workers.dev/products';
+    const STORE_API = 'https://fpvgate-store.fpvgate-analytics.workers.dev';
+
+    // --- Cart (localStorage) ---
+    function getCart() { return JSON.parse(localStorage.getItem('fpvgate_cart') || '[]'); }
+    function saveCart(cart) { localStorage.setItem('fpvgate_cart', JSON.stringify(cart)); updateCartUI(); }
+    function updateCartUI() {
+        const cart = getCart();
+        const count = cart.reduce((s, i) => s + i.quantity, 0);
+        document.getElementById('cart-count').textContent = count;
+        document.getElementById('cart-count').style.display = count > 0 ? 'inline-flex' : 'none';
+        const el = document.getElementById('cart-items');
+        const footer = document.getElementById('cart-footer');
+        if (cart.length === 0) {
+            el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-secondary)">Your cart is empty</div>';
+            footer.style.display = 'none';
+            return;
+        }
+        footer.style.display = 'block';
+        let subtotal = 0;
+        el.innerHTML = cart.map((item, idx) => {
+            subtotal += item.price * item.quantity;
+            return `<div class="cart-item">
+                <div class="cart-item-img">${item.image ? `<img src="${item.image}" alt="${item.name}">` : ''}</div>
+                <div class="cart-item-info">
+                    <div class="cart-item-name">${item.name}</div>
+                    <div class="cart-item-price">&pound;${item.price.toFixed(2)}</div>
+                    <div class="cart-item-qty">
+                        <button onclick="changeQty(${idx},-1)">-</button>
+                        <span>${item.quantity}</span>
+                        <button onclick="changeQty(${idx},1)">+</button>
+                    </div>
+                </div>
+                <button class="cart-item-remove" onclick="removeFromCart(${idx})">&times;</button>
+            </div>`;
+        }).join('');
+        document.getElementById('cart-subtotal').innerHTML = '&pound;' + subtotal.toFixed(2);
+    }
+    function addToCart(product) {
+        const cart = getCart();
+        const existing = cart.find(i => i.id === product.id);
+        if (existing) {
+            if (existing.quantity < (product.maxQuantity || 5)) existing.quantity++;
+        } else {
+            cart.push({ id: product.id, name: product.name, price: product.price, quantity: 1, image: product.image || '', maxQuantity: product.maxQuantity || 5 });
+        }
+        saveCart(cart);
+        if (window.fpvgateAnalytics) window.fpvgateAnalytics.track('cart_add', { product_id: product.id, product_name: product.name, price: product.price });
+        // Open cart briefly
+        if (!document.getElementById('cart-panel').classList.contains('open')) toggleCart();
+    }
+    function removeFromCart(idx) {
+        const cart = getCart(); cart.splice(idx, 1); saveCart(cart);
+    }
+    function changeQty(idx, dir) {
+        const cart = getCart();
+        cart[idx].quantity += dir;
+        if (cart[idx].quantity <= 0) cart.splice(idx, 1);
+        else if (cart[idx].quantity > cart[idx].maxQuantity) cart[idx].quantity = cart[idx].maxQuantity;
+        saveCart(cart);
+    }
+    function toggleCart() {
+        const panel = document.getElementById('cart-panel');
+        const overlay = document.getElementById('cart-overlay');
+        const isOpen = panel.classList.toggle('open');
+        overlay.classList.toggle('open', isOpen);
+        document.body.style.overflow = isOpen ? 'hidden' : '';
+        if (isOpen && window.fpvgateAnalytics) window.fpvgateAnalytics.track('cart_open', {});
+    }
+    updateCartUI();
+
+    // --- Products ---
     async function loadProducts() {
         const grid = document.getElementById('product-grid');
         try {
-            const resp = await fetch(PRODUCTS_API);
+            const resp = await fetch(STORE_API + '/products');
             const products = await resp.json();
             if (!products.length) {
                 grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-secondary);">No products available right now.</div>';
@@ -161,19 +228,11 @@
                     </div>
                     <div class="product-info">
                         <h2 class="product-name">${p.name}</h2>
-                        <p class="product-description">${p.description}</p>
+                        <p class="product-description">${p.shortDescription || p.description}</p>
                         ${p.stock <= 0 ? '<p style="color:var(--error-color);font-weight:600;margin-top:8px;">Out of Stock</p>' : ''}
                         <div class="product-price-row">
                             <span class="product-price">&pound;${p.price.toFixed(2)}</span>
-                            <button class="btn btn-primary snipcart-add-item" onclick="event.stopPropagation()"
-                                data-item-id="${p.id}"
-                                data-item-name="${p.name}"
-                                data-item-price="${p.price}"
-                                data-item-url="/products"
-                                data-item-description="${p.description}"
-                                data-item-image="${p.image || ''}"
-                                data-item-weight="${p.weight}"
-                                data-item-max-quantity="${p.maxQuantity}"
+                            <button class="btn btn-primary" onclick="event.stopPropagation();addToCart(window._shopProducts[${pi}])"
                                 ${p.stock <= 0 ? 'disabled' : ''}>
                                 ${p.stock <= 0 ? 'Out of Stock' : 'Add to Cart'}
                             </button>
@@ -186,6 +245,7 @@
         }
     }
     loadProducts();
+
     // --- Product Modal ---
     let modalCarouselState = 0;
     function openProductModal(pi) {
@@ -211,58 +271,31 @@
 
         document.getElementById('modal-name').textContent = p.name;
         document.getElementById('modal-price').innerHTML = '&pound;' + p.price.toFixed(2);
-        document.getElementById('modal-description').textContent = p.description;
         document.getElementById('modal-stock').textContent = p.stock <= 0 ? 'Out of Stock' : '';
         document.getElementById('modal-actions').innerHTML = `
-            <button class="btn btn-primary snipcart-add-item"
-                data-item-id="${p.id}"
-                data-item-name="${p.name}"
-                data-item-price="${p.price}"
-                data-item-url="/products"
-                data-item-description="${p.description}"
-                data-item-image="${p.image || ''}"
-                data-item-weight="${p.weight}"
-                data-item-max-quantity="${p.maxQuantity}"
+            <button class="btn btn-primary" onclick="addToCart(window._shopProducts[${pi}])"
                 ${p.stock <= 0 ? 'disabled' : ''}>
                 ${p.stock <= 0 ? 'Out of Stock' : 'Add to Cart'}
             </button>`;
+
+        // Render long description or fall back to short description
+        const descEl = document.getElementById('modal-description');
+        if (p.longDescription) {
+            descEl.innerHTML = '<div class="modal-product-details">' + p.longDescription + '</div>';
+        } else {
+            descEl.textContent = p.shortDescription || p.description;
+        }
 
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
     }
 
-    function closeProductModal() {
-        document.getElementById('product-modal').classList.remove('active');
-        document.body.style.overflow = '';
-    }
-
-    function moveModalCarousel(dir) {
-        const c = document.getElementById('modal-carousel');
-        if (!c) return;
-        const total = c.querySelectorAll('.carousel-slide').length;
-        modalCarouselState += dir;
-        if (modalCarouselState < 0) modalCarouselState = total - 1;
-        if (modalCarouselState >= total) modalCarouselState = 0;
-        goToModalSlide(modalCarouselState);
-    }
-
-    function goToModalSlide(idx) {
-        const c = document.getElementById('modal-carousel');
-        if (!c) return;
-        modalCarouselState = idx;
-        c.querySelector('.carousel-track').style.transform = 'translateX(-' + idx * 100 + '%)';
-        c.querySelectorAll('.carousel-dot').forEach((d, i) => d.classList.toggle('active', i === idx));
-    }
-
-    document.addEventListener('keydown', function(e) {
-        if (!document.getElementById('product-modal').classList.contains('active')) return;
-        if (e.key === 'Escape') closeProductModal();
-        if (e.key === 'ArrowLeft') moveModalCarousel(-1);
-        if (e.key === 'ArrowRight') moveModalCarousel(1);
-    });
-
+    function closeProductModal() { document.getElementById('product-modal').classList.remove('active'); document.body.style.overflow = ''; }
+    function moveModalCarousel(dir) { const c=document.getElementById('modal-carousel');if(!c)return;const t=c.querySelectorAll('.carousel-slide').length;modalCarouselState+=dir;if(modalCarouselState<0)modalCarouselState=t-1;if(modalCarouselState>=t)modalCarouselState=0;goToModalSlide(modalCarouselState); }
+    function goToModalSlide(idx) { const c=document.getElementById('modal-carousel');if(!c)return;modalCarouselState=idx;c.querySelector('.carousel-track').style.transform='translateX(-'+idx*100+'%)';c.querySelectorAll('.carousel-dot').forEach((d,i)=>d.classList.toggle('active',i===idx)); }
+    document.addEventListener('keydown', function(e) { if(!document.getElementById('product-modal').classList.contains('active'))return;if(e.key==='Escape')closeProductModal();if(e.key==='ArrowLeft')moveModalCarousel(-1);if(e.key==='ArrowRight')moveModalCarousel(1); });
     const carouselState={};
-    function moveCarousel(pi,dir){const c=document.getElementById('carousel-'+pi);if(!c)return;const slides=c.querySelectorAll('.carousel-slide');const total=slides.length;carouselState[pi]=(carouselState[pi]||0)+dir;if(carouselState[pi]<0)carouselState[pi]=total-1;if(carouselState[pi]>=total)carouselState[pi]=0;goToSlide(pi,carouselState[pi])}
+    function moveCarousel(pi,dir){const c=document.getElementById('carousel-'+pi);if(!c)return;const total=c.querySelectorAll('.carousel-slide').length;carouselState[pi]=(carouselState[pi]||0)+dir;if(carouselState[pi]<0)carouselState[pi]=total-1;if(carouselState[pi]>=total)carouselState[pi]=0;goToSlide(pi,carouselState[pi])}
     function goToSlide(pi,idx){const c=document.getElementById('carousel-'+pi);if(!c)return;carouselState[pi]=idx;c.querySelector('.carousel-track').style.transform='translateX(-'+idx*100+'%)';c.querySelectorAll('.carousel-dot').forEach((d,i)=>d.classList.toggle('active',i===idx))}
     </script>
     <script src="analytics-tracker.js"></script>

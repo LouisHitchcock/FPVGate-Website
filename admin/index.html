@@ -142,7 +142,9 @@
 <label>Product Name</label><input type="text" id="new-product-name" placeholder="e.g. FPVGate AIO V3">
 <label>SKU (optional)</label><input type="text" id="new-product-sku" placeholder="e.g. FPVG-AIO-V3">
 <label>Price (GBP)</label><input type="number" id="new-product-price" step="0.01" min="0" placeholder="e.g. 29.99">
-<label>Description</label><input type="text" id="new-product-desc" placeholder="Product description">
+<label>Short Description <span style="color:#a0aec0;font-weight:normal">(shown on shop card)</span></label><textarea id="new-product-short-desc" rows="2" placeholder="Brief product tagline for the shop grid"></textarea>
+<label>Long Description <span style="color:#a0aec0;font-weight:normal">(HTML, shown on product page)</span></label><textarea id="new-product-long-desc" rows="6" placeholder="Detailed HTML product description"></textarea>
+<label>Description <span style="color:#a0aec0;font-weight:normal">(legacy/Stripe)</span></label><input type="text" id="new-product-desc" placeholder="Fallback description">
 <label>Image URL (optional)</label><input type="text" id="new-product-image" placeholder="https://...">
 <label>Initial Stock</label><input type="number" id="new-product-stock" value="0" min="0">
 <label>Low Stock Threshold</label><input type="number" id="new-product-threshold" value="5" min="0">
@@ -155,7 +157,9 @@
 <label>Product Name</label><input type="text" id="edit-product-name">
 <label>SKU</label><input type="text" id="edit-product-sku">
 <label>Price (GBP)</label><input type="number" id="edit-product-price" step="0.01" min="0">
-<label>Description</label><input type="text" id="edit-product-desc">
+<label>Short Description <span style="color:#a0aec0;font-weight:normal">(shown on shop card)</span></label><textarea id="edit-product-short-desc" rows="2"></textarea>
+<label>Long Description <span style="color:#a0aec0;font-weight:normal">(HTML, shown on product page)</span></label><textarea id="edit-product-long-desc" rows="6"></textarea>
+<label>Description <span style="color:#a0aec0;font-weight:normal">(legacy/Stripe)</span></label><input type="text" id="edit-product-desc">
 <label>Image URL</label><input type="text" id="edit-product-image">
 <label>Stock Quantity</label><input type="number" id="edit-product-stock" min="0">
 <label>Low Stock Threshold</label><input type="number" id="edit-product-threshold" min="0">

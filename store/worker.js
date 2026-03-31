@@ -66,7 +66,7 @@ export default {
 
             if (url.pathname === '/products' && request.method === 'GET') {
                 const result = await env.DB.prepare(
-                    'SELECT product_id, product_name, price, description, image_url, images, weight, max_quantity, stock_quantity, low_stock_threshold, active FROM inventory WHERE active = 1 ORDER BY product_name ASC'
+                    'SELECT product_id, product_name, price, description, short_description, long_description, image_url, images, weight, max_quantity, stock_quantity, low_stock_threshold, active FROM inventory WHERE active = 1 ORDER BY product_name ASC'
                 ).all();
 
                 const baseUrl = url.origin;
@@ -78,6 +78,8 @@ export default {
                         price: p.price,
                         url: '/products',
                         description: p.description || '',
+                        shortDescription: p.short_description || p.description || '',
+                        longDescription: p.long_description || '',
                         image: imgs.length > 0 ? `${baseUrl}/images/${imgs[0]}` : (p.image_url || ''),
                         images: imgs.map(k => `${baseUrl}/images/${k}`),
                         stock: p.stock_quantity,
@@ -1192,7 +1194,7 @@ async function handleListInventory(env, corsHeaders) {
 
 async function handleUpdateInventory(productId, request, env, corsHeaders) {
     const body = await request.json();
-    const { stock_quantity, low_stock_threshold, reason, product_name, sku, price, description, image_url, weight, max_quantity } = body;
+    const { stock_quantity, low_stock_threshold, reason, product_name, sku, price, description, short_description, long_description, image_url, weight, max_quantity } = body;
 
     const existing = await env.DB.prepare('SELECT * FROM inventory WHERE product_id = ?').bind(productId).first();
     if (!existing) return jsonResponse({ error: 'Product not found' }, corsHeaders, 404);
@@ -1212,6 +1214,8 @@ async function handleUpdateInventory(productId, request, env, corsHeaders) {
     if (sku !== undefined) { updates.push('sku = ?'); params.push(sku); }
     if (price !== undefined) { updates.push('price = ?'); params.push(price); }
     if (description !== undefined) { updates.push('description = ?'); params.push(description); }
+    if (short_description !== undefined) { updates.push('short_description = ?'); params.push(short_description); }
+    if (long_description !== undefined) { updates.push('long_description = ?'); params.push(long_description); }
     if (image_url !== undefined) { updates.push('image_url = ?'); params.push(image_url); }
     if (weight !== undefined) { updates.push('weight = ?'); params.push(weight); }
     if (max_quantity !== undefined) { updates.push('max_quantity = ?'); params.push(max_quantity); }
@@ -1227,15 +1231,15 @@ async function handleUpdateInventory(productId, request, env, corsHeaders) {
 
 async function handleAddInventoryProduct(request, env, corsHeaders) {
     const body = await request.json();
-    const { product_id, product_name, sku, stock_quantity, low_stock_threshold, price, description, image_url } = body;
+    const { product_id, product_name, sku, stock_quantity, low_stock_threshold, price, description, short_description, long_description, image_url } = body;
 
     if (!product_id || !product_name) return jsonResponse({ error: 'product_id and product_name are required' }, corsHeaders, 400);
     if (!price) return jsonResponse({ error: 'Price is required' }, corsHeaders, 400);
 
     try {
         await env.DB.prepare(
-            'INSERT INTO inventory (product_id, product_name, sku, stock_quantity, low_stock_threshold, price, description, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-        ).bind(product_id, product_name, sku || null, stock_quantity || 0, low_stock_threshold || 5, price || 0, description || null, image_url || null).run();
+            'INSERT INTO inventory (product_id, product_name, sku, stock_quantity, low_stock_threshold, price, description, short_description, long_description, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        ).bind(product_id, product_name, sku || null, stock_quantity || 0, low_stock_threshold || 5, price || 0, description || null, short_description || null, long_description || null, image_url || null).run();
 
         if (stock_quantity && stock_quantity > 0) {
             await env.DB.prepare('INSERT INTO inventory_log (product_id, change_amount, reason) VALUES (?, ?, ?)').bind(product_id, stock_quantity, 'Initial stock').run();
