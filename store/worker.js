@@ -209,6 +209,15 @@ async function handleOrderWebhook(request, env, corsHeaders) {
         order.shippingMethod || null
     ).run();
 
+    // Send Discord notification
+    if (env.DISCORD_WEBHOOK_URL) {
+        try {
+            await sendDiscordNotification(env.DISCORD_WEBHOOK_URL, order);
+        } catch (e) {
+            console.error('Discord notification failed:', e.message);
+        }
+    }
+
     return jsonResponse({ success: true }, corsHeaders);
 }
 
@@ -396,6 +405,42 @@ async function handleUpdateStatus(orderId, request, env, corsHeaders) {
 }
 
 // --- Helpers ---
+
+async function sendDiscordNotification(webhookUrl, order) {
+    const total = order.finalGrandTotal || order.grandTotal;
+    const currency = (order.currency || 'GBP').toUpperCase();
+    const itemList = order.items
+        .map(item => `${item.name} x${item.quantity}`)
+        .join(', ');
+
+    const address = [
+        order.shippingAddressAddress1,
+        order.shippingAddressAddress2,
+        order.shippingAddressCity,
+        order.shippingAddressProvince,
+        order.shippingAddressPostalCode,
+        order.shippingAddressCountry
+    ].filter(Boolean).join(', ');
+
+    await fetch(webhookUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            embeds: [{
+                title: `New Order #${order.invoiceNumber || order.token.slice(0, 8)}`,
+                color: 0x48bb78,
+                fields: [
+                    { name: 'Customer', value: order.shippingAddressName || order.email, inline: true },
+                    { name: 'Total', value: `${currency} ${parseFloat(total).toFixed(2)}`, inline: true },
+                    { name: 'Items', value: itemList, inline: false },
+                    { name: 'Ship To', value: address, inline: false }
+                ],
+                footer: { text: 'FPVGate Store' },
+                timestamp: new Date().toISOString()
+            }]
+        })
+    });
+}
 
 async function updateSnipcartTracking(apiKey, orderToken, trackingNumber) {
     const credentials = btoa(apiKey + ':');
