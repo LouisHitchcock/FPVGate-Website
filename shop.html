@@ -138,6 +138,17 @@
     <div hidden id="snipcart" data-api-key="MjExOWVjM2ItYTE1Ni00YmI4LWIyNTMtYjExNjQ4N2IyYzViNjM5MDk5Nzc1NTk0MDc1MDc1" data-config-modal-style="side" data-currency="gbp"></div>
     <script async src="https://cdn.snipcart.com/themes/v3.7.1/default/snipcart.js"></script>
 
+    <script>
+    // Test/Live mode toggle - use ?test in URL or localStorage flag from admin
+    (function() {
+        const LIVE_KEY = 'MjExOWVjM2ItYTE1Ni00YmI4LWIyNTMtYjExNjQ4N2IyYzViNjM5MDk5Nzc1NTk0MDc1MDc1';
+        const TEST_KEY = 'NTczM2M2NjYtMDM3MS00MzMzLWJiOTYtYmYyOTJhOWNkZjZkNjM5MDk5Nzc1NTk0MDc1MDc1';
+        const params = new URLSearchParams(window.location.search);
+        const isTest = params.has('test') || localStorage.getItem('fpvgate_snipcart_test') === 'true';
+        document.getElementById('snipcart').setAttribute('data-api-key', isTest ? TEST_KEY : LIVE_KEY);
+        if (isTest) document.title = '[TEST] ' + document.title;
+    })();
+    </script>
     <script src="analytics-tracker.js"></script>
     <script src="animations.js"></script>
 </body>

@@ -23,7 +23,17 @@
 <button class="nav-item" onclick="switchSection('inventory',this)"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>Inventory<span class="nav-badge" id="low-stock-badge" style="display:none">!</span></button>
 <button class="nav-item" onclick="switchSection('flasherstats',this)"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>Flasher Stats</button>
 </nav>
-<div class="sidebar-footer">FPVGate Shop Admin</div>
+<div class="sidebar-footer">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+<span style="font-size:11px">Snipcart Mode</span>
+<label style="position:relative;display:inline-block;width:36px;height:20px;cursor:pointer">
+<input type="checkbox" id="snipcart-mode-toggle" onchange="toggleSnipcartMode(this.checked)" style="opacity:0;width:0;height:0">
+<span style="position:absolute;top:0;left:0;right:0;bottom:0;background:#48bb78;border-radius:10px;transition:.3s"></span>
+<span id="mode-slider" style="position:absolute;height:16px;width:16px;left:2px;bottom:2px;background:#fff;border-radius:50%;transition:.3s"></span>
+</label>
+</div>
+<div id="snipcart-mode-label" style="font-size:11px;color:#48bb78">LIVE</div>
+</div>
 </aside>
 <main class="main-content">
 <div id="section-dashboard" class="section active">

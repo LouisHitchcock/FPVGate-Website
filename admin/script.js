@@ -60,3 +60,6 @@ function renderFlErrorTable(errors){const tb=document.querySelector('#fl-error-t
 function formatStatus(s){return{new:'New',label_created:'Label Created',shipped:'Shipped',completed:'Completed',cancelled:'Cancelled',refunded:'Refunded'}[s]||s}
 function escHtml(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML}
 function countryFlag(c){if(!c||c.length!==2)return'';const cp=[...c.toUpperCase()].map(x=>0x1F1E6-65+x.charCodeAt(0));return String.fromCodePoint(...cp)}
+
+function toggleSnipcartMode(isTest){localStorage.setItem('fpvgate_snipcart_test',isTest?'true':'false');const label=document.getElementById('snipcart-mode-label');const slider=document.getElementById('mode-slider');const track=document.getElementById('snipcart-mode-toggle').parentElement.querySelector('span');if(isTest){label.textContent='TEST';label.style.color='#ed8936';slider.style.left='18px';track.style.background='#ed8936'}else{label.textContent='LIVE';label.style.color='#48bb78';slider.style.left='2px';track.style.background='#48bb78'}}
+(function(){const isTest=localStorage.getItem('fpvgate_snipcart_test')==='true';const toggle=document.getElementById('snipcart-mode-toggle');if(toggle){toggle.checked=isTest;if(isTest)toggleSnipcartMode(true)}})();
