@@ -133,6 +133,14 @@ export default {
                     return await handleListInventory(env, corsHeaders);
                 }
 
+                // GET /api/inventory/:productId - Get single product
+                const inventoryGetMatch = url.pathname.match(/^\/api\/inventory\/([\w-]+)$/);
+                if (inventoryGetMatch && request.method === 'GET') {
+                    const product = await env.DB.prepare('SELECT * FROM inventory WHERE product_id = ?').bind(inventoryGetMatch[1]).first();
+                    if (!product) return jsonResponse({ error: 'Product not found' }, corsHeaders, 404);
+                    return jsonResponse(product, corsHeaders);
+                }
+
                 // PUT /api/inventory/:productId - Update stock
                 const inventoryUpdateMatch = url.pathname.match(/^\/api\/inventory\/([\w-]+)$/);
                 if (inventoryUpdateMatch && request.method === 'PUT') {
@@ -701,7 +709,7 @@ async function handleListInventory(env, corsHeaders) {
 
 async function handleUpdateInventory(productId, request, env, corsHeaders) {
     const body = await request.json();
-    const { stock_quantity, low_stock_threshold, reason } = body;
+    const { stock_quantity, low_stock_threshold, reason, product_name, sku, price, description, image_url, weight, max_quantity } = body;
 
     const existing = await env.DB.prepare(
         'SELECT * FROM inventory WHERE product_id = ?'
@@ -717,18 +725,20 @@ async function handleUpdateInventory(productId, request, env, corsHeaders) {
     if (stock_quantity !== undefined) {
         updates.push('stock_quantity = ?');
         params.push(stock_quantity);
-
-        // Log the change
         const changeAmount = stock_quantity - existing.stock_quantity;
         await env.DB.prepare(
             'INSERT INTO inventory_log (product_id, change_amount, reason) VALUES (?, ?, ?)'
         ).bind(productId, changeAmount, reason || 'Manual adjustment').run();
     }
 
-    if (low_stock_threshold !== undefined) {
-        updates.push('low_stock_threshold = ?');
-        params.push(low_stock_threshold);
-    }
+    if (low_stock_threshold !== undefined) { updates.push('low_stock_threshold = ?'); params.push(low_stock_threshold); }
+    if (product_name !== undefined) { updates.push('product_name = ?'); params.push(product_name); }
+    if (sku !== undefined) { updates.push('sku = ?'); params.push(sku); }
+    if (price !== undefined) { updates.push('price = ?'); params.push(price); }
+    if (description !== undefined) { updates.push('description = ?'); params.push(description); }
+    if (image_url !== undefined) { updates.push('image_url = ?'); params.push(image_url); }
+    if (weight !== undefined) { updates.push('weight = ?'); params.push(weight); }
+    if (max_quantity !== undefined) { updates.push('max_quantity = ?'); params.push(max_quantity); }
 
     if (updates.length === 0) {
         return jsonResponse({ error: 'No fields to update' }, corsHeaders, 400);

@@ -157,6 +157,19 @@
 <div id="add-product-error" class="error-text" style="margin-bottom:8px"></div>
 <div class="modal-actions"><button class="btn btn-secondary" onclick="closeAddProductModal()">Cancel</button><button class="btn btn-primary" onclick="addProduct()">Add Product</button></div>
 </div></div>
+<div id="edit-product-modal" class="modal-overlay" onclick="if(event.target===this) closeEditProductModal()">
+<div class="modal"><h2>Edit Product</h2>
+<input type="hidden" id="edit-product-id">
+<label>Product Name</label><input type="text" id="edit-product-name">
+<label>SKU</label><input type="text" id="edit-product-sku">
+<label>Price (GBP)</label><input type="number" id="edit-product-price" step="0.01" min="0">
+<label>Description</label><input type="text" id="edit-product-desc">
+<label>Image URL</label><input type="text" id="edit-product-image">
+<label>Stock Quantity</label><input type="number" id="edit-product-stock" min="0">
+<label>Low Stock Threshold</label><input type="number" id="edit-product-threshold" min="0">
+<div id="edit-product-error" class="error-text" style="margin-bottom:8px"></div>
+<div class="modal-actions"><button class="btn btn-secondary" onclick="closeEditProductModal()">Cancel</button><button class="btn btn-primary" onclick="saveEditProduct()">Save Changes</button></div>
+</div></div>
 <script src="script.js"></script>
 </body>
 </html>
