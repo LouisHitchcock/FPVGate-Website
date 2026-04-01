@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout | FPVGate Shop</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/png" href="logo-black.png">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f7f8fa; color: #1a202c; min-height: 100vh; }
+
+        .checkout-header { background: #fff; border-bottom: 1px solid #e2e8f0; padding: 16px 0; }
+        .checkout-header .container { max-width: 1100px; margin: 0 auto; padding: 0 20px; display: flex; align-items: center; justify-content: space-between; }
+        .checkout-header h1 { font-size: 1.25rem; color: #1a202c; }
+        .checkout-header h1 span { color: #00d4ff; }
+        .checkout-header a { color: #4299e1; text-decoration: none; font-size: 14px; }
+        .checkout-header a:hover { text-decoration: underline; }
+
+        .checkout-body { max-width: 1100px; margin: 0 auto; padding: 32px 20px; display: grid; grid-template-columns: 1fr 380px; gap: 32px; }
+
+        .checkout-section { background: #fff; border-radius: 10px; border: 1px solid #e2e8f0; padding: 28px; margin-bottom: 24px; }
+        .checkout-section h2 { font-size: 1.1rem; color: #1a202c; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0; }
+
+        label { display: block; font-size: 13px; font-weight: 600; color: #4a5568; margin-bottom: 4px; margin-top: 12px; }
+        label:first-of-type { margin-top: 0; }
+        input, select { width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; font-family: inherit; background: #fff; color: #1a202c; transition: border-color 0.2s; }
+        input:focus, select:focus { outline: none; border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66,153,225,0.1); }
+        .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+        .btn-rates { width: 100%; padding: 12px; background: #4299e1; color: #fff; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 16px; transition: background 0.2s; }
+        .btn-rates:hover { background: #3182ce; }
+        .btn-rates:disabled { background: #a0aec0; cursor: not-allowed; }
+
+        /* Shipping rates */
+        .rates-list { margin-top: 16px; }
+        .rate-card { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s; }
+        .rate-card:hover { border-color: #4299e1; background: #ebf8ff; }
+        .rate-card.selected { border-color: #4299e1; background: #ebf8ff; }
+        .rate-card .rate-info { flex: 1; }
+        .rate-card .rate-name { font-weight: 600; font-size: 14px; color: #1a202c; }
+        .rate-card .rate-days { font-size: 12px; color: #718096; margin-top: 2px; }
+        .rate-card .rate-price { font-weight: 700; font-size: 16px; color: #1a202c; white-space: nowrap; margin-left: 16px; }
+        .rate-card .rate-check { width: 20px; height: 20px; border: 2px solid #cbd5e0; border-radius: 50%; margin-right: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+        .rate-card.selected .rate-check { border-color: #4299e1; background: #4299e1; }
+        .rate-card.selected .rate-check::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #fff; }
+
+        /* Order summary */
+        .summary-card { background: #fff; border-radius: 10px; border: 1px solid #e2e8f0; padding: 28px; position: sticky; top: 24px; }
+        .summary-card h2 { font-size: 1.1rem; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0; }
+        .summary-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f7f8fa; align-items: center; }
+        .summary-item-info { display: flex; gap: 12px; align-items: center; flex: 1; min-width: 0; }
+        .summary-item-img { width: 48px; height: 48px; border-radius: 6px; background: #f7f8fa; overflow: hidden; flex-shrink: 0; }
+        .summary-item-img img { width: 100%; height: 100%; object-fit: cover; }
+        .summary-item-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .summary-item-qty { font-size: 12px; color: #718096; }
+        .summary-item-price { font-weight: 600; font-size: 14px; white-space: nowrap; margin-left: 12px; }
+        .summary-line { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; color: #4a5568; }
+        .summary-total { display: flex; justify-content: space-between; padding: 14px 0 0; margin-top: 8px; border-top: 2px solid #e2e8f0; font-size: 18px; font-weight: 700; color: #1a202c; }
+
+        .btn-pay { width: 100%; padding: 14px; background: linear-gradient(135deg, #00d4ff, #6c63ff); color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 20px; transition: opacity 0.2s, transform 0.2s; }
+        .btn-pay:hover { opacity: 0.9; transform: translateY(-1px); }
+        .btn-pay:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .checkout-error { color: #e53e3e; font-size: 13px; margin-top: 8px; }
+        .checkout-empty { text-align: center; padding: 60px 20px; color: #718096; }
+        .checkout-empty a { color: #4299e1; }
+
+        .loading-spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; margin-right: 8px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 768px) {
+            .checkout-body { grid-template-columns: 1fr; }
+            .summary-card { position: static; }
+        }
+    </style>
+</head>
+<body>
+    <div class="checkout-header">
+        <div class="container">
+            <h1><span>FPVGate</span> Checkout</h1>
+            <a href="shop.html">Back to Shop</a>
+        </div>
+    </div>
+
+    <div class="checkout-body" id="checkout-body">
+        <div class="checkout-left">
+            <div class="checkout-section">
+                <h2>Shipping Address</h2>
+                <label>Full Name *</label>
+                <input type="text" id="ship-name" autocomplete="name">
+                <label>Email *</label>
+                <input type="email" id="ship-email" autocomplete="email">
+                <label>Address Line 1 *</label>
+                <input type="text" id="ship-address1" autocomplete="address-line1">
+                <label>Address Line 2</label>
+                <input type="text" id="ship-address2" autocomplete="address-line2">
+                <div class="row-2">
+                    <div><label>City *</label><input type="text" id="ship-city" autocomplete="address-level2"></div>
+                    <div><label>County / State</label><input type="text" id="ship-province" autocomplete="address-level1"></div>
+                </div>
+                <div class="row-2">
+                    <div><label>Postcode *</label><input type="text" id="ship-postcode" autocomplete="postal-code"></div>
+                    <div><label>Country *</label>
+                        <select id="ship-country" autocomplete="country">
+                            <option value="">Select country</option>
+                            <option value="GB" selected>United Kingdom</option>
+                            <option value="IE">Ireland</option>
+                            <option value="FR">France</option>
+                            <option value="DE">Germany</option>
+                            <option value="NL">Netherlands</option>
+                            <option value="BE">Belgium</option>
+                            <option value="ES">Spain</option>
+                            <option value="IT">Italy</option>
+                            <option value="PT">Portugal</option>
+                            <option value="AT">Austria</option>
+                            <option value="CH">Switzerland</option>
+                            <option value="SE">Sweden</option>
+                            <option value="NO">Norway</option>
+                            <option value="DK">Denmark</option>
+                            <option value="FI">Finland</option>
+                            <option value="PL">Poland</option>
+                            <option value="CZ">Czech Republic</option>
+                            <option value="US">United States</option>
+                            <option value="CA">Canada</option>
+                            <option value="AU">Australia</option>
+                            <option value="NZ">New Zealand</option>
+                        </select>
+                    </div>
+                </div>
+                <label>Phone</label>
+                <input type="tel" id="ship-phone" autocomplete="tel">
+
+                <button class="btn-rates" id="btn-rates" onclick="fetchRates()">Calculate Shipping</button>
+            </div>
+
+            <div class="checkout-section" id="shipping-section" style="display:none">
+                <h2>Shipping Method</h2>
+                <div class="rates-list" id="rates-list"></div>
+            </div>
+        </div>
+
+        <div class="checkout-right">
+            <div class="summary-card">
+                <h2>Order Summary</h2>
+                <div id="summary-items"></div>
+                <div class="summary-line"><span>Subtotal</span><span id="summary-subtotal">-</span></div>
+                <div class="summary-line"><span>Shipping</span><span id="summary-shipping">-</span></div>
+                <div class="summary-total"><span>Total</span><span id="summary-total">-</span></div>
+                <button class="btn-pay" id="btn-pay" disabled onclick="startCheckout()">Select shipping to continue</button>
+                <div class="checkout-error" id="checkout-error"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    const STORE_API = 'https://fpvgate-store.fpvgate-analytics.workers.dev';
+    let selectedRate = null;
+    let cartItems = [];
+
+    function getCart() { return JSON.parse(localStorage.getItem('fpvgate_cart') || '[]'); }
+
+    function init() {
+        cartItems = getCart();
+        if (cartItems.length === 0) {
+            document.getElementById('checkout-body').innerHTML = '<div class="checkout-empty"><h2>Your cart is empty</h2><p style="margin-top:12px"><a href="shop.html">Continue shopping</a></p></div>';
+            return;
+        }
+        let subtotal = 0;
+        document.getElementById('summary-items').innerHTML = cartItems.map(item => {
+            subtotal += item.price * item.quantity;
+            return `<div class="summary-item">
+                <div class="summary-item-info">
+                    <div class="summary-item-img">${item.image ? `<img src="${item.image}">` : ''}</div>
+                    <div><div class="summary-item-name">${item.name}</div><div class="summary-item-qty">Qty: ${item.quantity}</div></div>
+                </div>
+                <div class="summary-item-price">&pound;${(item.price * item.quantity).toFixed(2)}</div>
+            </div>`;
+        }).join('');
+        document.getElementById('summary-subtotal').innerHTML = '&pound;' + subtotal.toFixed(2);
+        updateTotal();
+    }
+
+    function updateTotal() {
+        const cart = getCart();
+        const subtotal = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+        const shipping = selectedRate ? selectedRate.amount : 0;
+        document.getElementById('summary-shipping').innerHTML = selectedRate ? '&pound;' + shipping.toFixed(2) : '-';
+        document.getElementById('summary-total').innerHTML = '&pound;' + (subtotal + shipping).toFixed(2);
+    }
+
+    async function fetchRates() {
+        const name = document.getElementById('ship-name').value.trim();
+        const addr1 = document.getElementById('ship-address1').value.trim();
+        const city = document.getElementById('ship-city').value.trim();
+        const postcode = document.getElementById('ship-postcode').value.trim();
+        const country = document.getElementById('ship-country').value;
+        const email = document.getElementById('ship-email').value.trim();
+
+        if (!name || !addr1 || !city || !postcode || !country || !email) {
+            document.getElementById('checkout-error').textContent = 'Please fill in all required fields.';
+            return;
+        }
+        document.getElementById('checkout-error').textContent = '';
+
+        const btn = document.getElementById('btn-rates');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="loading-spinner"></span>Calculating...';
+
+        try {
+            const resp = await fetch(STORE_API + '/shipping-rates', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    shipping: {
+                        name, address1: addr1,
+                        address2: document.getElementById('ship-address2').value.trim(),
+                        city, province: document.getElementById('ship-province').value.trim(),
+                        postalCode: postcode, country,
+                        phone: document.getElementById('ship-phone').value.trim()
+                    }
+                })
+            });
+            const data = await resp.json();
+            if (data.error) {
+                document.getElementById('checkout-error').textContent = data.error;
+                btn.disabled = false; btn.textContent = 'Calculate Shipping';
+                return;
+            }
+
+            const list = document.getElementById('rates-list');
+            const rates = data.rates || [];
+            if (rates.length === 0) {
+                list.innerHTML = '<div style="color:#718096;text-align:center;padding:16px">No shipping options available for this address.</div>';
+            } else {
+                list.innerHTML = rates.map((r, i) => `
+                    <div class="rate-card" id="rate-${i}" onclick="selectRate(${i})">
+                        <div class="rate-check"></div>
+                        <div class="rate-info">
+                            <div class="rate-name">${r.provider} - ${r.service}</div>
+                            <div class="rate-days">${r.estimatedDays ? r.estimatedDays + ' business day(s)' : ''} ${r.durationTerms || ''}</div>
+                        </div>
+                        <div class="rate-price">&pound;${r.amount.toFixed(2)}</div>
+                    </div>
+                `).join('');
+                window._shippingRates = rates;
+            }
+            document.getElementById('shipping-section').style.display = 'block';
+            btn.textContent = 'Recalculate Shipping';
+            btn.disabled = false;
+        } catch (e) {
+            document.getElementById('checkout-error').textContent = 'Failed to get shipping rates. Please try again.';
+            btn.disabled = false; btn.textContent = 'Calculate Shipping';
+        }
+    }
+
+    function selectRate(idx) {
+        document.querySelectorAll('.rate-card').forEach(c => c.classList.remove('selected'));
+        document.getElementById('rate-' + idx).classList.add('selected');
+        selectedRate = window._shippingRates[idx];
+        updateTotal();
+        const btn = document.getElementById('btn-pay');
+        btn.disabled = false;
+        btn.textContent = 'Pay with Stripe';
+    }
+
+    async function startCheckout() {
+        const errEl = document.getElementById('checkout-error');
+        errEl.textContent = '';
+
+        if (!selectedRate) { errEl.textContent = 'Please select a shipping method.'; return; }
+
+        const cart = getCart();
+        if (!cart.length) return;
+
+        const btn = document.getElementById('btn-pay');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="loading-spinner"></span>Redirecting to payment...';
+
+        const shipping = {
+            name: document.getElementById('ship-name').value.trim(),
+            address1: document.getElementById('ship-address1').value.trim(),
+            address2: document.getElementById('ship-address2').value.trim(),
+            city: document.getElementById('ship-city').value.trim(),
+            province: document.getElementById('ship-province').value.trim(),
+            postalCode: document.getElementById('ship-postcode').value.trim(),
+            country: document.getElementById('ship-country').value,
+            phone: document.getElementById('ship-phone').value.trim(),
+            email: document.getElementById('ship-email').value.trim()
+        };
+
+        try {
+            const resp = await fetch(STORE_API + '/checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    items: cart.map(i => ({ id: i.id, quantity: i.quantity })),
+                    shipping,
+                    selectedShippingRate: {
+                        amount: selectedRate.amount,
+                        name: selectedRate.provider + ' - ' + selectedRate.service,
+                        estimatedDays: selectedRate.estimatedDays
+                    },
+                    successUrl: window.location.origin + '/order-success.html?session_id={CHECKOUT_SESSION_ID}',
+                    cancelUrl: window.location.origin + '/checkout.html'
+                })
+            });
+            const data = await resp.json();
+            if (data.error) {
+                errEl.textContent = data.error;
+                btn.disabled = false; btn.textContent = 'Pay with Stripe';
+                return;
+            }
+            if (data.url) window.location.href = data.url;
+        } catch (e) {
+            errEl.textContent = 'Checkout failed. Please try again.';
+            btn.disabled = false; btn.textContent = 'Pay with Stripe';
+        }
+    }
+
+    init();
+    </script>
+</body>
+</html>

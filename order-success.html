@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmed | FPVGate Shop</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/png" href="logo-black.png">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <img src="images/LogoAnimated.svg" alt="FPVGate Logo" class="nav-logo">
+                <h1>FPVGate</h1>
+            </div>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="shop.html">Shop</a>
+                <a href="docs.html">Documentation</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="store-hero">
+        <div class="container">
+            <h1 id="success-title">Processing Order...</h1>
+            <p class="subtitle" id="success-subtitle">Please wait while we confirm your payment.</p>
+        </div>
+    </section>
+
+    <section class="store-content">
+        <div class="container">
+            <div id="order-details" style="max-width:600px;margin:0 auto;text-align:center;padding:2rem 0;">
+                <div class="loading-products" style="padding:40px;color:var(--text-secondary);">
+                    Loading order details...
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>Made with care for the FPV community</p>
+            <p>Licensed under CC BY-NC-SA 4.0</p>
+            <div class="footer-links">
+                <a href="https://github.com/LouisHitchcock/FPVGate" target="_blank">GitHub</a>
+                <a href="docs.html">Documentation</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+    (async function() {
+        // Clear cart immediately
+        localStorage.removeItem('fpvgate_cart');
+
+        const params = new URLSearchParams(window.location.search);
+        const sessionId = params.get('session_id');
+        const titleEl = document.getElementById('success-title');
+        const subEl = document.getElementById('success-subtitle');
+        const detailsEl = document.getElementById('order-details');
+
+        if (!sessionId) {
+            titleEl.textContent = 'No Order Found';
+            subEl.textContent = 'It looks like you arrived here without placing an order.';
+            detailsEl.innerHTML = '<a href="shop.html" class="btn btn-primary" style="margin-top:20px">Back to Shop</a>';
+            return;
+        }
+
+        // Try to load order details (webhook may not have fired yet, so retry)
+        let order = null;
+        for (let i = 0; i < 6; i++) {
+            try {
+                const resp = await fetch(`https://fpvgate-store.fpvgate-analytics.workers.dev/order-status?session_id=${sessionId}`);
+                const data = await resp.json();
+                if (!data.error) { order = data; break; }
+            } catch (e) {}
+            await new Promise(r => setTimeout(r, 2000));
+        }
+
+        titleEl.textContent = 'Order Confirmed!';
+        subEl.textContent = 'Thank you for your purchase. You will receive a confirmation email shortly.';
+
+        if (order) {
+            const items = Array.isArray(order.items) ? order.items : [];
+            detailsEl.innerHTML = `
+                <div style="background:var(--card-bg);border-radius:10px;border:1px solid rgba(0,212,255,0.1);padding:24px;text-align:left;margin-bottom:24px">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:16px">
+                        <span style="color:var(--text-secondary)">Order</span>
+                        <strong style="color:var(--primary-color)">#${order.invoiceNumber || 'Pending'}</strong>
+                    </div>
+                    ${items.map(i => `
+                        <div style="display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid rgba(255,255,255,0.06)">
+                            <span>${i.name} x${i.quantity}</span>
+                            <span>&pound;${(i.totalPrice || i.price * i.quantity).toFixed(2)}</span>
+                        </div>
+                    `).join('')}
+                    <div style="display:flex;justify-content:space-between;padding:12px 0 0;border-top:1px solid rgba(0,212,255,0.1);margin-top:8px;font-weight:700;font-size:18px">
+                        <span>Total</span>
+                        <span style="color:var(--primary-color)">&pound;${order.total.toFixed(2)}</span>
+                    </div>
+                </div>
+                <a href="shop.html" class="btn btn-primary">Continue Shopping</a>
+            `;
+        } else {
+            detailsEl.innerHTML = `
+                <p style="color:var(--text-secondary);margin-bottom:20px">Your payment was received. Order details will be sent to your email.</p>
+                <a href="shop.html" class="btn btn-primary">Continue Shopping</a>
+            `;
+        }
+
+        // Track order completed
+        if (window.fpvgateAnalytics && order) {
+            window.fpvgateAnalytics.track('order_completed', { invoice: order.invoiceNumber, total: order.total });
+        }
+    })();
+    </script>
+    <script src="analytics-tracker.js"></script>
+</body>
+</html>
