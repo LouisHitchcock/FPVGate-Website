@@ -90,16 +90,15 @@
                 <img src="images/LogoAnimated.svg" alt="FPVGate Logo" class="nav-logo">
                 <h1>FPVGate</h1>
             </div>
+            <button class="nav-toggle" onclick="this.classList.toggle('active');this.nextElementSibling.classList.toggle('nav-open')" aria-label="Toggle menu">
+                <span></span><span></span><span></span>
+            </button>
             <div class="nav-links">
                 <a href="index.html">Home</a>
+                <a href="shop.html">Shop</a>
                 <a href="docs.html">Documentation</a>
-                <a href="flasher.html">Flash Firmware</a>
+                <a href="flasher.html" class="btn-primary">Flash Firmware</a>
                 <a href="https://github.com/LouisHitchcock/FPVGate" target="_blank">GitHub</a>
-                <a href="https://ko-fi.com/louishitchcock" class="btn-kofi" target="_blank" title="Support on Ko-fi">
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M23.881 8.948c-.773-4.085-4.859-4.593-4.859-4.593H.723c-.604 0-.679.798-.679.798s-.082 7.324-.022 11.822c.164 2.424 2.586 2.672 2.586 2.672s8.267-.023 11.966-.049c2.438-.426 2.683-2.566 2.658-3.734 4.352.24 7.422-2.831 6.649-6.916zm-11.062 3.511c-1.246 1.453-4.011 3.976-4.011 3.976s-.121.119-.31.023c-.076-.057-.108-.09-.108-.09-.443-.441-3.368-3.049-4.034-3.954-.709-.965-1.041-2.7-.091-3.71.951-1.01 3.005-1.086 4.363.407 0 0 1.565-1.782 3.468-.963 1.904.82 1.832 3.011.723 4.311zm6.173.478c-.928.116-1.682.028-1.682.028V7.284h1.77s1.971.551 1.971 2.638c0 1.913-.985 2.667-2.059 3.015z"/>
-                    </svg>
-                </a>
             </div>
         </div>
     </nav>
@@ -137,9 +136,14 @@
                         <p>FPVGate is an RSSI-based lap timing solution for FPV drones. It measures lap times by detecting your drone's video transmitter signal strength as you fly through the gate.</p>
                         
                         <div class="info-box">
-                            <h4>What You'll Need</h4>
+                            <h4>Option 1: FPVGate AIO (Easiest)</h4>
+                            <p>The <strong>FPVGate AIO</strong> is a prebuilt all-in-one board with everything included. No soldering or wiring required. <a href="shop.html">Purchase from the FPVGate Shop</a>.</p>
+                        </div>
+
+                        <div class="info-box">
+                            <h4>Option 2: Build Your Own</h4>
                             <ul>
-<li><strong>Seeed Studio XIAO ESP32S3</strong> (Recommended) or <strong>ESP32-S3 DevKitC-1</strong></li>
+                                <li><strong>Seeed Studio XIAO ESP32S3</strong> (Recommended) or <strong>ESP32-S3 DevKitC-1</strong></li>
                                 <li><strong>RX5808 Module</strong> (SPI modded)</li>
                                 <li><strong>MicroSD Card</strong> (FAT32, 1GB+)</li>
                                 <li><strong>5V Power Supply</strong> (USB power or any 5V source)</li>
@@ -151,7 +155,13 @@
 
                     <section id="hardware" class="doc-section">
                         <h2>Hardware Setup</h2>
-                        <p>FPVGate supports multiple ESP32 boards. Select your board below to see the wiring diagram:</p>
+
+                        <div class="info-box" style="margin-bottom: 1.5rem;">
+                            <h4>FPVGate AIO</h4>
+                            <p>If you have the <strong>FPVGate AIO</strong> prebuilt board, no wiring is needed. Simply flash the firmware and insert an SD card to get started. <a href="shop.html">Get one from the Shop</a>.</p>
+                        </div>
+
+                        <p>Building your own? FPVGate supports multiple ESP32 boards. Select your board below to see the wiring diagram:</p>
                         
                         <div class="warning-box ESP32S3SuperminiWarn" style="margin-top: 1rem;">
                             <h4>Note on ESP32-S3 Super Mini</h4>

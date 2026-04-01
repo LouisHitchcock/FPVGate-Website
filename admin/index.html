@@ -61,13 +61,21 @@
 <button class="filter-btn" onclick="filterOrders('completed',this)">Completed</button>
 <button class="filter-btn" onclick="filterOrders('cancelled',this)">Cancelled</button>
 <button class="filter-btn" onclick="filterOrders('refunded',this)">Refunded</button>
+<button class="filter-btn" onclick="filterOrders('archived',this)">Archived</button>
 </div>
 <button class="refresh-btn" onclick="loadOrders()">Refresh</button>
 </div>
 <div class="card">
 <div id="orders-loading" class="loading"><div class="spinner"></div>Loading orders...</div>
 <div id="orders-empty" class="empty-state" style="display:none">No orders found</div>
-<table id="orders-table" style="display:none"><thead><tr><th>Order</th><th>Date</th><th>Customer</th><th>Items</th><th>Total</th><th>Status</th><th>Tracking</th></tr></thead><tbody id="orders-body"></tbody></table>
+<div id="bulk-bar" class="bulk-bar" style="display:none">
+<span id="bulk-count">0 selected</span>
+<button class="btn btn-sm btn-primary" onclick="bulkAddLabel()">Add Label</button>
+<button class="btn btn-sm btn-secondary" onclick="bulkArchive(true)">Archive</button>
+<button class="btn btn-sm btn-secondary" onclick="bulkArchive(false)">Unarchive</button>
+<button class="btn btn-sm btn-secondary" onclick="clearSelection()">Clear</button>
+</div>
+<table id="orders-table" style="display:none"><thead><tr><th style="width:36px"><input type="checkbox" id="select-all" onchange="toggleSelectAll(this.checked)"></th><th>Order</th><th>Date</th><th>Customer</th><th>Items</th><th>Total</th><th>Labels</th><th>Status</th><th>Tracking</th></tr></thead><tbody id="orders-body"></tbody></table>
 </div>
 </div>
 

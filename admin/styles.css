@@ -212,3 +212,13 @@ tr.clickable { cursor: pointer; }
 .img-thumb .img-delete { position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.6); color: #fff; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; }
 .img-thumb .img-delete:hover { background: #e53e3e; }
 .img-thumb .img-badge { position: absolute; bottom: 2px; left: 2px; background: rgba(0,0,0,0.6); color: #fff; font-size: 9px; padding: 1px 5px; border-radius: 3px; }
+
+/* --- Order Labels --- */
+.order-label { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; color: #fff; white-space: nowrap; }
+
+/* --- Bulk Action Bar --- */
+.bulk-bar { display: flex; align-items: center; gap: 10px; background: #ebf8ff; border: 1px solid #bee3f8; border-radius: 8px; padding: 10px 16px; margin-bottom: 12px; }
+.bulk-bar span { font-size: 13px; font-weight: 600; color: #2b6cb0; }
+.order-cb { width: 16px; height: 16px; cursor: pointer; }
+.modal textarea { width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; margin-bottom: 14px; font-family: inherit; resize: vertical; }
+.modal textarea:focus { outline: none; border-color: #4299e1; }

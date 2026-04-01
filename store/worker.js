@@ -188,6 +188,18 @@ export default {
                     return await handleCancelOrder(cancelMatch[1], request, env, corsHeaders);
                 }
 
+                // Labels
+                const labelsMatch = url.pathname.match(/^\/api\/orders\/(\d+)\/labels$/);
+                if (labelsMatch && request.method === 'PUT') {
+                    return await handleUpdateLabels(labelsMatch[1], request, env, corsHeaders);
+                }
+
+                // Archive
+                const archiveOrderMatch = url.pathname.match(/^\/api\/orders\/(\d+)\/archive$/);
+                if (archiveOrderMatch && request.method === 'POST') {
+                    return await handleArchiveOrder(archiveOrderMatch[1], request, env, corsHeaders);
+                }
+
                 // Return endpoints
                 const returnCreateMatch = url.pathname.match(/^\/api\/orders\/(\d+)\/return$/);
                 if (returnCreateMatch && request.method === 'POST') {
@@ -661,28 +673,64 @@ async function processCompletedCheckout(session, env) {
 async function handleListOrders(request, env, corsHeaders) {
     const url = new URL(request.url);
     const status = url.searchParams.get('status');
+    const showArchived = url.searchParams.get('archived') === '1';
+    const label = url.searchParams.get('label');
     const limit = parseInt(url.searchParams.get('limit') || '50');
     const offset = parseInt(url.searchParams.get('offset') || '0');
 
     let query = 'SELECT * FROM orders';
+    const conditions = [];
     const params = [];
 
+    if (showArchived) {
+        conditions.push('archived = 1');
+    } else {
+        conditions.push('(archived = 0 OR archived IS NULL)');
+    }
+
     if (status) {
-        query += ' WHERE status = ?';
+        conditions.push('status = ?');
         params.push(status);
+    }
+
+    if (label) {
+        conditions.push("labels LIKE '%" + label.replace(/'/g, "''") + "%'");
+    }
+
+    if (conditions.length > 0) {
+        query += ' WHERE ' + conditions.join(' AND ');
     }
 
     query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
     params.push(limit, offset);
 
     const result = await env.DB.prepare(query).bind(...params).all();
-    const counts = await env.DB.prepare('SELECT status, COUNT(*) as count FROM orders GROUP BY status').all();
+    const counts = await env.DB.prepare('SELECT status, COUNT(*) as count FROM orders WHERE (archived = 0 OR archived IS NULL) GROUP BY status').all();
+    const archivedCount = await env.DB.prepare('SELECT COUNT(*) as count FROM orders WHERE archived = 1').first();
 
     return jsonResponse({
         orders: result.results.map(parseOrderJson),
         total: result.results.length,
-        counts: counts.results
+        counts: counts.results,
+        archivedCount: archivedCount?.count || 0
     }, corsHeaders);
+}
+
+async function handleUpdateLabels(orderId, request, env, corsHeaders) {
+    const body = await request.json();
+    const { labels } = body;
+    if (!Array.isArray(labels)) return jsonResponse({ error: 'labels must be an array' }, corsHeaders, 400);
+    const cleaned = labels.map(l => String(l).trim()).filter(Boolean).slice(0, 10);
+    await env.DB.prepare("UPDATE orders SET labels = ?, updated_at = datetime('now') WHERE id = ?").bind(JSON.stringify(cleaned), orderId).run();
+    return jsonResponse({ success: true, labels: cleaned }, corsHeaders);
+}
+
+async function handleArchiveOrder(orderId, request, env, corsHeaders) {
+    const body = await request.json();
+    const archived = body.archived ? 1 : 0;
+    const result = await env.DB.prepare("UPDATE orders SET archived = ?, updated_at = datetime('now') WHERE id = ?").bind(archived, orderId).run();
+    if (result.meta.changes === 0) return jsonResponse({ error: 'Order not found' }, corsHeaders, 404);
+    return jsonResponse({ success: true, archived: !!archived }, corsHeaders);
 }
 
 async function handleGetOrder(orderId, env, corsHeaders) {
@@ -1362,7 +1410,8 @@ function parseOrderJson(order) {
         ...order,
         shipping_address: tryParseJson(order.shipping_address),
         billing_address: tryParseJson(order.billing_address),
-        items: tryParseJson(order.items)
+        items: tryParseJson(order.items),
+        labels: tryParseJson(order.labels) || []
     };
 }
 

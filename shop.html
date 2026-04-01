@@ -26,18 +26,15 @@
                 <img src="images/LogoAnimated.svg" alt="FPVGate Logo" class="nav-logo">
                 <h1>FPVGate</h1>
             </div>
+            <button class="nav-toggle" onclick="this.classList.toggle('active');this.nextElementSibling.classList.toggle('nav-open')" aria-label="Toggle menu">
+                <span></span><span></span><span></span>
+            </button>
             <div class="nav-links">
                 <a href="index.html">Home</a>
+                <a href="shop.html">Shop</a>
                 <a href="docs.html">Documentation</a>
-                <a href="flasher.html">Flash Firmware</a>
+                <a href="flasher.html" class="btn-primary">Flash Firmware</a>
                 <a href="https://github.com/LouisHitchcock/FPVGate" target="_blank">GitHub</a>
-                <button class="btn-cart" title="View Cart" onclick="toggleCart()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-                        <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
-                        <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
-                    </svg>
-                    <span class="cart-count" id="cart-count">0</span>
-                </button>
             </div>
         </div>
     </nav>
@@ -105,6 +102,15 @@
             </div>
         </div>
     </footer>
+
+    <!-- Floating Cart Button -->
+    <button class="cart-fab" title="View Cart" onclick="toggleCart()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
+            <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+            <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/>
+        </svg>
+        <span class="cart-count" id="cart-count">0</span>
+    </button>
 
     <!-- Cart Slide-out Panel -->
     <div class="cart-overlay" id="cart-overlay" onclick="toggleCart()"></div>
