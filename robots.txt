@@ -1,5 +1,12 @@
 User-agent: *
 Allow: /
+Disallow: /admin/
 Disallow: /analytics/
+Disallow: /discord-bot/
+Disallow: /email-templates/
+Disallow: /node_modules/
+Disallow: /preRelease/
+Disallow: /scripts/
+Disallow: /store/
 
 Sitemap: https://fpvgate.xyz/sitemap.xml
