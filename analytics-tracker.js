@@ -115,49 +115,7 @@ function initStoreTracking() {
     analytics.track('store_view', { page });
   }
 
-  // Listen for Snipcart events if Snipcart is present
-  if (typeof document.querySelector('#snipcart') !== 'undefined') {
-    // Poll for Snipcart SDK readiness
-    let attempts = 0;
-    const waitForSnipcart = setInterval(() => {
-      attempts++;
-      if (attempts > 50) {
-        clearInterval(waitForSnipcart);
-        return;
-      }
-      if (window.Snipcart) {
-        clearInterval(waitForSnipcart);
-        bindSnipcartEvents();
-      }
-    }, 200);
-  }
-}
-
-function bindSnipcartEvents() {
-  try {
-    // Track item added to cart
-    window.Snipcart.events.on('item.added', (item) => {
-      analytics.track('cart_add', {
-        product_id: item.id || item.uniqueId,
-        product_name: item.name,
-        quantity: item.quantity,
-        price: item.price
-      });
-    });
-
-    // Track cart opened
-    window.Snipcart.events.on('cart.opened', () => {
-      analytics.track('cart_open', {});
-    });
-
-    // Track order completed (client-side)
-    window.Snipcart.events.on('order.completed', (order) => {
-      analytics.track('order_completed', {
-        invoice: order.invoiceNumber,
-        total: order.total
-      });
-    });
-  } catch (e) {
-    console.debug('Snipcart event binding failed:', e);
-  }
+  // Cart events (cart_add, cart_open, order_completed) are now
+  // triggered directly by the cart widget in shop.html and order-success.html
+  // via window.fpvgateAnalytics.track() calls.
 }
