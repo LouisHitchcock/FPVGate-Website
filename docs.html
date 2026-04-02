@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FPVGate Documentation | FPV Lap Timer Setup & Calibration Guide</title>
-    <meta name="description" content="Step-by-step FPVGate docs: hardware wiring, flashing firmware, configuration, calibration, race use, and troubleshooting for the RSSI FPV lap timer.">
+    <meta name="description" content="Step-by-step FPVGate docs: hardware wiring, flashing firmware, configuration, calibration, race use, and troubleshooting for the RSSI FPV lap timer. Formerly PhobosLT.">
+    <meta name="keywords" content="FPVGate documentation, PhobosLT, FPV lap timer setup, ESP32-S3 FPV timer, RX5808 wiring, RSSI calibration, drone lap timer guide, DIY FPV gate, RotorHazard integration, FPV timing system setup">
     <link rel="canonical" href="https://fpvgate.xyz/docs.html">
 
     <!-- Open Graph -->
@@ -75,6 +76,46 @@
               "acceptedAnswer": {
                 "@type": "Answer",
                 "text": "Disable silent mode, ensure media volume is up, and on iOS make sure the hardware silent switch is off; the countdown tone needs media/ringer audio."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What is the difference between FPVGate and PhobosLT?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "FPVGate is a heavily modified fork of PhobosLT with many additional features including voice announcements, race analytics, multi-pilot support, RotorHazard integration, a web-based firmware flasher, and an online shop for prebuilt hardware."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "How do I build a DIY FPV lap timer?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "You need an ESP32-S3 board (Seeed XIAO ESP32S3 recommended), an SPI-modded RX5808 5.8GHz receiver module, a MicroSD card formatted as FAT32, and a 5V power supply. Wire the components together, flash FPVGate firmware using the web flasher at fpvgate.xyz, and calibrate your RSSI thresholds."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Can FPVGate work with RotorHazard?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes, FPVGate has full bidirectional RotorHazard integration including race start/stop control, NTP-style clock synchronization for accurate timing, and automatic lap submission via HTTP POST. A companion RotorHazard plugin is included."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What FPV frequencies does FPVGate support?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "FPVGate supports all major 5.8GHz bands including analog (Boscam A/B/E, Fatshark, RaceBand, LowBand) and digital (DJI, HDZero, WalkSnail) frequencies."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Do I need a transponder to use FPVGate?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "No. FPVGate uses RSSI (Received Signal Strength Indicator) to detect your drone's existing video transmitter signal. No transponders or additional hardware on your drone is needed."
               }
             }
           ]
