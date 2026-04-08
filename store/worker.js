@@ -173,6 +173,11 @@ export default {
                     return await handleRefundOrder(refundMatch[1], request, env, corsHeaders);
                 }
 
+                const sendEmailMatch = url.pathname.match(/^\/api\/orders\/(\d+)\/send-email$/);
+                if (sendEmailMatch && request.method === 'POST') {
+                    return await handleSendEmail(sendEmailMatch[1], request, env, corsHeaders);
+                }
+
                 const trackingMatch = url.pathname.match(/^\/api\/orders\/(\d+)\/tracking$/);
                 if (trackingMatch && request.method === 'GET') {
                     return await handleGetTracking(trackingMatch[1], env, corsHeaders);
@@ -827,6 +832,21 @@ async function handleUpdateStatus(orderId, request, env, corsHeaders) {
     const result = await env.DB.prepare(query).bind(...params).run();
     if (result.meta.changes === 0) return jsonResponse({ error: 'Order not found' }, corsHeaders, 404);
 
+    // Send tracking number email when tracking is set manually
+    if (trackingNumber) {
+        try {
+            const order = await env.DB.prepare('SELECT * FROM orders WHERE id = ?').bind(orderId).first();
+            if (order && order.customer_email) {
+                const emailData = normalizeOrder(order);
+                emailData.trackingUrl = '';
+                const email = trackingNumberEmail(emailData);
+                await sendEmail(env, order.customer_email, email.subject, email.html);
+            }
+        } catch (e) {
+            console.error('Tracking email failed:', e.message);
+        }
+    }
+
     // Send shipped notification email
     if (status === 'shipped') {
         try {
@@ -842,6 +862,40 @@ async function handleUpdateStatus(orderId, request, env, corsHeaders) {
     }
 
     return jsonResponse({ success: true, status }, corsHeaders);
+}
+
+// --- Manual Email Send ---
+
+async function handleSendEmail(orderId, request, env, corsHeaders) {
+    const order = await env.DB.prepare('SELECT * FROM orders WHERE id = ?').bind(orderId).first();
+    if (!order) return jsonResponse({ error: 'Order not found' }, corsHeaders, 404);
+    if (!order.customer_email) return jsonResponse({ error: 'No customer email on this order' }, corsHeaders, 400);
+
+    const body = await request.json();
+    const { type } = body;
+
+    const emailData = normalizeOrder(order);
+
+    try {
+        if (type === 'tracking') {
+            if (!order.tracking_number) return jsonResponse({ error: 'No tracking number set' }, corsHeaders, 400);
+            emailData.trackingUrl = '';
+            const email = trackingNumberEmail(emailData);
+            await sendEmail(env, order.customer_email, email.subject, email.html);
+        } else if (type === 'shipped') {
+            const email = orderShippedEmail(emailData);
+            await sendEmail(env, order.customer_email, email.subject, email.html);
+        } else if (type === 'confirmation') {
+            const email = orderConfirmationEmail(emailData);
+            await sendEmail(env, order.customer_email, email.subject, email.html);
+        } else {
+            return jsonResponse({ error: 'Invalid email type. Must be: tracking, shipped, or confirmation' }, corsHeaders, 400);
+        }
+
+        return jsonResponse({ success: true, type, sentTo: order.customer_email }, corsHeaders);
+    } catch (e) {
+        return jsonResponse({ error: `Failed to send email: ${e.message}` }, corsHeaders, 500);
+    }
 }
 
 // --- Shippo Tracking Webhook ---
