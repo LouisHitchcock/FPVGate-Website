@@ -148,6 +148,11 @@ export default {
                     return await handleCreateLabel(labelMatch[1], request, env, corsHeaders);
                 }
 
+                const uploadLabelMatch = url.pathname.match(/^\/api\/orders\/(\d+)\/upload-label$/);
+                if (uploadLabelMatch && request.method === 'POST') {
+                    return await handleUploadLabel(uploadLabelMatch[1], request, env, corsHeaders);
+                }
+
                 const statusMatch = url.pathname.match(/^\/api\/orders\/(\d+)\/status$/);
                 if (statusMatch && request.method === 'PUT') {
                     return await handleUpdateStatus(statusMatch[1], request, env, corsHeaders);
@@ -749,9 +754,10 @@ async function handleGetOrderRates(orderId, env, corsHeaders) {
     if (!order) return jsonResponse({ error: 'Order not found' }, corsHeaders, 404);
 
     const shippingAddress = JSON.parse(order.shipping_address);
+    const orderItems = tryParseJson(order.items) || [];
 
     try {
-        const shipment = await getShippingRates(env.SHIPPO_API_TOKEN, shippingAddress);
+        const shipment = await getShippingRates(env.SHIPPO_API_TOKEN, shippingAddress, null, orderItems, env.EORI_NUMBER || '');
 
         await env.DB.prepare(
             'UPDATE orders SET shippo_shipment_id = ?, updated_at = datetime(\'now\') WHERE id = ?'
@@ -809,6 +815,28 @@ async function handleCreateLabel(orderId, request, env, corsHeaders) {
     } catch (error) {
         return jsonResponse({ error: `Label creation failed: ${error.message}` }, corsHeaders, 500);
     }
+}
+
+async function handleUploadLabel(orderId, request, env, corsHeaders) {
+    const order = await env.DB.prepare('SELECT * FROM orders WHERE id = ?').bind(orderId).first();
+    if (!order) return jsonResponse({ error: 'Order not found' }, corsHeaders, 404);
+
+    const formData = await request.formData();
+    const file = formData.get('label');
+    if (!file) return jsonResponse({ error: 'No file provided' }, corsHeaders, 400);
+    if (file.size > 10 * 1024 * 1024) return jsonResponse({ error: 'File must be under 10MB' }, corsHeaders, 400);
+
+    const key = `labels/order-${orderId}-${Date.now()}.pdf`;
+    await env.IMAGES.put(key, file.stream(), { httpMetadata: { contentType: 'application/pdf' } });
+
+    const labelUrl = `/images/${key}`;
+
+    await env.DB.prepare(`
+        UPDATE orders SET label_url = ?, status = CASE WHEN status = 'new' THEN 'label_created' ELSE status END,
+            updated_at = datetime('now') WHERE id = ?
+    `).bind(labelUrl, orderId).run();
+
+    return jsonResponse({ success: true, labelUrl }, corsHeaders);
 }
 
 async function handleUpdateStatus(orderId, request, env, corsHeaders) {

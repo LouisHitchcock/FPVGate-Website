@@ -52,11 +52,70 @@ async function shippoRequest(token, endpoint, method = 'GET', body = null) {
 }
 
 /**
+ * Create a customs declaration via the Shippo Customs Declarations API.
+ * Returns the object_id to reference in shipment creation.
+ * Required by carriers like DPD UK for non-GB destinations.
+ */
+async function createCustomsDeclaration(token, items = [], eoriNumber = '') {
+    const customsItems = items.length > 0
+        ? items.map(item => ({
+            description: item.name || 'FPV Electronics',
+            quantity: item.quantity || 1,
+            net_weight: String(item.weight || 100),
+            mass_unit: 'g',
+            value_amount: String(item.price || '0'),
+            value_currency: 'GBP',
+            origin_country: 'GB',
+            tariff_number: '9106100000'
+        }))
+        : [{
+            description: 'FPV Electronics',
+            quantity: 1,
+            net_weight: '100',
+            mass_unit: 'g',
+            value_amount: '0',
+            value_currency: 'GBP',
+            origin_country: 'GB',
+            tariff_number: '9106100000'
+        }];
+
+    const declarationData = {
+        contents_type: 'MERCHANDISE',
+        non_delivery_option: 'RETURN',
+        certify: true,
+        certify_signer: 'Louis Hitchcock',
+        incoterm: 'DDU',
+        items: customsItems
+    };
+
+    if (eoriNumber) {
+        declarationData.exporter_identification = {
+            eori_number: eoriNumber,
+            tax_id: {
+                number: eoriNumber,
+                type: 'VAT'
+            }
+        };
+    }
+
+    const declaration = await shippoRequest(token, '/customs/declarations/', 'POST', declarationData);
+
+    return declaration.object_id;
+}
+
+/**
  * Create a shipment and get available rates
  * Returns the shipment object with rates array
+ * @param {string} token - Shippo API token
+ * @param {object} toAddress - Destination address
+ * @param {object|null} parcel - Parcel dimensions (uses default if null)
+ * @param {array} items - Order items for customs declaration (optional)
  */
-export async function getShippingRates(token, toAddress, parcel = null) {
-    const shipment = await shippoRequest(token, '/shipments', 'POST', {
+export async function getShippingRates(token, toAddress, parcel = null, items = [], eoriNumber = '') {
+    const destCountry = toAddress.country || toAddress.countryCode || '';
+    const isInternational = destCountry && destCountry !== 'GB';
+
+    const shipmentData = {
         address_from: FROM_ADDRESS,
         address_to: {
             name: toAddress.name || 'Customer',
@@ -65,14 +124,20 @@ export async function getShippingRates(token, toAddress, parcel = null) {
             city: toAddress.city,
             state: toAddress.state || toAddress.province || '',
             zip: toAddress.zip || toAddress.postalCode,
-            country: toAddress.country,
+            country: destCountry,
             phone: toAddress.phone || '',
             email: toAddress.email || ''
         },
         parcels: [parcel || DEFAULT_PARCEL],
         async: false
-    });
+    };
 
+    if (isInternational) {
+        const customsId = await createCustomsDeclaration(token, items, eoriNumber);
+        shipmentData.customs_declaration = customsId;
+    }
+
+    const shipment = await shippoRequest(token, '/shipments', 'POST', shipmentData);
     return shipment;
 }
 
@@ -180,8 +245,11 @@ export function getFallbackShippingOptions(destinationCountry, currency = 'gbp')
  * Create a RETURN shipment (addresses swapped: customer -> FPVGate)
  * Returns the shipment object with rates array
  */
-export async function getReturnRates(token, fromCustomerAddress, parcel = null) {
-    const shipment = await shippoRequest(token, '/shipments', 'POST', {
+export async function getReturnRates(token, fromCustomerAddress, parcel = null, items = [], eoriNumber = '') {
+    const srcCountry = fromCustomerAddress.country || '';
+    const isInternational = srcCountry && srcCountry !== 'GB';
+
+    const shipmentData = {
         address_from: {
             name: fromCustomerAddress.name || 'Customer',
             street1: fromCustomerAddress.street1 || fromCustomerAddress.address1,
@@ -189,15 +257,21 @@ export async function getReturnRates(token, fromCustomerAddress, parcel = null) 
             city: fromCustomerAddress.city,
             state: fromCustomerAddress.state || fromCustomerAddress.province || '',
             zip: fromCustomerAddress.zip || fromCustomerAddress.postalCode,
-            country: fromCustomerAddress.country,
+            country: srcCountry,
             phone: fromCustomerAddress.phone || '',
             email: fromCustomerAddress.email || ''
         },
         address_to: FROM_ADDRESS,
         parcels: [parcel || DEFAULT_PARCEL],
         async: false
-    });
+    };
 
+    if (isInternational) {
+        const customsId = await createCustomsDeclaration(token, items, eoriNumber);
+        shipmentData.customs_declaration = customsId;
+    }
+
+    const shipment = await shippoRequest(token, '/shipments', 'POST', shipmentData);
     return shipment;
 }
 
