@@ -234,6 +234,11 @@ export default {
                     return await handleUpdateReturnStatus(returnStatusMatch[1], request, env, corsHeaders);
                 }
 
+                // Email log
+                if (url.pathname === '/api/emails' && request.method === 'GET') {
+                    return await handleListEmails(request, env, corsHeaders);
+                }
+
                 // Inventory endpoints
                 if (url.pathname === '/api/inventory' && request.method === 'GET') {
                     return await handleListInventory(env, corsHeaders);
@@ -657,7 +662,7 @@ async function processCompletedCheckout(session, env) {
                 billingAddress: session.customer_details || {}
             };
             const email = orderConfirmationEmail(emailData);
-            await sendEmail(env, customerEmail, email.subject, email.html);
+            await sendEmail(env, customerEmail, email.subject, email.html, { type: 'confirmation', invoiceNumber });
         }
     } catch (e) {
         console.error('Confirmation email failed:', e.message);
@@ -805,7 +810,7 @@ async function handleCreateLabel(orderId, request, env, corsHeaders) {
                 const emailData = normalizeOrder(updatedOrder);
                 emailData.trackingUrl = label.trackingUrlProvider || '';
                 const email = trackingNumberEmail(emailData);
-                await sendEmail(env, updatedOrder.customer_email, email.subject, email.html);
+                await sendEmail(env, updatedOrder.customer_email, email.subject, email.html, { type: 'tracking', orderId, invoiceNumber: updatedOrder.invoice_number });
             }
         } catch (e) {
             console.error('Tracking email failed:', e.message);
@@ -829,7 +834,8 @@ async function handleUploadLabel(orderId, request, env, corsHeaders) {
     const key = `labels/order-${orderId}-${Date.now()}.pdf`;
     await env.IMAGES.put(key, file.stream(), { httpMetadata: { contentType: 'application/pdf' } });
 
-    const labelUrl = `/images/${key}`;
+    const origin = new URL(request.url).origin;
+    const labelUrl = `${origin}/images/${key}`;
 
     await env.DB.prepare(`
         UPDATE orders SET label_url = ?, status = CASE WHEN status = 'new' THEN 'label_created' ELSE status END,
@@ -868,7 +874,7 @@ async function handleUpdateStatus(orderId, request, env, corsHeaders) {
                 const emailData = normalizeOrder(order);
                 emailData.trackingUrl = '';
                 const email = trackingNumberEmail(emailData);
-                await sendEmail(env, order.customer_email, email.subject, email.html);
+                await sendEmail(env, order.customer_email, email.subject, email.html, { type: 'tracking', orderId, invoiceNumber: order.invoice_number });
             }
         } catch (e) {
             console.error('Tracking email failed:', e.message);
@@ -882,7 +888,7 @@ async function handleUpdateStatus(orderId, request, env, corsHeaders) {
             if (order && order.customer_email) {
                 const emailData = normalizeOrder(order);
                 const email = orderShippedEmail(emailData);
-                await sendEmail(env, order.customer_email, email.subject, email.html);
+                await sendEmail(env, order.customer_email, email.subject, email.html, { type: 'shipped', orderId, invoiceNumber: order.invoice_number });
             }
         } catch (e) {
             console.error('Shipped email failed:', e.message);
@@ -905,17 +911,19 @@ async function handleSendEmail(orderId, request, env, corsHeaders) {
     const emailData = normalizeOrder(order);
 
     try {
+        const emailMeta = { orderId, invoiceNumber: order.invoice_number };
+
         if (type === 'tracking') {
             if (!order.tracking_number) return jsonResponse({ error: 'No tracking number set' }, corsHeaders, 400);
             emailData.trackingUrl = '';
             const email = trackingNumberEmail(emailData);
-            await sendEmail(env, order.customer_email, email.subject, email.html);
+            await sendEmail(env, order.customer_email, email.subject, email.html, { ...emailMeta, type: 'tracking' });
         } else if (type === 'shipped') {
             const email = orderShippedEmail(emailData);
-            await sendEmail(env, order.customer_email, email.subject, email.html);
+            await sendEmail(env, order.customer_email, email.subject, email.html, { ...emailMeta, type: 'shipped' });
         } else if (type === 'confirmation') {
             const email = orderConfirmationEmail(emailData);
-            await sendEmail(env, order.customer_email, email.subject, email.html);
+            await sendEmail(env, order.customer_email, email.subject, email.html, { ...emailMeta, type: 'confirmation' });
         } else {
             return jsonResponse({ error: 'Invalid email type. Must be: tracking, shipped, or confirmation' }, corsHeaders, 400);
         }
@@ -1110,7 +1118,7 @@ async function handleCreateReturnLabel(orderId, request, env, corsHeaders) {
                     labelUrl: label.labelUrl
                 };
                 const email = returnLabelEmail(emailData);
-                await sendEmail(env, order.customer_email, email.subject, email.html);
+                await sendEmail(env, order.customer_email, email.subject, email.html, { type: 'return_label', orderId, invoiceNumber: order.invoice_number });
             }
         } catch (e) {
             console.error('Return label email failed:', e.message);
@@ -1181,7 +1189,7 @@ async function handleUpdateReturnStatus(orderId, request, env, corsHeaders) {
                 const allRefundsResult = await env.DB.prepare('SELECT * FROM order_refunds WHERE order_id = ? ORDER BY created_at DESC').bind(orderId).all();
                 const refundInfo = { amount: refundAmount, comment: `Return #${ret.id}` };
                 const email = refundEmail(emailData, refundInfo, allRefundsResult.results || []);
-                await sendEmail(env, order.customer_email, email.subject, email.html);
+                await sendEmail(env, order.customer_email, email.subject, email.html, { type: 'refund', orderId, invoiceNumber: order.invoice_number });
             }
         } catch (e) {
             console.error('Return refund email failed:', e.message);
@@ -1210,7 +1218,7 @@ async function handleAddComment(orderId, request, env, corsHeaders) {
         if (order && order.customer_email) {
             const emailData = normalizeOrder(order);
             const email = orderCommentEmail(emailData, body.comment.trim());
-            await sendEmail(env, order.customer_email, email.subject, email.html);
+            await sendEmail(env, order.customer_email, email.subject, email.html, { type: 'comment', orderId, invoiceNumber: order.invoice_number });
         }
     } catch (e) {
         console.error('Comment email failed:', e.message);
@@ -1264,7 +1272,7 @@ async function handleRefundOrder(orderId, request, env, corsHeaders) {
             const allRefundsResult = await env.DB.prepare('SELECT * FROM order_refunds WHERE order_id = ? ORDER BY created_at DESC').bind(orderId).all();
             const refundInfo = { amount, comment: comment || '' };
             const email = refundEmail(emailData, refundInfo, allRefundsResult.results || []);
-            await sendEmail(env, order.customer_email, email.subject, email.html);
+            await sendEmail(env, order.customer_email, email.subject, email.html, { type: 'refund', orderId, invoiceNumber: order.invoice_number });
         }
     } catch (e) {
         console.error('Refund email failed:', e.message);
@@ -1313,6 +1321,35 @@ async function handleCancelOrder(orderId, request, env, corsHeaders) {
     }
 
     return jsonResponse({ success: true, status: 'cancelled' }, corsHeaders);
+}
+
+// --- Email Log ---
+
+async function handleListEmails(request, env, corsHeaders) {
+    const url = new URL(request.url);
+    const limit = parseInt(url.searchParams.get('limit') || '100');
+    const offset = parseInt(url.searchParams.get('offset') || '0');
+    const emailType = url.searchParams.get('type');
+    const status = url.searchParams.get('status');
+
+    let query = 'SELECT * FROM email_log';
+    const conditions = [];
+    const params = [];
+
+    if (emailType) { conditions.push('email_type = ?'); params.push(emailType); }
+    if (status) { conditions.push('status = ?'); params.push(status); }
+
+    if (conditions.length > 0) query += ' WHERE ' + conditions.join(' AND ');
+    query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?';
+    params.push(limit, offset);
+
+    const result = await env.DB.prepare(query).bind(...params).all();
+    const total = await env.DB.prepare('SELECT COUNT(*) as count FROM email_log').first();
+
+    return jsonResponse({
+        emails: result.results,
+        total: total?.count || 0
+    }, corsHeaders);
 }
 
 // --- Inventory ---

@@ -38,9 +38,10 @@ function nl2br(str) {
 
 // ─── Resend API ─────────────────────────────────────
 
-export async function sendEmail(env, to, subject, html) {
+export async function sendEmail(env, to, subject, html, meta = {}) {
     if (!env.RESEND_API_KEY) {
         console.error('RESEND_API_KEY not configured, email skipped');
+        await logEmail(env, to, subject, 'skipped', 'RESEND_API_KEY not configured', meta);
         return false;
     }
 
@@ -59,14 +60,35 @@ export async function sendEmail(env, to, subject, html) {
         if (!res.ok) {
             const err = await res.text();
             console.error(`Resend error (${res.status}):`, err);
+            await logEmail(env, to, subject, 'failed', err, meta);
             return false;
         }
 
         console.log(`Email sent: "${subject}" -> ${to}`);
+        await logEmail(env, to, subject, 'sent', null, meta);
         return true;
     } catch (e) {
         console.error('Email send failed:', e.message);
+        await logEmail(env, to, subject, 'failed', e.message, meta);
         return false;
+    }
+}
+
+async function logEmail(env, to, subject, status, error, meta) {
+    try {
+        await env.DB.prepare(
+            'INSERT INTO email_log (order_id, invoice_number, email_type, recipient, subject, status, error) VALUES (?, ?, ?, ?, ?, ?, ?)'
+        ).bind(
+            meta.orderId || null,
+            meta.invoiceNumber || null,
+            meta.type || 'unknown',
+            to,
+            subject,
+            status,
+            error || null
+        ).run();
+    } catch (e) {
+        console.error('Email log failed:', e.message);
     }
 }
 

@@ -180,6 +180,18 @@ tr.clickable { cursor: pointer; }
 .error-text { color: #e53e3e; }
 .success-text { color: #48bb78; }
 
+/* --- Email Log --- */
+.status-sent { background: #c6f6d5; color: #276749; }
+.status-failed { background: #fed7d7; color: #9b2c2c; }
+.status-skipped { background: #fefcbf; color: #975a16; }
+.email-type-badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .3px; background: #e2e8f0; color: #4a5568; }
+.email-type-confirmation { background: #ebf8ff; color: #2b6cb0; }
+.email-type-shipped { background: #c6f6d5; color: #276749; }
+.email-type-tracking { background: #e9d8fd; color: #553c9a; }
+.email-type-refund { background: #fed7d7; color: #9b2c2c; }
+.email-type-comment { background: #fefcbf; color: #975a16; }
+.email-type-return_label { background: #feebc8; color: #7b341e; }
+
 /* --- Tracking Timeline --- */
 .tracking-timeline { padding-left: 8px; }
 .tracking-event { display: flex; gap: 12px; position: relative; padding-bottom: 16px; }
