@@ -22,9 +22,11 @@
 <button class="nav-item" onclick="switchSection('livestats',this)"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>Live Stats<span class="live-indicator" style="margin-left:6px"><span class="live-dot"></span></span></button>
 <button class="nav-item" onclick="switchSection('inventory',this)"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>Inventory<span class="nav-badge" id="low-stock-badge" style="display:none">!</span></button>
 <button class="nav-item" onclick="switchSection('flasherstats',this)"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>Flasher Stats</button>
+<button class="nav-item" onclick="switchSection('analytics',this)"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>Analytics</button>
 <button class="nav-item" onclick="switchSection('emails',this)"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>Sent Emails</button>
 </nav>
 <div class="sidebar-footer">
+<button class="btn btn-secondary" style="width:100%;margin-bottom:8px;font-size:12px;padding:8px" onclick="openTestOrderModal()">+ Test Order</button>
 <span style="font-size:11px;color:#718096">FPVGate Store Admin</span>
 </div>
 </aside>
@@ -139,6 +141,41 @@
 </div>
 </div>
 
+<div id="section-analytics" class="section">
+<div class="page-header"><h2>Analytics</h2><p>Revenue, profit, forecasting and shipping insights</p></div>
+<div class="controls">
+<div class="status-filters">
+<button class="filter-btn active" onclick="setAnalyticsDateFilter(30,this)">30 Days</button>
+<button class="filter-btn" onclick="setAnalyticsDateFilter(7,this)">7 Days</button>
+<button class="filter-btn" onclick="setAnalyticsDateFilter(90,this)">90 Days</button>
+<button class="filter-btn" onclick="setAnalyticsDateFilter(365,this)">1 Year</button>
+<button class="filter-btn" onclick="setAnalyticsDateFilter('all',this)">All Time</button>
+</div>
+<button class="refresh-btn" onclick="loadAnalytics()">Refresh</button>
+</div>
+<div id="analytics-loading" class="loading"><div class="spinner"></div>Loading analytics...</div>
+<div id="analytics-content" style="display:none">
+<div class="metrics-grid">
+<div class="metric-card" style="border-left-color:#48bb78"><h3>Total Revenue</h3><div class="metric-value" id="an-total-revenue">-</div></div>
+<div class="metric-card" style="border-left-color:#4299e1"><h3>Net Revenue</h3><div class="metric-value" id="an-net-revenue">-</div><div class="metric-sub" id="an-refunds-sub"></div></div>
+<div class="metric-card" style="border-left-color:#ed8936"><h3>Total Cost</h3><div class="metric-value" id="an-total-cost">-</div></div>
+<div class="metric-card" style="border-left-color:#9f7aea"><h3>Gross Profit</h3><div class="metric-value" id="an-gross-profit">-</div></div>
+<div class="metric-card" style="border-left-color:#38b2ac"><h3>Gross Margin</h3><div class="metric-value" id="an-gross-margin">-</div></div>
+<div class="metric-card"><h3>Avg Order Value</h3><div class="metric-value" id="an-avg-order">-</div><div class="metric-sub" id="an-total-orders-sub"></div></div>
+</div>
+<div class="card"><h2>Revenue & Profit Over Time</h2><canvas id="an-revenue-chart" style="max-height:350px"></canvas></div>
+<div class="card"><h2>Revenue Forecast</h2><div class="analytics-forecast-controls" style="display:flex;gap:8px;margin-bottom:12px"><button class="filter-btn active" onclick="setForecastPeriod(30,this)">30 Days</button><button class="filter-btn" onclick="setForecastPeriod(60,this)">60 Days</button><button class="filter-btn" onclick="setForecastPeriod(90,this)">90 Days</button></div><canvas id="an-forecast-chart" style="max-height:300px"></canvas><div id="an-forecast-summary" style="margin-top:12px;font-size:14px;color:#4a5568"></div></div>
+<div class="card"><h2>Product Profitability</h2>
+<table id="an-product-table"><thead><tr><th>Product</th><th>Units Sold</th><th>Revenue</th><th>Cost</th><th>Profit</th><th>Margin</th></tr></thead><tbody id="an-product-body"></tbody></table>
+<div id="an-product-empty" class="empty-state" style="display:none">No product data yet. Set unit costs in Inventory to see profitability.</div>
+</div>
+<div class="card"><h2>Top Shipping Countries</h2>
+<div id="an-country-table"></div>
+<div id="an-country-empty" class="empty-state" style="display:none">No shipping data yet</div>
+</div>
+</div>
+</div>
+
 <div id="section-emails" class="section">
 <div class="page-header"><h2>Sent Emails</h2><p>Log of all emails sent to customers</p></div>
 <div class="controls">
@@ -166,6 +203,43 @@
 <div id="detail-overlay" class="detail-overlay" onclick="closeDetail()"></div>
 <div id="detail-panel" class="detail-panel"><div class="detail-header"><h2 id="detail-title">Order #</h2><button class="close-btn" onclick="closeDetail()">&times;</button></div><div id="detail-content"></div></div>
 
+<div id="test-order-modal" class="modal-overlay" onclick="if(event.target===this) closeTestOrderModal()">
+<div class="modal" style="max-width:500px">
+<h2>Create Test Order</h2>
+<label>Customer Name</label>
+<input type="text" id="test-customer-name" value="Test Customer">
+<label>Customer Email</label>
+<input type="email" id="test-customer-email" value="test@example.com">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<div><label>Address Line 1</label><input type="text" id="test-address1" value="123 Test Street"></div>
+<div><label>Address Line 2</label><input type="text" id="test-address2" value=""></div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<div><label>City</label><input type="text" id="test-city" value="Bedford"></div>
+<div><label>Postcode</label><input type="text" id="test-postcode" value="MK40 1AA"></div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<div><label>Country</label><input type="text" id="test-country" value="GB"></div>
+<div><label>Phone</label><input type="text" id="test-phone" value="07000000000"></div>
+</div>
+<hr style="border:none;border-top:1px solid #e2e8f0;margin:10px 0">
+<label>Item Name</label>
+<input type="text" id="test-item-name" value="Test Product">
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+<div><label>Price (GBP)</label><input type="number" id="test-item-price" value="9.99" step="0.01" min="0"></div>
+<div><label>Quantity</label><input type="number" id="test-item-qty" value="1" min="1"></div>
+<div><label>Shipping (GBP)</label><input type="number" id="test-shipping" value="1.85" step="0.01" min="0"></div>
+</div>
+<label>Shipping Method</label>
+<input type="text" id="test-shipping-method" value="Test Shipping">
+<div id="test-order-error" class="error-text" style="margin-bottom:8px"></div>
+<div class="modal-actions">
+<button class="btn btn-secondary" onclick="closeTestOrderModal()">Cancel</button>
+<button class="btn btn-primary" id="test-order-submit" onclick="submitTestOrder()">Create Test Order</button>
+</div>
+</div>
+</div>
+
 <div id="add-product-modal" class="modal-overlay" onclick="if(event.target===this) closeAddProductModal()">
 <div class="modal"><h2>Add Product</h2>
 <label>Product ID</label><input type="text" id="new-product-id" placeholder="e.g. fpvgate-aio-v3">
@@ -176,6 +250,7 @@
 <label>Long Description <span style="color:#a0aec0;font-weight:normal">(HTML, shown on product page)</span></label><textarea id="new-product-long-desc" rows="6" placeholder="Detailed HTML product description"></textarea>
 <label>Description <span style="color:#a0aec0;font-weight:normal">(legacy/Stripe)</span></label><input type="text" id="new-product-desc" placeholder="Fallback description">
 <label>Image URL (optional)</label><input type="text" id="new-product-image" placeholder="https://...">
+<label>Unit Cost (GBP) <span style="color:#a0aec0;font-weight:normal">(manufacture + ship cost)</span></label><input type="number" id="new-product-unit-cost" value="0" step="0.01" min="0">
 <label>Initial Stock</label><input type="number" id="new-product-stock" value="0" min="0">
 <label>Low Stock Threshold</label><input type="number" id="new-product-threshold" value="5" min="0">
 <div id="add-product-error" class="error-text" style="margin-bottom:8px"></div>
@@ -191,6 +266,7 @@
 <label>Long Description <span style="color:#a0aec0;font-weight:normal">(HTML, shown on product page)</span></label><textarea id="edit-product-long-desc" rows="6"></textarea>
 <label>Description <span style="color:#a0aec0;font-weight:normal">(legacy/Stripe)</span></label><input type="text" id="edit-product-desc">
 <label>Image URL</label><input type="text" id="edit-product-image">
+<label>Unit Cost (GBP) <span style="color:#a0aec0;font-weight:normal">(manufacture + ship cost)</span></label><input type="number" id="edit-product-unit-cost" step="0.01" min="0">
 <label>Stock Quantity</label><input type="number" id="edit-product-stock" min="0">
 <label>Low Stock Threshold</label><input type="number" id="edit-product-threshold" min="0">
 <div style="margin-bottom:14px">

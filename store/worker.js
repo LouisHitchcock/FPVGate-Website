@@ -198,6 +198,11 @@ export default {
                     return await handleCancelOrder(cancelMatch[1], request, env, corsHeaders);
                 }
 
+                // Test order
+                if (url.pathname === '/api/orders/test' && request.method === 'POST') {
+                    return await handleCreateTestOrder(request, env, corsHeaders);
+                }
+
                 // Labels
                 const labelsMatch = url.pathname.match(/^\/api\/orders\/(\d+)\/labels$/);
                 if (labelsMatch && request.method === 'PUT') {
@@ -232,6 +237,11 @@ export default {
                 const returnStatusMatch = url.pathname.match(/^\/api\/orders\/(\d+)\/return\/status$/);
                 if (returnStatusMatch && request.method === 'PUT') {
                     return await handleUpdateReturnStatus(returnStatusMatch[1], request, env, corsHeaders);
+                }
+
+                // Analytics
+                if (url.pathname === '/api/analytics' && request.method === 'GET') {
+                    return await handleAnalytics(request, env, corsHeaders);
                 }
 
                 // Email log
@@ -681,6 +691,66 @@ async function processCompletedCheckout(session, env) {
             console.error('Discord notification failed:', e.message);
         }
     }
+}
+
+// --- Admin: Test Order ---
+
+async function handleCreateTestOrder(request, env, corsHeaders) {
+    const body = await request.json().catch(() => ({}));
+
+    const customerName = body.customerName || 'Test Customer';
+    const customerEmail = body.customerEmail || 'test@example.com';
+    const shippingAddress = body.shippingAddress || {
+        name: customerName,
+        address1: '123 Test Street',
+        address2: '',
+        city: 'Bedford',
+        province: '',
+        postalCode: 'MK40 1AA',
+        country: 'GB',
+        phone: '07000000000',
+        email: customerEmail
+    };
+    const items = body.items || [{
+        id: 'test-product',
+        name: 'Test Product',
+        price: 9.99,
+        quantity: 1,
+        totalPrice: 9.99,
+        weight: 100
+    }];
+    const subtotal = items.reduce((s, i) => s + (i.totalPrice || i.price * (i.quantity || 1)), 0);
+    const shippingFees = body.shippingFees !== undefined ? body.shippingFees : 1.85;
+    const total = body.total !== undefined ? body.total : subtotal + shippingFees;
+
+    const countResult = await env.DB.prepare('SELECT COUNT(*) as c FROM orders').first();
+    const invoiceNumber = `FPVG-${String((countResult?.c || 0) + 1).padStart(4, '0')}`;
+
+    await env.DB.prepare(`
+        INSERT INTO orders
+        (stripe_session_id, stripe_payment_intent, invoice_number, customer_name, customer_email,
+         shipping_address, billing_address, items, subtotal, shipping_fees,
+         total, currency, shipping_method, status, notes)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new', 'TEST ORDER')
+    `).bind(
+        'test_' + Date.now(),
+        null,
+        invoiceNumber,
+        customerName,
+        customerEmail,
+        JSON.stringify(shippingAddress),
+        JSON.stringify({}),
+        JSON.stringify(items),
+        subtotal,
+        shippingFees,
+        total,
+        'gbp',
+        body.shippingMethod || 'Test Shipping'
+    ).run();
+
+    const order = await env.DB.prepare('SELECT * FROM orders WHERE invoice_number = ?').bind(invoiceNumber).first();
+
+    return jsonResponse({ success: true, order: parseOrderJson(order) }, corsHeaders);
 }
 
 // --- Admin: Orders ---
@@ -1361,7 +1431,7 @@ async function handleListInventory(env, corsHeaders) {
 
 async function handleUpdateInventory(productId, request, env, corsHeaders) {
     const body = await request.json();
-    const { stock_quantity, low_stock_threshold, reason, product_name, sku, price, description, short_description, long_description, image_url, weight, max_quantity } = body;
+    const { stock_quantity, low_stock_threshold, reason, product_name, sku, price, description, short_description, long_description, image_url, weight, max_quantity, unit_cost } = body;
 
     const existing = await env.DB.prepare('SELECT * FROM inventory WHERE product_id = ?').bind(productId).first();
     if (!existing) return jsonResponse({ error: 'Product not found' }, corsHeaders, 404);
@@ -1386,6 +1456,7 @@ async function handleUpdateInventory(productId, request, env, corsHeaders) {
     if (image_url !== undefined) { updates.push('image_url = ?'); params.push(image_url); }
     if (weight !== undefined) { updates.push('weight = ?'); params.push(weight); }
     if (max_quantity !== undefined) { updates.push('max_quantity = ?'); params.push(max_quantity); }
+    if (unit_cost !== undefined) { updates.push('unit_cost = ?'); params.push(unit_cost); }
 
     if (updates.length === 0) return jsonResponse({ error: 'No fields to update' }, corsHeaders, 400);
 
@@ -1398,15 +1469,15 @@ async function handleUpdateInventory(productId, request, env, corsHeaders) {
 
 async function handleAddInventoryProduct(request, env, corsHeaders) {
     const body = await request.json();
-    const { product_id, product_name, sku, stock_quantity, low_stock_threshold, price, description, short_description, long_description, image_url } = body;
+    const { product_id, product_name, sku, stock_quantity, low_stock_threshold, price, description, short_description, long_description, image_url, unit_cost } = body;
 
     if (!product_id || !product_name) return jsonResponse({ error: 'product_id and product_name are required' }, corsHeaders, 400);
     if (!price) return jsonResponse({ error: 'Price is required' }, corsHeaders, 400);
 
     try {
         await env.DB.prepare(
-            'INSERT INTO inventory (product_id, product_name, sku, stock_quantity, low_stock_threshold, price, description, short_description, long_description, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-        ).bind(product_id, product_name, sku || null, stock_quantity || 0, low_stock_threshold || 5, price || 0, description || null, short_description || null, long_description || null, image_url || null).run();
+            'INSERT INTO inventory (product_id, product_name, sku, stock_quantity, low_stock_threshold, price, description, short_description, long_description, image_url, unit_cost) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        ).bind(product_id, product_name, sku || null, stock_quantity || 0, low_stock_threshold || 5, price || 0, description || null, short_description || null, long_description || null, image_url || null, unit_cost || 0).run();
 
         if (stock_quantity && stock_quantity > 0) {
             await env.DB.prepare('INSERT INTO inventory_log (product_id, change_amount, reason) VALUES (?, ?, ?)').bind(product_id, stock_quantity, 'Initial stock').run();
@@ -1489,6 +1560,159 @@ async function handleDeleteProduct(productId, env, corsHeaders) {
     const result = await env.DB.prepare('DELETE FROM inventory WHERE product_id = ?').bind(productId).run();
     if (result.meta.changes === 0) return jsonResponse({ error: 'Product not found' }, corsHeaders, 404);
     return jsonResponse({ success: true }, corsHeaders);
+}
+
+// --- Analytics ---
+
+async function handleAnalytics(request, env, corsHeaders) {
+    const url = new URL(request.url);
+    const days = url.searchParams.get('days') || '30';
+
+    const validStatuses = "('new','label_created','shipped','completed')";
+    let dateFilter = '';
+    let dateParam = null;
+    if (days !== 'all') {
+        const d = parseInt(days) || 30;
+        dateFilter = ` AND created_at >= datetime('now', '-${d} days')`;
+        dateParam = d;
+    }
+
+    // Revenue summary
+    const summary = await env.DB.prepare(
+        `SELECT COUNT(*) as total_orders, COALESCE(SUM(total), 0) as total_revenue, COALESCE(AVG(total), 0) as avg_order_value, COALESCE(SUM(shipping_fees), 0) as total_shipping FROM orders WHERE status IN ${validStatuses}${dateFilter}`
+    ).first();
+
+    // Total refunds
+    const refundResult = await env.DB.prepare(
+        `SELECT COALESCE(SUM(r.amount), 0) as total_refunds FROM order_refunds r JOIN orders o ON r.order_id = o.id WHERE o.status IN ${validStatuses}${dateFilter ? dateFilter.replace('created_at', 'o.created_at') : ''}`
+    ).first();
+    const totalRefunds = refundResult?.total_refunds || 0;
+
+    // Daily time series
+    const timeSeries = await env.DB.prepare(
+        `SELECT date(created_at) as date, COUNT(*) as orders, COALESCE(SUM(total), 0) as revenue FROM orders WHERE status IN ${validStatuses}${dateFilter} GROUP BY date(created_at) ORDER BY date ASC`
+    ).all();
+
+    // Product breakdown - parse items JSON from orders and join with inventory for unit_cost
+    const allOrders = await env.DB.prepare(
+        `SELECT items FROM orders WHERE status IN ${validStatuses}${dateFilter}`
+    ).all();
+
+    const productMap = {};
+    for (const row of allOrders.results) {
+        let items;
+        try { items = JSON.parse(row.items); } catch { continue; }
+        if (!Array.isArray(items)) continue;
+        for (const item of items) {
+            const pid = item.id || item.name;
+            if (!productMap[pid]) {
+                productMap[pid] = { product_id: pid, name: item.name || pid, units_sold: 0, revenue: 0 };
+            }
+            const qty = item.quantity || 1;
+            productMap[pid].units_sold += qty;
+            productMap[pid].revenue += item.totalPrice || (item.price * qty) || 0;
+        }
+    }
+
+    // Get unit costs from inventory
+    const inventory = await env.DB.prepare('SELECT product_id, product_name, unit_cost FROM inventory').all();
+    const costMap = {};
+    for (const inv of inventory.results) {
+        costMap[inv.product_id] = { unit_cost: inv.unit_cost || 0, name: inv.product_name };
+    }
+
+    const products = Object.values(productMap).map(p => {
+        const cost = costMap[p.product_id];
+        const unitCost = cost ? cost.unit_cost : 0;
+        const totalCost = unitCost * p.units_sold;
+        const profit = p.revenue - totalCost;
+        const margin = p.revenue > 0 ? (profit / p.revenue) * 100 : 0;
+        return {
+            product_id: p.product_id,
+            name: cost ? cost.name : p.name,
+            units_sold: p.units_sold,
+            revenue: Math.round(p.revenue * 100) / 100,
+            total_cost: Math.round(totalCost * 100) / 100,
+            profit: Math.round(profit * 100) / 100,
+            margin: Math.round(margin * 10) / 10
+        };
+    }).sort((a, b) => b.revenue - a.revenue);
+
+    const totalCost = products.reduce((s, p) => s + p.total_cost, 0);
+    const netRevenue = (summary.total_revenue || 0) - totalRefunds;
+    const grossProfit = netRevenue - totalCost;
+    const grossMargin = netRevenue > 0 ? (grossProfit / netRevenue) * 100 : 0;
+
+    // Country breakdown from shipping_address JSON
+    const countryOrders = await env.DB.prepare(
+        `SELECT shipping_address FROM orders WHERE status IN ${validStatuses}${dateFilter}`
+    ).all();
+
+    const countryMap = {};
+    for (const row of countryOrders.results) {
+        let addr;
+        try { addr = JSON.parse(row.shipping_address); } catch { continue; }
+        const country = addr?.country || 'Unknown';
+        if (!countryMap[country]) countryMap[country] = { country, orders: 0, revenue: 0 };
+        countryMap[country].orders++;
+    }
+    // Re-read with totals for revenue per country
+    const countryRevOrders = await env.DB.prepare(
+        `SELECT shipping_address, total FROM orders WHERE status IN ${validStatuses}${dateFilter}`
+    ).all();
+    for (const row of countryRevOrders.results) {
+        let addr;
+        try { addr = JSON.parse(row.shipping_address); } catch { continue; }
+        const country = addr?.country || 'Unknown';
+        if (countryMap[country]) countryMap[country].revenue += row.total || 0;
+    }
+    const countries = Object.values(countryMap).sort((a, b) => b.orders - a.orders).map(c => ({
+        ...c, revenue: Math.round(c.revenue * 100) / 100
+    }));
+
+    // Add cost to time series for profit chart
+    // Build per-day cost from order items
+    const dailyOrders = await env.DB.prepare(
+        `SELECT date(created_at) as date, items FROM orders WHERE status IN ${validStatuses}${dateFilter}`
+    ).all();
+    const dailyCostMap = {};
+    for (const row of dailyOrders.results) {
+        let items;
+        try { items = JSON.parse(row.items); } catch { continue; }
+        if (!Array.isArray(items)) continue;
+        let dayCost = 0;
+        for (const item of items) {
+            const pid = item.id || item.name;
+            const uc = costMap[pid]?.unit_cost || 0;
+            dayCost += uc * (item.quantity || 1);
+        }
+        dailyCostMap[row.date] = (dailyCostMap[row.date] || 0) + dayCost;
+    }
+
+    const timeSeriesWithProfit = (timeSeries.results || []).map(d => ({
+        date: d.date,
+        orders: d.orders,
+        revenue: Math.round(d.revenue * 100) / 100,
+        cost: Math.round((dailyCostMap[d.date] || 0) * 100) / 100,
+        profit: Math.round((d.revenue - (dailyCostMap[d.date] || 0)) * 100) / 100
+    }));
+
+    return jsonResponse({
+        summary: {
+            total_orders: summary.total_orders || 0,
+            total_revenue: Math.round((summary.total_revenue || 0) * 100) / 100,
+            avg_order_value: Math.round((summary.avg_order_value || 0) * 100) / 100,
+            total_shipping: Math.round((summary.total_shipping || 0) * 100) / 100,
+            total_refunds: Math.round(totalRefunds * 100) / 100,
+            net_revenue: Math.round(netRevenue * 100) / 100,
+            total_cost: Math.round(totalCost * 100) / 100,
+            gross_profit: Math.round(grossProfit * 100) / 100,
+            gross_margin: Math.round(grossMargin * 10) / 10
+        },
+        time_series: timeSeriesWithProfit,
+        products,
+        countries
+    }, corsHeaders);
 }
 
 // --- Helpers ---
