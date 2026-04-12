@@ -122,6 +122,79 @@ export default {
                 }, corsHeaders);
             }
 
+            // --- Google OAuth ---
+
+            if (url.pathname === '/auth/google' && request.method === 'GET') {
+                const redirectUri = `${url.origin}/auth/callback`;
+                const params = new URLSearchParams({
+                    client_id: env.GOOGLE_CLIENT_ID,
+                    redirect_uri: redirectUri,
+                    response_type: 'code',
+                    scope: 'openid email profile',
+                    access_type: 'online',
+                    prompt: 'select_account'
+                });
+                return Response.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params}`, 302);
+            }
+
+            if (url.pathname === '/auth/callback' && request.method === 'GET') {
+                const code = url.searchParams.get('code');
+                const error = url.searchParams.get('error');
+                if (error || !code) {
+                    return new Response('Authentication failed: ' + (error || 'no code'), { status: 400, headers: corsHeaders });
+                }
+
+                try {
+                    // Exchange code for tokens
+                    const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: new URLSearchParams({
+                            code,
+                            client_id: env.GOOGLE_CLIENT_ID,
+                            client_secret: env.GOOGLE_CLIENT_SECRET,
+                            redirect_uri: `${url.origin}/auth/callback`,
+                            grant_type: 'authorization_code'
+                        })
+                    });
+                    const tokenData = await tokenRes.json();
+                    if (!tokenData.access_token) {
+                        return new Response('Token exchange failed', { status: 400, headers: corsHeaders });
+                    }
+
+                    // Get user info
+                    const userRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+                        headers: { 'Authorization': `Bearer ${tokenData.access_token}` }
+                    });
+                    const user = await userRes.json();
+                    const email = (user.email || '').toLowerCase();
+
+                    // Check allowed emails
+                    const allowed = (env.ALLOWED_EMAILS || '').toLowerCase().split(',').map(e => e.trim()).filter(Boolean);
+                    if (!allowed.includes(email)) {
+                        return new Response(`Access denied for ${email}. This account is not authorized.`, { status: 403, headers: corsHeaders });
+                    }
+
+                    // Issue JWT
+                    const jwt = await signJWT({ email, name: user.name || email, picture: user.picture || '' }, env.JWT_SECRET, 86400);
+
+                    // Redirect to admin with token
+                    const adminUrl = env.ADMIN_URL || 'https://fpvgate.xyz/admin/';
+                    return Response.redirect(`${adminUrl}?token=${jwt}`, 302);
+                } catch (e) {
+                    return new Response('OAuth error: ' + e.message, { status: 500, headers: corsHeaders });
+                }
+            }
+
+            if (url.pathname === '/auth/verify' && request.method === 'GET') {
+                const authHeader = request.headers.get('Authorization');
+                if (!authHeader) return jsonResponse({ error: 'No token' }, corsHeaders, 401);
+                const token = authHeader.replace('Bearer ', '');
+                const payload = await verifyJWT(token, env.JWT_SECRET);
+                if (!payload) return jsonResponse({ error: 'Invalid or expired token' }, corsHeaders, 401);
+                return jsonResponse({ email: payload.email, name: payload.name, picture: payload.picture }, corsHeaders);
+            }
+
             // --- Admin API (requires auth) ---
 
             if (url.pathname.startsWith('/api/')) {
@@ -319,8 +392,62 @@ async function validateAdminAuth(request, env) {
     const authHeader = request.headers.get('Authorization');
     if (!authHeader) return true;
     const token = authHeader.replace('Bearer ', '');
-    if (token !== env.ADMIN_TOKEN) return true;
-    return false;
+
+    // Try JWT first
+    if (token.includes('.')) {
+        const payload = await verifyJWT(token, env.JWT_SECRET);
+        if (payload) return false; // valid JWT
+    }
+
+    // Fallback to legacy ADMIN_TOKEN
+    if (token === env.ADMIN_TOKEN) return false;
+
+    return true;
+}
+
+// --- JWT ---
+
+async function signJWT(payload, secret, expiresInSeconds) {
+    const header = { alg: 'HS256', typ: 'JWT' };
+    const now = Math.floor(Date.now() / 1000);
+    const claims = { ...payload, iat: now, exp: now + expiresInSeconds };
+
+    const enc = new TextEncoder();
+    const headerB64 = base64url(JSON.stringify(header));
+    const payloadB64 = base64url(JSON.stringify(claims));
+    const signingInput = `${headerB64}.${payloadB64}`;
+
+    const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+    const sig = await crypto.subtle.sign('HMAC', key, enc.encode(signingInput));
+    const sigB64 = base64url(String.fromCharCode(...new Uint8Array(sig)));
+
+    return `${signingInput}.${sigB64}`;
+}
+
+async function verifyJWT(token, secret) {
+    try {
+        const parts = token.split('.');
+        if (parts.length !== 3) return null;
+
+        const enc = new TextEncoder();
+        const signingInput = `${parts[0]}.${parts[1]}`;
+        const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']);
+
+        const sigBytes = Uint8Array.from(atob(parts[2].replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+        const valid = await crypto.subtle.verify('HMAC', key, sigBytes, enc.encode(signingInput));
+        if (!valid) return null;
+
+        const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+        if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) return null;
+
+        return payload;
+    } catch {
+        return null;
+    }
+}
+
+function base64url(str) {
+    return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
 // --- Stripe Helpers ---

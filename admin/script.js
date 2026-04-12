@@ -1,11 +1,29 @@
 const STORE_API='https://fpvgate-store.fpvgate-analytics.workers.dev';
 const ANALYTICS_API='https://fpvgate-analytics.fpvgate-analytics.workers.dev';
-const PASSWORD_HASH='fc4184b0cf53f0f30eb5ead285ae71b91addfa2c17c968f6b5a146a289c62e9c';
 let adminToken='',currentFilter=null,ordersData=[],liveStatsInterval=null,currentEditImages=[],selectedOrderIds=new Set();
 
-async function hashPassword(p){const e=new TextEncoder();const d=e.encode(p);const h=await crypto.subtle.digest('SHA-256',d);return Array.from(new Uint8Array(h)).map(b=>b.toString(16).padStart(2,'0')).join('')}
-async function checkPassword(){const i=document.getElementById('password-input');const err=document.getElementById('auth-error');const h=await hashPassword(i.value);if(h===PASSWORD_HASH){adminToken=i.value;document.getElementById('auth-overlay').style.display='none';document.getElementById('main-content').style.display='flex';sessionStorage.setItem('fpvgate_admin_auth','true');sessionStorage.setItem('fpvgate_admin_token',i.value);loadDashboard()}else{err.style.display='block';i.value='';i.focus()}}
-window.addEventListener('DOMContentLoaded',()=>{if(sessionStorage.getItem('fpvgate_admin_auth')==='true'){adminToken=sessionStorage.getItem('fpvgate_admin_token');document.getElementById('auth-overlay').style.display='none';document.getElementById('main-content').style.display='flex';loadDashboard()}else{document.getElementById('password-input').focus()}});
+async function initAuth(){
+  const params=new URLSearchParams(window.location.search);
+  const urlToken=params.get('token');
+  if(urlToken){sessionStorage.setItem('fpvgate_admin_token',urlToken);window.history.replaceState({},'',window.location.pathname)}
+  const token=sessionStorage.getItem('fpvgate_admin_token');
+  if(!token){showAuthOverlay();return}
+  try{
+    const r=await fetch(STORE_API+'/auth/verify',{headers:{'Authorization':'Bearer '+token}});
+    if(!r.ok){sessionStorage.removeItem('fpvgate_admin_token');showAuthOverlay();return}
+    const user=await r.json();
+    adminToken=token;
+    document.getElementById('auth-overlay').style.display='none';
+    document.getElementById('main-content').style.display='flex';
+    if(user.email){document.getElementById('user-email').textContent=user.email}
+    if(user.picture){const av=document.getElementById('user-avatar');av.src=user.picture;av.style.display='block'}
+    document.getElementById('sign-out-btn').style.display='block';
+    loadDashboard();
+  }catch(e){sessionStorage.removeItem('fpvgate_admin_token');showAuthOverlay()}
+}
+function showAuthOverlay(){document.getElementById('auth-overlay').style.display='flex';document.getElementById('main-content').style.display='none'}
+function signOut(){sessionStorage.removeItem('fpvgate_admin_token');adminToken='';showAuthOverlay()}
+window.addEventListener('DOMContentLoaded',()=>{initAuth()});
 
 let currentEmailFilter=null;
 function switchSection(name,btn){document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.getElementById('section-'+name).classList.add('active');if(btn)btn.classList.add('active');document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-overlay').classList.remove('open');if(liveStatsInterval){clearInterval(liveStatsInterval);liveStatsInterval=null}if(name==='dashboard')loadDashboard();else if(name==='orders')loadOrders();else if(name==='livestats'){loadLiveStats();liveStatsInterval=setInterval(loadLiveStats,30000)}else if(name==='inventory')loadInventory();else if(name==='flasherstats')loadFlasherStats();else if(name==='analytics')loadAnalytics();else if(name==='emails')loadEmails()}
