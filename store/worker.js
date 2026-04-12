@@ -1569,6 +1569,7 @@ async function handleAnalytics(request, env, corsHeaders) {
     const days = url.searchParams.get('days') || '30';
 
     const validStatuses = "('new','label_created','shipped','completed')";
+    const excludeTest = " AND (labels NOT LIKE '%\"test\"%' OR labels IS NULL)";
     let dateFilter = '';
     let dateParam = null;
     if (days !== 'all') {
@@ -1579,23 +1580,23 @@ async function handleAnalytics(request, env, corsHeaders) {
 
     // Revenue summary
     const summary = await env.DB.prepare(
-        `SELECT COUNT(*) as total_orders, COALESCE(SUM(total), 0) as total_revenue, COALESCE(AVG(total), 0) as avg_order_value, COALESCE(SUM(shipping_fees), 0) as total_shipping FROM orders WHERE status IN ${validStatuses}${dateFilter}`
+        `SELECT COUNT(*) as total_orders, COALESCE(SUM(total), 0) as total_revenue, COALESCE(AVG(total), 0) as avg_order_value, COALESCE(SUM(shipping_fees), 0) as total_shipping FROM orders WHERE status IN ${validStatuses}${excludeTest}${dateFilter}`
     ).first();
 
     // Total refunds
     const refundResult = await env.DB.prepare(
-        `SELECT COALESCE(SUM(r.amount), 0) as total_refunds FROM order_refunds r JOIN orders o ON r.order_id = o.id WHERE o.status IN ${validStatuses}${dateFilter ? dateFilter.replace('created_at', 'o.created_at') : ''}`
+        `SELECT COALESCE(SUM(r.amount), 0) as total_refunds FROM order_refunds r JOIN orders o ON r.order_id = o.id WHERE o.status IN ${validStatuses}${excludeTest.replace('labels', 'o.labels')}${dateFilter ? dateFilter.replace('created_at', 'o.created_at') : ''}`
     ).first();
     const totalRefunds = refundResult?.total_refunds || 0;
 
     // Daily time series
     const timeSeries = await env.DB.prepare(
-        `SELECT date(created_at) as date, COUNT(*) as orders, COALESCE(SUM(total), 0) as revenue FROM orders WHERE status IN ${validStatuses}${dateFilter} GROUP BY date(created_at) ORDER BY date ASC`
+        `SELECT date(created_at) as date, COUNT(*) as orders, COALESCE(SUM(total), 0) as revenue FROM orders WHERE status IN ${validStatuses}${excludeTest}${dateFilter} GROUP BY date(created_at) ORDER BY date ASC`
     ).all();
 
     // Product breakdown - parse items JSON from orders and join with inventory for unit_cost
     const allOrders = await env.DB.prepare(
-        `SELECT items FROM orders WHERE status IN ${validStatuses}${dateFilter}`
+        `SELECT items FROM orders WHERE status IN ${validStatuses}${excludeTest}${dateFilter}`
     ).all();
 
     const productMap = {};
@@ -1645,7 +1646,7 @@ async function handleAnalytics(request, env, corsHeaders) {
 
     // Country breakdown from shipping_address JSON
     const countryOrders = await env.DB.prepare(
-        `SELECT shipping_address FROM orders WHERE status IN ${validStatuses}${dateFilter}`
+        `SELECT shipping_address FROM orders WHERE status IN ${validStatuses}${excludeTest}${dateFilter}`
     ).all();
 
     const countryMap = {};
@@ -1658,7 +1659,7 @@ async function handleAnalytics(request, env, corsHeaders) {
     }
     // Re-read with totals for revenue per country
     const countryRevOrders = await env.DB.prepare(
-        `SELECT shipping_address, total FROM orders WHERE status IN ${validStatuses}${dateFilter}`
+        `SELECT shipping_address, total FROM orders WHERE status IN ${validStatuses}${excludeTest}${dateFilter}`
     ).all();
     for (const row of countryRevOrders.results) {
         let addr;
@@ -1673,7 +1674,7 @@ async function handleAnalytics(request, env, corsHeaders) {
     // Add cost to time series for profit chart
     // Build per-day cost from order items
     const dailyOrders = await env.DB.prepare(
-        `SELECT date(created_at) as date, items FROM orders WHERE status IN ${validStatuses}${dateFilter}`
+        `SELECT date(created_at) as date, items FROM orders WHERE status IN ${validStatuses}${excludeTest}${dateFilter}`
     ).all();
     const dailyCostMap = {};
     for (const row of dailyOrders.results) {
