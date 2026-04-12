@@ -248,6 +248,10 @@
                     </div>
                 `).join('');
                 window._shippingRates = rates;
+
+                // Auto-select Evri rate as default, fall back to first rate
+                const evriIdx = rates.findIndex(r => r.provider && r.provider.toLowerCase().includes('evri'));
+                selectRate(evriIdx >= 0 ? evriIdx : 0);
             }
             document.getElementById('shipping-section').style.display = 'block';
             btn.textContent = 'Recalculate Shipping';

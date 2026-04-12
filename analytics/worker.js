@@ -90,7 +90,15 @@ export default {
       if (url.pathname === '/stats/live' && request.method === 'GET') {
         const authHeader = request.headers.get('Authorization');
         const token = authHeader ? authHeader.replace('Bearer ', '') : '';
-        if (!env.ADMIN_TOKEN || token !== env.ADMIN_TOKEN) {
+        let authorized = false;
+        // Check JWT
+        if (token.includes('.') && env.JWT_SECRET) {
+          const payload = await verifyJWT(token, env.JWT_SECRET);
+          if (payload) authorized = true;
+        }
+        // Fallback to legacy ADMIN_TOKEN
+        if (!authorized && env.ADMIN_TOKEN && token === env.ADMIN_TOKEN) authorized = true;
+        if (!authorized) {
           return new Response(JSON.stringify({ error: 'Unauthorized' }), {
             status: 401,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -118,6 +126,24 @@ export default {
     }
   }
 };
+
+// --- JWT Verification ---
+
+async function verifyJWT(token, secret) {
+    try {
+        const parts = token.split('.');
+        if (parts.length !== 3) return null;
+        const enc = new TextEncoder();
+        const signingInput = `${parts[0]}.${parts[1]}`;
+        const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']);
+        const sigBytes = Uint8Array.from(atob(parts[2].replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0));
+        const valid = await crypto.subtle.verify('HMAC', key, sigBytes, enc.encode(signingInput));
+        if (!valid) return null;
+        const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+        if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) return null;
+        return payload;
+    } catch { return null; }
+}
 
 // Hash IP address for privacy (one-way hash)
 async function hashIP(ip) {

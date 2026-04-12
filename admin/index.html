@@ -24,6 +24,7 @@
 <button class="nav-item" onclick="switchSection('flasherstats',this)"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>Flasher Stats</button>
 <button class="nav-item" onclick="switchSection('analytics',this)"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>Analytics</button>
 <button class="nav-item" onclick="switchSection('emails',this)"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>Sent Emails</button>
+<button class="nav-item" onclick="switchSection('users',this)"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>Users</button>
 </nav>
 <div class="sidebar-footer">
 <button class="btn btn-secondary" style="width:100%;margin-bottom:8px;font-size:12px;padding:8px" onclick="openTestOrderModal()">+ Test Order</button>
@@ -175,6 +176,31 @@
 <div id="an-country-table"></div>
 <div id="an-country-empty" class="empty-state" style="display:none">No shipping data yet</div>
 </div>
+</div>
+</div>
+
+<div id="section-users" class="section">
+<div class="page-header"><h2>Allowed Users</h2><p>Manage who can access the admin panel via Google sign-in</p></div>
+<div class="controls"><div></div><div style="display:flex;gap:8px"><button class="refresh-btn" onclick="loadUsers()">Refresh</button></div></div>
+<div class="card">
+<h2>Add User</h2>
+<div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap">
+<div style="flex:1;min-width:200px"><label style="font-size:13px;font-weight:600;color:#4a5568;display:block;margin-bottom:4px">Email</label><input type="email" id="add-user-email" placeholder="user@gmail.com" style="width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px"></div>
+<div style="flex:1;min-width:150px"><label style="font-size:13px;font-weight:600;color:#4a5568;display:block;margin-bottom:4px">Name (optional)</label><input type="text" id="add-user-name" placeholder="Display name" style="width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px"></div>
+<button class="btn btn-primary" onclick="addUser()">Add User</button>
+</div>
+<div id="add-user-error" class="error-text" style="margin-top:8px"></div>
+</div>
+<div class="card">
+<h2>Owner (Environment Variable)</h2>
+<p style="font-size:13px;color:#718096;margin-bottom:12px">These emails are set via ALLOWED_EMAILS env var and always have access. They cannot be removed from this panel.</p>
+<div id="owner-users-list"></div>
+</div>
+<div class="card">
+<h2>Additional Users</h2>
+<div id="users-loading" class="loading"><div class="spinner"></div>Loading users...</div>
+<div id="users-empty" class="empty-state" style="display:none">No additional users added yet</div>
+<table id="users-table" style="display:none"><thead><tr><th>Email</th><th>Name</th><th>Added</th><th>Actions</th></tr></thead><tbody id="users-body"></tbody></table>
 </div>
 </div>
 

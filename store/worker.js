@@ -169,9 +169,10 @@ export default {
                     const user = await userRes.json();
                     const email = (user.email || '').toLowerCase();
 
-                    // Check allowed emails
-                    const allowed = (env.ALLOWED_EMAILS || '').toLowerCase().split(',').map(e => e.trim()).filter(Boolean);
-                    if (!allowed.includes(email)) {
+                    // Check allowed emails: env var (owner override) + database
+                    const envAllowed = (env.ALLOWED_EMAILS || '').toLowerCase().split(',').map(e => e.trim()).filter(Boolean);
+                    const dbUser = await env.DB.prepare('SELECT email FROM allowed_users WHERE email = ?').bind(email).first();
+                    if (!envAllowed.includes(email) && !dbUser) {
                         return new Response(`Access denied for ${email}. This account is not authorized.`, { status: 403, headers: corsHeaders });
                     }
 
@@ -315,6 +316,33 @@ export default {
                 // Analytics
                 if (url.pathname === '/api/analytics' && request.method === 'GET') {
                     return await handleAnalytics(request, env, corsHeaders);
+                }
+
+                // User management
+                if (url.pathname === '/api/users' && request.method === 'GET') {
+                    const result = await env.DB.prepare('SELECT id, email, name, added_at FROM allowed_users ORDER BY added_at DESC').all();
+                    const envEmails = (env.ALLOWED_EMAILS || '').toLowerCase().split(',').map(e => e.trim()).filter(Boolean);
+                    return jsonResponse({ users: result.results, owner_emails: envEmails }, corsHeaders);
+                }
+                if (url.pathname === '/api/users' && request.method === 'POST') {
+                    const body = await request.json();
+                    const email = (body.email || '').toLowerCase().trim();
+                    const name = (body.name || '').trim();
+                    if (!email || !email.includes('@')) return jsonResponse({ error: 'Valid email is required' }, corsHeaders, 400);
+                    try {
+                        await env.DB.prepare('INSERT INTO allowed_users (email, name) VALUES (?, ?)').bind(email, name || null).run();
+                        return jsonResponse({ success: true }, corsHeaders);
+                    } catch (e) {
+                        if (e.message.includes('UNIQUE')) return jsonResponse({ error: 'User already exists' }, corsHeaders, 409);
+                        throw e;
+                    }
+                }
+                const userDeleteMatch = url.pathname.match(/^\/api\/users\/(.+)$/);
+                if (userDeleteMatch && request.method === 'DELETE') {
+                    const email = decodeURIComponent(userDeleteMatch[1]).toLowerCase();
+                    const result = await env.DB.prepare('DELETE FROM allowed_users WHERE email = ?').bind(email).run();
+                    if (result.meta.changes === 0) return jsonResponse({ error: 'User not found' }, corsHeaders, 404);
+                    return jsonResponse({ success: true }, corsHeaders);
                 }
 
                 // Email log
