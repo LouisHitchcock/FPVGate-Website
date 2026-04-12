@@ -25,6 +25,7 @@
 <button class="nav-item" onclick="switchSection('analytics',this)"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>Analytics</button>
 <button class="nav-item" onclick="switchSection('emails',this)"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>Sent Emails</button>
 <button class="nav-item" onclick="switchSection('users',this)"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>Users</button>
+<button class="nav-item" onclick="switchSection('tools',this)"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>Tools</button>
 </nav>
 <div class="sidebar-footer">
 <button class="btn btn-secondary" style="width:100%;margin-bottom:8px;font-size:12px;padding:8px" onclick="openTestOrderModal()">+ Test Order</button>
@@ -225,6 +226,38 @@
 </div>
 </div>
 
+<div id="section-tools" class="section">
+<div class="page-header"><h2>Tools</h2><p>Utilities for managing FPVGate products</p></div>
+<div class="card">
+<h2>Quick Start QR Code</h2>
+<p style="color:#718096;font-size:14px;margin-bottom:16px">Generate a QR code that links to the FPVGate AIO Quick Start guide. Print this and include it with shipped AIO units.</p>
+<div style="display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:20px">
+<div style="flex:1;min-width:250px">
+<label style="font-size:13px;font-weight:600;color:#4a5568;display:block;margin-bottom:4px">URL</label>
+<input type="text" id="qr-url" value="https://fpvgate.xyz/quickstart.html" style="width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px">
+</div>
+<div>
+<label style="font-size:13px;font-weight:600;color:#4a5568;display:block;margin-bottom:4px">Size</label>
+<select id="qr-size" style="padding:10px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px;background:#fff">
+<option value="200">Small (200px)</option>
+<option value="400" selected>Medium (400px)</option>
+<option value="600">Large (600px)</option>
+<option value="800">Print (800px)</option>
+</select>
+</div>
+<button class="btn btn-primary" onclick="generateQR()">Generate</button>
+</div>
+<div id="qr-output" style="text-align:center;padding:20px;display:none">
+<canvas id="qr-canvas"></canvas>
+<p style="margin-top:12px;font-size:13px;color:#718096" id="qr-url-label"></p>
+<div style="margin-top:16px;display:flex;gap:8px;justify-content:center">
+<button class="btn btn-secondary btn-sm" onclick="downloadQR('png')">Download PNG</button>
+<button class="btn btn-secondary btn-sm" onclick="downloadQR('svg')">Download SVG</button>
+</div>
+</div>
+</div>
+</div>
+
 </main>
 </div>
 
@@ -309,6 +342,7 @@
 <div id="edit-product-error" class="error-text" style="margin-bottom:8px"></div>
 <div class="modal-actions"><button class="btn btn-secondary" onclick="closeEditProductModal()">Cancel</button><button class="btn btn-primary" onclick="saveEditProduct()">Save Changes</button></div>
 </div></div>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js"></script>
 <script src="script.js"></script>
 </body>
 </html>

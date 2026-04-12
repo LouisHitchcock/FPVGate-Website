@@ -136,3 +136,39 @@ function renderRevenueChart(data){const ctx=document.getElementById('an-revenue-
 function renderForecastChart(data){const ctx=document.getElementById('an-forecast-chart');if(analyticsCharts.forecast)analyticsCharts.forecast.destroy();if(data.length<2){document.getElementById('an-forecast-summary').textContent='Not enough data to forecast.';analyticsCharts.forecast=new Chart(ctx,{type:'line',data:{labels:[],datasets:[]},options:{responsive:true}});return}const revenues=data.map(d=>d.revenue);const n=revenues.length;let sumX=0,sumY=0,sumXY=0,sumXX=0;for(let i=0;i<n;i++){sumX+=i;sumY+=revenues[i];sumXY+=i*revenues[i];sumXX+=i*i}const slope=(n*sumXY-sumX*sumY)/(n*sumXX-sumX*sumX);const intercept=(sumY-slope*sumX)/n;const forecastDays=analyticsForecastDays;const historicalLabels=data.map(d=>d.date);const historicalRevenue=revenues;const forecastLabels=[];const forecastRevenue=[];const lastDate=new Date(data[data.length-1].date);for(let i=1;i<=forecastDays;i++){const d=new Date(lastDate);d.setDate(d.getDate()+i);forecastLabels.push(d.toISOString().split('T')[0]);const predicted=Math.max(0,intercept+slope*(n-1+i));forecastRevenue.push(Math.round(predicted*100)/100)}const allLabels=[...historicalLabels,...forecastLabels];const histData=historicalRevenue.map(v=>v);const foreData=new Array(historicalRevenue.length).fill(null);foreData[foreData.length-1]=historicalRevenue[historicalRevenue.length-1];foreData.push(...forecastRevenue);analyticsCharts.forecast=new Chart(ctx,{type:'line',data:{labels:allLabels,datasets:[{label:'Actual Revenue',data:histData.concat(new Array(forecastDays).fill(null)),borderColor:'#4299e1',backgroundColor:'rgba(66,153,225,0.1)',fill:true,tension:0.3,pointRadius:2,borderWidth:2},{label:'Forecast',data:foreData,borderColor:'#9f7aea',backgroundColor:'rgba(159,122,234,0.1)',fill:true,tension:0.3,pointRadius:2,borderWidth:2,borderDash:[6,3]}]},options:{responsive:true,interaction:{mode:'index',intersect:false},plugins:{tooltip:{callbacks:{label:function(ctx){if(ctx.parsed.y===null)return null;return ctx.dataset.label+': £'+ctx.parsed.y.toFixed(2)}}}},scales:{y:{beginAtZero:true,grid:{color:'#e2e8f0'},ticks:{callback:v=>'£'+v}},x:{grid:{display:false}}}}});const projectedTotal=forecastRevenue.reduce((s,v)=>s+v,0);const dailyAvg=projectedTotal/forecastDays;const summary=document.getElementById('an-forecast-summary');summary.innerHTML='Projected revenue over next '+forecastDays+' days: <strong>£'+projectedTotal.toFixed(2)+'</strong> (avg £'+dailyAvg.toFixed(2)+'/day). Trend: <strong>'+(slope>=0?'↑ Growing':'↓ Declining')+'</strong> at £'+Math.abs(slope).toFixed(2)+'/day.'}
 function renderProductTable(products){const tb=document.getElementById('an-product-body');const em=document.getElementById('an-product-empty');const tbl=document.getElementById('an-product-table');if(products.length===0){tbl.style.display='none';em.style.display='block';return}tbl.style.display='table';em.style.display='none';tb.innerHTML='';products.forEach(p=>{const tr=document.createElement('tr');const profitCls=p.profit>=0?'profit-positive':'profit-negative';const marginCls=p.margin>=50?'margin-good':p.margin>=20?'margin-ok':'margin-bad';tr.innerHTML='<td><strong>'+escHtml(p.name)+'</strong></td><td>'+p.units_sold+'</td><td>£'+p.revenue.toFixed(2)+'</td><td>£'+p.total_cost.toFixed(2)+'</td><td class="'+profitCls+'">£'+p.profit.toFixed(2)+'</td><td><span class="margin-badge '+marginCls+'">'+p.margin.toFixed(1)+'%</span></td>';tb.appendChild(tr)})}
 function renderCountryTable(countries){const ct=document.getElementById('an-country-table');const em=document.getElementById('an-country-empty');if(countries.length===0){ct.innerHTML='';em.style.display='block';return}em.style.display='none';ct.innerHTML=countries.map(c=>'<div class="country-row-analytics"><div class="country-info"><span style="font-size:20px">'+countryFlag(c.country)+'</span><span><strong>'+escHtml(c.country)+'</strong></span></div><div class="country-stats"><span>'+c.orders+' order'+(c.orders!==1?'s':'')+'</span><span>£'+c.revenue.toFixed(2)+'</span></div></div>').join('')}
+
+// --- QR Code Tools ---
+let lastQRUrl='';
+function generateQR(){
+    const url=document.getElementById('qr-url').value.trim();
+    const size=parseInt(document.getElementById('qr-size').value);
+    if(!url){alert('Enter a URL');return}
+    lastQRUrl=url;
+    const canvas=document.getElementById('qr-canvas');
+    QRCode.toCanvas(canvas,url,{width:size,margin:2,color:{dark:'#000000',light:'#ffffff'}},function(err){
+        if(err){alert('Failed to generate QR: '+err.message);return}
+        document.getElementById('qr-output').style.display='block';
+        document.getElementById('qr-url-label').textContent=url;
+    });
+}
+function downloadQR(format){
+    const url=document.getElementById('qr-url').value.trim();
+    const size=parseInt(document.getElementById('qr-size').value);
+    if(format==='png'){
+        const canvas=document.getElementById('qr-canvas');
+        const link=document.createElement('a');
+        link.download='fpvgate-quickstart-qr.png';
+        link.href=canvas.toDataURL('image/png');
+        link.click();
+    } else if(format==='svg'){
+        QRCode.toString(url,{type:'svg',width:size,margin:2},function(err,svgStr){
+            if(err){alert('Failed: '+err.message);return}
+            const blob=new Blob([svgStr],{type:'image/svg+xml'});
+            const link=document.createElement('a');
+            link.download='fpvgate-quickstart-qr.svg';
+            link.href=URL.createObjectURL(blob);
+            link.click();
+            URL.revokeObjectURL(link.href);
+        });
+    }
+}
