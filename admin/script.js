@@ -214,36 +214,36 @@ async function printInvoice(id){
 <style>
 @page{size:4in 6in;margin:0}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#000;width:4in;height:6in;padding:10px 14px;font-size:9px;line-height:1.35;overflow:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#000;width:4in;height:6in;padding:10px 14px;font-size:9px;line-height:1.35;overflow:hidden;font-weight:600;-webkit-print-color-adjust:exact}
 .hdr{display:flex;justify-content:space-between;align-items:center;padding-bottom:6px;border-bottom:1.5px solid #000;margin-bottom:6px}
 .hdr img{height:28px}
 .hdr-r{text-align:right}
-.hdr-r h1{font-size:13px;font-weight:700;letter-spacing:0.5px}
+.hdr-r h1{font-size:13px;font-weight:800;letter-spacing:0.5px}
 .hdr-r p{font-size:8px;color:#444}
 .grid{display:flex;gap:12px;margin-bottom:6px}
 .grid .col{flex:1}
-.grid h3{font-size:7px;text-transform:uppercase;letter-spacing:0.8px;color:#666;margin-bottom:2px;font-weight:700}
+.grid h3{font-size:7px;text-transform:uppercase;letter-spacing:0.8px;color:#444;margin-bottom:2px;font-weight:800}
 .grid p{font-size:9px;line-height:1.4}
-.trk{background:#f0f0f0;border:1px solid #ccc;border-radius:3px;padding:3px 6px;margin-top:3px;font-size:8px}
+.trk{background:#f0f0f0;border:1px solid #ccc;border-radius:3px;padding:3px 6px;margin-top:3px;font-size:8px;font-weight:600}
 .trk strong{color:#000}
 table{width:100%;border-collapse:collapse;margin-bottom:4px}
-table thead th{padding:3px 4px;text-align:left;font-size:7px;text-transform:uppercase;letter-spacing:0.3px;color:#666;font-weight:700;border-bottom:1.5px solid #000}
+table thead th{padding:3px 4px;text-align:left;font-size:7px;text-transform:uppercase;letter-spacing:0.3px;color:#444;font-weight:800;border-bottom:1.5px solid #000}
 table thead th:nth-child(2){text-align:center}
 table thead th:last-child{text-align:right}
-table td{padding:3px 4px;font-size:9px;border-bottom:0.5px solid #ddd}
+table td{padding:3px 4px;font-size:9px;font-weight:600;border-bottom:0.5px solid #ddd}
 .tots{display:flex;justify-content:flex-end;margin-bottom:6px}
 .tots-inner{width:140px}
-.tots .r{display:flex;justify-content:space-between;font-size:9px;padding:1px 0}
-.tots .r.t{border-top:1.5px solid #000;margin-top:2px;padding-top:3px;font-weight:700;font-size:10px}
+.tots .r{display:flex;justify-content:space-between;font-size:9px;padding:1px 0;font-weight:600}
+.tots .r.t{border-top:1.5px solid #000;margin-top:2px;padding-top:3px;font-weight:800;font-size:10px}
 .qs{border:1.5px solid #000;border-radius:4px;padding:8px;margin-bottom:6px}
-.qs h2{font-size:10px;font-weight:700;margin-bottom:5px;display:flex;align-items:center;gap:4px}
+.qs h2{font-size:10px;font-weight:800;margin-bottom:5px;display:flex;align-items:center;gap:4px}
 .qs-inner{display:flex;gap:8px;align-items:flex-start}
 .qs-inner img{width:68px;height:68px;flex-shrink:0}
 .qs-inner ol{margin:0;padding-left:12px}
-.qs-inner li{margin-bottom:2px;font-size:8px;line-height:1.3}
+.qs-inner li{margin-bottom:2px;font-size:8px;line-height:1.3;font-weight:600}
 .qs-inner li strong{color:#000}
 .cred{display:inline-flex;gap:8px;background:#f0f0f0;border:1px solid #ccc;border-radius:2px;padding:2px 6px;margin-top:2px;font-size:7.5px}
-.cred span{font-weight:700}
+.cred span{font-weight:800}
 .qs-link{margin-top:3px;font-size:7px;color:#666}
 .ftr{text-align:center;font-size:7px;color:#666;padding-top:4px;border-top:0.5px solid #ccc}
 @media print{.no-print{display:none!important}}
