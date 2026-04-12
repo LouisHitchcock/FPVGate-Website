@@ -2491,3 +2491,648 @@ footer p {
         grid-template-columns: 1fr;
     }
 }
+
+/* ======================== */
+/* Quick Start Page         */
+/* ======================== */
+
+.qs-hero {
+    padding: 4rem 0 3rem;
+    text-align: center;
+    background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(108, 99, 255, 0.1));
+}
+
+.qs-hero h1 {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.qs-progress {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 2.5rem;
+    flex-wrap: wrap;
+}
+
+.qs-progress-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: var(--text-secondary);
+    transition: color 0.3s;
+}
+
+.qs-progress-step:hover {
+    color: var(--primary-color);
+}
+
+.qs-progress-num {
+    width: 44px;
+    height: 44px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: white;
+    transition: transform 0.3s;
+}
+
+.qs-progress-step:hover .qs-progress-num {
+    transform: scale(1.1);
+}
+
+.qs-progress-step span {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+/* Sections */
+.qs-section {
+    padding: 4rem 0;
+}
+
+.qs-section-alt {
+    background: rgba(21, 25, 50, 0.5);
+}
+
+.qs-section-header {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    margin-bottom: 2rem;
+}
+
+.qs-section-num {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+}
+
+.qs-section-header h2 {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin: 0;
+}
+
+/* Content */
+.qs-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.qs-content p {
+    color: var(--text-secondary);
+    line-height: 1.8;
+    margin-bottom: 1rem;
+}
+
+.qs-content h3 {
+    color: var(--primary-color);
+    font-size: 1.4rem;
+    margin: 2.5rem 0 1rem;
+}
+
+.qs-content h3:first-child {
+    margin-top: 0;
+}
+
+/* Checklist */
+.qs-checklist {
+    background: var(--card-bg);
+    padding: 1.5rem 2rem;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 212, 255, 0.15);
+    margin: 1.5rem 0;
+}
+
+.qs-checklist h3 {
+    color: var(--primary-color);
+    margin: 0 0 1rem;
+    font-size: 1.1rem;
+}
+
+.qs-checklist ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.qs-checklist li {
+    padding: 0.5rem 0 0.5rem 2rem;
+    color: var(--text-secondary);
+    position: relative;
+    line-height: 1.6;
+}
+
+.qs-checklist li::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 0.7rem;
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--success-color);
+    border-radius: 4px;
+    background: rgba(72, 187, 120, 0.1);
+}
+
+.qs-checklist li::after {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 0.8rem;
+    width: 10px;
+    height: 6px;
+    border-left: 2px solid var(--success-color);
+    border-bottom: 2px solid var(--success-color);
+    transform: rotate(-45deg);
+}
+
+/* Note boxes */
+.qs-note {
+    background: rgba(66, 153, 225, 0.1);
+    border-left: 4px solid var(--info-color);
+    padding: 1.25rem 1.5rem;
+    border-radius: 0 8px 8px 0;
+    margin: 1.5rem 0;
+}
+
+.qs-note h4 {
+    color: var(--info-color);
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
+}
+
+.qs-note p {
+    margin: 0;
+    color: var(--text-secondary);
+    line-height: 1.7;
+}
+
+.qs-note-warning {
+    background: rgba(237, 137, 54, 0.1);
+    border-left-color: var(--warning-color);
+}
+
+.qs-note-warning h4 {
+    color: var(--warning-color);
+}
+
+/* Tips boxes */
+.qs-tips {
+    background: rgba(72, 187, 120, 0.08);
+    border: 1px solid rgba(72, 187, 120, 0.2);
+    padding: 1.5rem 2rem;
+    border-radius: 10px;
+    margin: 1.5rem 0;
+}
+
+.qs-tips h4 {
+    color: var(--success-color);
+    margin: 0 0 0.75rem;
+}
+
+.qs-tips ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.qs-tips li {
+    padding: 0.4rem 0;
+    color: var(--text-secondary);
+    line-height: 1.7;
+}
+
+.qs-tips li strong {
+    color: var(--text-primary);
+}
+
+/* Steps */
+.qs-steps {
+    margin: 1rem 0 1.5rem;
+    padding-left: 0;
+    counter-reset: qs-step;
+    list-style: none;
+}
+
+.qs-steps li {
+    counter-increment: qs-step;
+    padding: 0.75rem 0.75rem 0.75rem 3.5rem;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    position: relative;
+    margin-bottom: 0.5rem;
+    background: rgba(0, 212, 255, 0.03);
+    border-radius: 8px;
+    border: 1px solid rgba(0, 212, 255, 0.06);
+}
+
+.qs-steps li::before {
+    content: counter(qs-step);
+    position: absolute;
+    left: 0.75rem;
+    top: 0.65rem;
+    width: 28px;
+    height: 28px;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: white;
+}
+
+.qs-steps li strong {
+    color: var(--text-primary);
+}
+
+.qs-steps li code {
+    background: rgba(0, 212, 255, 0.1);
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+    color: var(--primary-color);
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+}
+
+/* WiFi credentials */
+.qs-credential {
+    display: flex;
+    gap: 1.5rem;
+    margin: 1.25rem 0;
+    flex-wrap: wrap;
+}
+
+.qs-credential-item {
+    background: var(--card-bg);
+    border: 2px solid rgba(0, 212, 255, 0.2);
+    border-radius: 10px;
+    padding: 1rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 1;
+    min-width: 180px;
+}
+
+.qs-credential-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.qs-credential-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    font-family: 'Courier New', monospace;
+}
+
+/* URL box */
+.qs-url-box {
+    background: var(--card-bg);
+    border: 2px solid rgba(0, 212, 255, 0.2);
+    border-radius: 10px;
+    padding: 1.25rem 1.5rem;
+    margin: 1.25rem 0;
+    text-align: center;
+}
+
+.qs-url-box code {
+    font-size: 1.3rem;
+    color: var(--primary-color);
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+    background: none;
+    padding: 0;
+}
+
+.qs-url-alt {
+    display: block;
+    margin-top: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.qs-url-alt code {
+    font-size: 0.95rem;
+    background: rgba(0, 212, 255, 0.1);
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+}
+
+.qs-hint {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+.qs-hint code {
+    background: rgba(0, 212, 255, 0.1);
+    padding: 0.15rem 0.4rem;
+    border-radius: 3px;
+    color: var(--primary-color);
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    font-style: normal;
+}
+
+/* Config items */
+.qs-config-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin: 1.5rem 0;
+}
+
+.qs-config-item {
+    display: flex;
+    gap: 1.25rem;
+    align-items: flex-start;
+    padding: 1.25rem;
+    background: var(--card-bg);
+    border-radius: 10px;
+    border: 1px solid rgba(0, 212, 255, 0.1);
+    cursor: pointer;
+    transition: border-color 0.3s;
+}
+
+.qs-config-item:hover {
+    border-color: rgba(0, 212, 255, 0.3);
+}
+
+.qs-config-icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.qs-config-icon svg {
+    width: 28px;
+    height: 28px;
+    color: var(--primary-color);
+}
+
+.qs-config-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.qs-config-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.qs-config-header strong {
+    color: var(--text-primary);
+}
+
+.qs-config-arrow {
+    width: 20px;
+    height: 20px;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+    transition: transform 0.3s;
+}
+
+.qs-config-item.open .qs-config-arrow {
+    transform: rotate(180deg);
+}
+
+.qs-config-item p {
+    color: var(--text-secondary);
+    margin: 0.25rem 0 0;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.qs-config-preview {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease;
+}
+
+.qs-config-item.open .qs-config-preview {
+    max-height: 800px;
+}
+
+.qs-config-preview .qs-screenshot {
+    margin-top: 1rem;
+    margin-bottom: 0;
+}
+
+/* Screenshots */
+.qs-screenshot {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    margin: 1.5rem 0;
+    display: block;
+    transition: transform 0.3s;
+}
+
+.qs-screenshot:hover {
+    transform: scale(1.01);
+    border-color: var(--primary-color);
+}
+
+/* Feature list */
+.qs-feature-list {
+    list-style: none;
+    padding: 0;
+    margin: 1rem 0 1.5rem;
+}
+
+.qs-feature-list li {
+    padding: 0.6rem 0;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.qs-feature-list li:last-child {
+    border-bottom: none;
+}
+
+.qs-feature-list li strong {
+    color: var(--text-primary);
+}
+
+/* Next steps section */
+.qs-next-steps {
+    padding: 4rem 0;
+    background: rgba(21, 25, 50, 0.5);
+    text-align: center;
+}
+
+.qs-next-steps h2 {
+    font-size: 2rem;
+    color: var(--primary-color);
+    margin-bottom: 0.75rem;
+}
+
+.qs-next-steps > .container > p {
+    color: var(--text-secondary);
+    margin-bottom: 2.5rem;
+    font-size: 1.05rem;
+}
+
+.qs-next-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.qs-next-card {
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: 10px;
+    border: 1px solid rgba(0, 212, 255, 0.1);
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.3s;
+    display: block;
+}
+
+.qs-next-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--primary-color);
+    box-shadow: 0 10px 30px rgba(0, 212, 255, 0.15);
+}
+
+.qs-next-icon {
+    margin-bottom: 1rem;
+}
+
+.qs-next-icon svg {
+    width: 40px;
+    height: 40px;
+    color: var(--primary-color);
+}
+
+.qs-next-card h3 {
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+    font-size: 1.15rem;
+}
+
+.qs-next-card p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.qs-help {
+    margin-top: 2rem;
+}
+
+.qs-help p {
+    color: var(--text-secondary);
+}
+
+.qs-help a {
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.qs-help a:hover {
+    text-decoration: underline;
+}
+
+/* Quick Start responsive */
+@media (max-width: 768px) {
+    .qs-hero h1 {
+        font-size: 1.75rem;
+    }
+
+    .qs-progress {
+        gap: 1rem;
+    }
+
+    .qs-progress-num {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+    }
+
+    .qs-section {
+        padding: 2.5rem 0;
+    }
+
+    .qs-section-header {
+        gap: 1rem;
+    }
+
+    .qs-section-num {
+        width: 44px;
+        height: 44px;
+        font-size: 1.2rem;
+    }
+
+    .qs-section-header h2 {
+        font-size: 1.5rem;
+    }
+
+    .qs-content h3 {
+        font-size: 1.2rem;
+        margin-top: 2rem;
+    }
+
+    .qs-credential {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .qs-credential-item {
+        min-width: auto;
+    }
+
+    .qs-url-box code {
+        font-size: 1rem;
+        word-break: break-all;
+    }
+
+    .qs-steps li {
+        padding-left: 3rem;
+    }
+
+    .qs-checklist,
+    .qs-tips {
+        padding: 1.25rem;
+    }
+
+    .qs-next-grid {
+        grid-template-columns: 1fr;
+    }
+}

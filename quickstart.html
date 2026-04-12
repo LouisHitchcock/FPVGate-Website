@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Start | FPVGate AIO Setup Guide</title>
+    <meta name="description" content="Get your FPVGate AIO up and running in minutes. Unboxing, setup, calibration, and your first race.">
+    <meta name="keywords" content="FPVGate AIO, quick start, setup guide, FPV lap timer setup, FPVGate getting started">
+    <link rel="canonical" href="https://fpvgate.xyz/quickstart.html">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Quick Start | FPVGate AIO Setup Guide">
+    <meta property="og:description" content="Get your FPVGate AIO up and running in minutes. Unboxing, setup, calibration, and your first race.">
+    <meta property="og:url" content="https://fpvgate.xyz/quickstart.html">
+    <meta property="og:image" content="https://fpvgate.xyz/logo-black.png">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Quick Start | FPVGate AIO Setup Guide">
+    <meta name="twitter:description" content="Get your FPVGate AIO up and running in minutes.">
+    <meta name="twitter:image" content="https://fpvgate.xyz/logo-black.png">
+
+    <link rel="icon" type="image/png" href="logo-black.png">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <img src="images/LogoAnimated.svg" alt="FPVGate Logo" class="nav-logo">
+                <h1>FPVGate</h1>
+            </div>
+            <button class="nav-toggle" onclick="this.classList.toggle('active');this.nextElementSibling.classList.toggle('nav-open')" aria-label="Toggle menu">
+                <span></span><span></span><span></span>
+            </button>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="shop.html">Shop</a>
+                <a href="docs.html">Documentation</a>
+                <a href="flasher.html" class="btn-primary">Flash Firmware</a>
+                <a href="https://github.com/LouisHitchcock/FPVGate" target="_blank">GitHub</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="qs-hero">
+        <div class="container">
+            <h1>FPVGate AIO Quick Start</h1>
+            <p class="subtitle">From unboxing to your first race in minutes</p>
+            <div class="qs-progress">
+                <a href="#unboxing" class="qs-progress-step">
+                    <div class="qs-progress-num">1</div>
+                    <span>Unboxing</span>
+                </a>
+                <a href="#setup" class="qs-progress-step">
+                    <div class="qs-progress-num">2</div>
+                    <span>Setup</span>
+                </a>
+                <a href="#calibration" class="qs-progress-step">
+                    <div class="qs-progress-num">3</div>
+                    <span>Calibration</span>
+                </a>
+                <a href="#racing" class="qs-progress-step">
+                    <div class="qs-progress-num">4</div>
+                    <span>Race</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="qs-section" id="unboxing">
+        <div class="container">
+            <div class="qs-section-header">
+                <div class="qs-section-num">1</div>
+                <h2>Unboxing</h2>
+            </div>
+            <div class="qs-content">
+                <p>Your FPVGate AIO is a fully assembled, ready-to-go lap timer. No soldering, no wiring, no assembly required.</p>
+
+                <div class="qs-checklist">
+                    <h3>In the Box</h3>
+                    <ul>
+                        <li>FPVGate AIO board (with SD card pre-installed)</li>
+                        <li>Extra antenna (for Novacore radio - see note below)</li>
+                    </ul>
+                </div>
+
+                <!-- Placeholder for product photo -->
+                <!--<div class="qs-image-slot">
+                    <img src="images/quickstart/aio-unboxing.jpg" alt="FPVGate AIO board">
+                </div>-->
+
+                <div class="qs-note">
+                    <h4>About the Extra Antenna</h4>
+                    <p>The included extra antenna is designed for the Novacore radio module. For the vast majority of users this is <strong>not needed</strong>. It can provide marginal improvements in extremely noisy RF environments. If you're unsure, you don't need it.</p>
+                </div>
+
+                <p>That's it - you're ready to power it up.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="qs-section qs-section-alt" id="setup">
+        <div class="container">
+            <div class="qs-section-header">
+                <div class="qs-section-num">2</div>
+                <h2>Initial Setup</h2>
+            </div>
+            <div class="qs-content">
+                <h3>Power On</h3>
+                <ol class="qs-steps">
+                    <li>Confirm the SD card is inserted into the slot on the board. It should already be in place from the factory.</li>
+                    <li>Connect the FPVGate AIO to any USB power source using a USB-C cable (power bank, wall adapter, laptop, etc).</li>
+                    <li>Wait a few seconds for the board to boot. You'll see the LEDs light up when it's ready.</li>
+                </ol>
+
+                <h3>Connect to the FPVGate Network</h3>
+                <p>On your phone or computer, open your WiFi settings and look for the network:</p>
+                <div class="qs-credential">
+                    <div class="qs-credential-item">
+                        <span class="qs-credential-label">Network</span>
+                        <span class="qs-credential-value">FPVGate</span>
+                    </div>
+                    <div class="qs-credential-item">
+                        <span class="qs-credential-label">Password</span>
+                        <span class="qs-credential-value">fpvgate1</span>
+                    </div>
+                </div>
+                <p>Once connected, open a browser and go to:</p>
+                <div class="qs-url-box">
+                    <code>http://fpvgate.local</code>
+                    <span class="qs-url-alt">or <code>http://192.168.4.1</code></span>
+                </div>
+                <p class="qs-hint">Works on both mobile and desktop. If <code>fpvgate.local</code> doesn't resolve, use the IP address directly.</p>
+
+                <!-- Placeholder for web UI landing screenshot -->
+                <!--<div class="qs-image-slot">
+                    <img src="images/quickstart/web-ui-home.png" alt="FPVGate web interface">
+                </div>-->
+
+                <h3>Configure Your Profile</h3>
+                <p>Head to the <strong>Configuration</strong> page from the main menu. Here you'll want to set up a few things:</p>
+                <p class="qs-hint">Tap each item below to see a screenshot.</p>
+                <div class="qs-config-list">
+                    <div class="qs-config-item" onclick="this.classList.toggle('open')">
+                        <div class="qs-config-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        </div>
+                        <div class="qs-config-body">
+                            <div class="qs-config-header">
+                                <strong>Pilot Name</strong>
+                                <svg class="qs-config-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </div>
+                            <p>Set your name so it appears in lap announcements and race history.</p>
+                            <div class="qs-config-preview">
+                                <img src="images/screenshots/Config Screen - Pilot Info 12-12-2025.png" alt="Configuration - Pilot Info" class="qs-screenshot">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="qs-config-item" onclick="this.classList.toggle('open')">
+                        <div class="qs-config-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                        </div>
+                        <div class="qs-config-body">
+                            <div class="qs-config-header">
+                                <strong>Voice Selection</strong>
+                                <svg class="qs-config-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </div>
+                            <p>Choose from 4 built-in voices for lap time announcements. Hit "Test Voice" to preview each one.</p>
+                            <div class="qs-config-preview">
+                                <img src="images/screenshots/Config Screen - Lap & Announcer Settings 12-12-2025.png" alt="Configuration - Voice & Announcer Settings" class="qs-screenshot">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="qs-config-item" onclick="this.classList.toggle('open')">
+                        <div class="qs-config-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M12 1v6m0 6v6m-7-7h6m6 0h6"></path></svg>
+                        </div>
+                        <div class="qs-config-body">
+                            <div class="qs-config-header">
+                                <strong>LED Preset</strong>
+                                <svg class="qs-config-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </div>
+                            <p>Pick an LED color preset, or customize your own. These provide visual feedback during races.</p>
+                            <div class="qs-config-preview">
+                                <img src="images/screenshots/Config Screen - LED Setup 12-12-2025.png" alt="Configuration - LED Setup" class="qs-screenshot">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>Connect to Your Home WiFi (Optional)</h3>
+                <p>If you're flying at home and want to access FPVGate from your regular network instead of switching WiFi every time:</p>
+                <ol class="qs-steps">
+                    <li>Go to <strong>Configuration</strong> and then <strong>WiFi & Connection</strong>.</li>
+                    <li>Under <strong>WiFi Station Mode</strong>, enter your home network name (SSID) and password.</li>
+                    <li>Click <strong>Save</strong>. The device will reboot and connect to your home network.</li>
+                    <li>You can then access the timer at <code>http://fpvgate.local</code> from any device on the same network.</li>
+                </ol>
+                <div class="qs-note">
+                    <h4>Good to Know</h4>
+                    <p>When connected to your home network, the FPVGate access point is still available as a fallback. If the device can't reach your home WiFi (e.g. you take it to the field), it will automatically create its own network again.</p>
+                </div>
+
+                <!-- Placeholder for WiFi config screenshot -->
+                <img src="images/screenshots/Config Screen - Wifi & Connections 12-12-2025.png" alt="Configuration - WiFi & Connections" class="qs-screenshot">
+            </div>
+        </div>
+    </section>
+
+    <section class="qs-section" id="calibration">
+        <div class="container">
+            <div class="qs-section-header">
+                <div class="qs-section-num">3</div>
+                <h2>Placement & Calibration</h2>
+            </div>
+            <div class="qs-content">
+                <h3>Place the Timer</h3>
+                <p>Place the FPVGate AIO in the <strong>bottom left or right corner</strong> of your start/finish gate.</p>
+                <p>On the board you'll notice two sides: a <strong>smooth side</strong> and a <strong>circular side</strong> (where the antenna is). Point the <strong>circular side toward the gate opening</strong> so it faces the flight path.</p>
+
+                <!-- Placeholder for placement photo -->
+                <!--<div class="qs-image-slot">
+                    <img src="images/quickstart/aio-placement.jpg" alt="FPVGate AIO at base of gate">
+                </div>-->
+
+                <div class="qs-tips">
+                    <h4>Placement Tips</h4>
+                    <ul>
+                        <li><strong>Corner position</strong> - The bottom corner of the gate keeps the board out of the flight path while still getting a strong signal as drones pass through.</li>
+                        <li><strong>Circular side facing inward</strong> - This is the antenna side. It needs to face toward the gate opening for the best signal reception.</li>
+                        <li><strong>Away from metal</strong> - Metal structures can reflect RF signals and cause false triggers. Keep some distance from large metal objects.</li>
+                        <li><strong>Stable surface</strong> - Make sure the board won't move or get blown around by prop wash.</li>
+                    </ul>
+                </div>
+
+                <h3>Select Your Channel</h3>
+                <p>You need to tell FPVGate which frequency your drone is transmitting on. From the main screen:</p>
+                <ol class="qs-steps">
+                    <li>Find the <strong>frequency selection</strong> area.</li>
+                    <li>Select your <strong>system</strong> (Analog, DJI, HDZero, or WalkSnail).</li>
+                    <li>Choose the <strong>band</strong> (e.g. RaceBand, Fatshark, etc.).</li>
+                    <li>Select the <strong>channel</strong> that matches your VTx.</li>
+                </ol>
+                <div class="qs-note">
+                    <h4>Not Sure What Frequency You're On?</h4>
+                    <p>Check your drone's OSD or VTx settings. Common defaults are RaceBand channel 1 (R1 / 5658 MHz) for analog, or the default channel for your digital system. If in doubt, check your goggles - the channel you receive video on is the one to set.</p>
+                </div>
+
+                <h3>Calibrate RSSI</h3>
+                <p>Calibration teaches the timer what your drone's signal looks like when it passes through the gate. This is the most important step for accurate lap detection.</p>
+                <ol class="qs-steps">
+                    <li>Make sure your <strong>drone is powered on</strong> and the VTx is transmitting.</li>
+                    <li>Open the <strong>Calibration</strong> page from the main menu.</li>
+                    <li>Walk your powered-on drone through the gate <strong>3-5 times</strong> at roughly the height and speed you'll be flying.</li>
+                    <li>Watch the <strong>RSSI graph</strong> on screen. You'll see clear peaks each time the drone passes through the gate.</li>
+                    <li>Set the <strong>Enter threshold</strong> to roughly <strong>halfway up</strong> the peak. This is the signal level that triggers a crossing.</li>
+                    <li>Set the <strong>Exit threshold</strong> to a value <strong>slightly below</strong> the enter threshold. This is the level the signal must drop to before a new crossing can register.</li>
+                </ol>
+
+                <img src="images/screenshots/Calibration Screen 12-12-2025.png" alt="Calibration Screen with RSSI graph" class="qs-screenshot">
+
+                <h3>Set a Minimum Lap Time</h3>
+                <p>To prevent false positives (e.g. signal reflections or flying near the gate without passing through), set a <strong>minimum lap time</strong>:</p>
+                <ol class="qs-steps">
+                    <li>Go to <strong>Configuration</strong> and find the <strong>Lap & Announcer Settings</strong> section.</li>
+                    <li>Set the <strong>Minimum Lap Time</strong> to a value that makes sense for your track. For most setups, <strong>3-5 seconds</strong> is a good starting point.</li>
+                    <li>Any crossing detected faster than this will be ignored, preventing double-triggers and false laps.</li>
+                </ol>
+
+                <div class="qs-tips">
+                    <h4>Calibration Tips</h4>
+                    <ul>
+                        <li>Walk the drone through at a <strong>realistic height</strong> - don't hold it right next to the board.</li>
+                        <li>The peaks on the graph should be clear and distinct. If they're not, check your channel selection and make sure the VTx is on.</li>
+                        <li>If you get false laps during a race, raise the enter threshold slightly or increase the minimum lap time.</li>
+                        <li>If you change flying locations or move the gate, recalibrate.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="qs-section qs-section-alt" id="racing">
+        <div class="container">
+            <div class="qs-section-header">
+                <div class="qs-section-num">4</div>
+                <h2>Your First Race</h2>
+            </div>
+            <div class="qs-content">
+                <h3>Starting a Race</h3>
+                <ol class="qs-steps">
+                    <li>Go to the <strong>Race</strong> screen from the main menu.</li>
+                    <li>Make sure your drone is armed and ready to fly.</li>
+                    <li>Press <strong>Start Race</strong>. You'll hear a countdown beep sequence.</li>
+                    <li>Fly through the gate - your lap times will appear in real time.</li>
+                    <li>When you're done, press <strong>Stop Race</strong>.</li>
+                </ol>
+
+                <div class="qs-note qs-note-warning">
+                    <h4>Sound Not Working?</h4>
+                    <p>On mobile, your phone must <strong>not be on silent mode</strong> for the race countdown beep to play. On iOS, make sure the physical silent switch is off and media volume is up.</p>
+                </div>
+
+                <h3>The Race Screen</h3>
+                <p>During a race, the screen shows you everything in real time:</p>
+                <ul class="qs-feature-list">
+                    <li><strong>Lap times</strong> - Each lap is recorded as you fly through the gate.</li>
+                    <li><strong>Fastest lap</strong> - Your best lap is highlighted so you can see your target.</li>
+                    <li><strong>Gap time</strong> - Shows the difference between each lap and your fastest.</li>
+                    <li><strong>Voice announcements</strong> - Your lap times are announced aloud after each pass (using the voice you selected earlier).</li>
+                    <li><strong>LED feedback</strong> - The board LEDs flash when a crossing is detected, giving you visual confirmation even without looking at your phone.</li>
+                </ul>
+
+                <img src="images/screenshots/Race - 12-12-2025.png" alt="Race screen with lap times" class="qs-screenshot">
+
+                <h3>After the Race</h3>
+                <p>Once you stop the race, your session is automatically saved. You can:</p>
+                <ul class="qs-feature-list">
+                    <li>View detailed statistics including average lap time and consistency.</li>
+                    <li>See a lap-by-lap comparison chart.</li>
+                    <li>Browse all your past sessions in <strong>Race History</strong>.</li>
+                </ul>
+
+                <img src="images/screenshots/Race History - 12-12-2025.png" alt="Race History" class="qs-screenshot">
+            </div>
+        </div>
+    </section>
+
+    <section class="qs-next-steps">
+        <div class="container">
+            <h2>What's Next?</h2>
+            <p>You're all set for solo practice sessions. When you're ready to explore more, FPVGate has a lot more to offer:</p>
+            <div class="qs-next-grid">
+                <a href="docs.html#multipilot" class="qs-next-card">
+                    <div class="qs-next-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    </div>
+                    <h3>Multi-Pilot Racing</h3>
+                    <p>Sync multiple FPVGate timers for head-to-head racing with friends.</p>
+                </a>
+                <a href="docs.html#rotorhazard" class="qs-next-card">
+                    <div class="qs-next-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12.55a11 11 0 0 1 14.08 0"></path><path d="M1.42 9a16 16 0 0 1 21.16 0"></path><path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path><circle cx="12" cy="20" r="1"></circle></svg>
+                    </div>
+                    <h3>RotorHazard Integration</h3>
+                    <p>Connect FPVGate to a RotorHazard server for full race management.</p>
+                </a>
+                <a href="docs.html" class="qs-next-card">
+                    <div class="qs-next-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                    </div>
+                    <h3>Full Documentation</h3>
+                    <p>Deep dive into every feature, setting, and configuration option.</p>
+                </a>
+            </div>
+            <div class="qs-help">
+                <p>Need help? Join the <a href="https://discord.gg/XwammuWCCj" target="_blank">FPVGate Discord</a> or open an <a href="https://github.com/LouisHitchcock/FPVGate/issues" target="_blank">issue on GitHub</a>.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="container">
+            <p>Made with care for the FPV community</p>
+            <p>Licensed under CC BY-NC-SA 4.0</p>
+            <div class="footer-links">
+                <a href="https://github.com/LouisHitchcock/FPVGate" target="_blank">GitHub</a>
+                <a href="https://github.com/LouisHitchcock/FPVGate/issues" target="_blank">Issues</a>
+                <a href="docs.html">Documentation</a>
+                <a href="https://discord.gg/XwammuWCCj" target="_blank">Discord</a>
+                <a href="https://ko-fi.com/louishitchcock" target="_blank" class="kofi-link">Support on Ko-fi</a>
+            </div>
+        </div>
+    </footer>
+    <script src="animations.js"></script>
+</body>
+</html>
