@@ -1589,9 +1589,9 @@ async function handleAnalytics(request, env, corsHeaders) {
     ).first();
     const totalRefunds = refundResult?.total_refunds || 0;
 
-    // Daily time series
+    // Daily time series (include shipping_fees for per-day shipping cost)
     const timeSeries = await env.DB.prepare(
-        `SELECT date(created_at) as date, COUNT(*) as orders, COALESCE(SUM(total), 0) as revenue FROM orders WHERE status IN ${validStatuses}${excludeTest}${dateFilter} GROUP BY date(created_at) ORDER BY date ASC`
+        `SELECT date(created_at) as date, COUNT(*) as orders, COALESCE(SUM(total), 0) as revenue, COALESCE(SUM(shipping_fees), 0) as shipping FROM orders WHERE status IN ${validStatuses}${excludeTest}${dateFilter} GROUP BY date(created_at) ORDER BY date ASC`
     ).all();
 
     // Product breakdown - parse items JSON from orders and join with inventory for unit_cost
@@ -1639,7 +1639,9 @@ async function handleAnalytics(request, env, corsHeaders) {
         };
     }).sort((a, b) => b.revenue - a.revenue);
 
-    const totalCost = products.reduce((s, p) => s + p.total_cost, 0);
+    const totalManufactureCost = products.reduce((s, p) => s + p.total_cost, 0);
+    const totalShippingCost = summary.total_shipping || 0;
+    const totalCost = totalManufactureCost + totalShippingCost;
     const netRevenue = (summary.total_revenue || 0) - totalRefunds;
     const grossProfit = netRevenue - totalCost;
     const grossMargin = netRevenue > 0 ? (grossProfit / netRevenue) * 100 : 0;
@@ -1690,13 +1692,20 @@ async function handleAnalytics(request, env, corsHeaders) {
         dailyCostMap[row.date] = (dailyCostMap[row.date] || 0) + dayCost;
     }
 
-    const timeSeriesWithProfit = (timeSeries.results || []).map(d => ({
-        date: d.date,
-        orders: d.orders,
-        revenue: Math.round(d.revenue * 100) / 100,
-        cost: Math.round((dailyCostMap[d.date] || 0) * 100) / 100,
-        profit: Math.round((d.revenue - (dailyCostMap[d.date] || 0)) * 100) / 100
-    }));
+    const timeSeriesWithProfit = (timeSeries.results || []).map(d => {
+        const mfgCost = dailyCostMap[d.date] || 0;
+        const shipCost = d.shipping || 0;
+        const totalDayCost = mfgCost + shipCost;
+        return {
+            date: d.date,
+            orders: d.orders,
+            revenue: Math.round(d.revenue * 100) / 100,
+            manufacture_cost: Math.round(mfgCost * 100) / 100,
+            shipping_cost: Math.round(shipCost * 100) / 100,
+            cost: Math.round(totalDayCost * 100) / 100,
+            profit: Math.round((d.revenue - totalDayCost) * 100) / 100
+        };
+    });
 
     return jsonResponse({
         summary: {
@@ -1706,6 +1715,8 @@ async function handleAnalytics(request, env, corsHeaders) {
             total_shipping: Math.round((summary.total_shipping || 0) * 100) / 100,
             total_refunds: Math.round(totalRefunds * 100) / 100,
             net_revenue: Math.round(netRevenue * 100) / 100,
+            manufacture_cost: Math.round(totalManufactureCost * 100) / 100,
+            shipping_cost: Math.round(totalShippingCost * 100) / 100,
             total_cost: Math.round(totalCost * 100) / 100,
             gross_profit: Math.round(grossProfit * 100) / 100,
             gross_margin: Math.round(grossMargin * 10) / 10
