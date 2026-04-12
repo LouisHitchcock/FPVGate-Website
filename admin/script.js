@@ -214,7 +214,7 @@ async function printInvoice(id){
 <style>
 @page{size:4in 6in;margin:0}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#000;width:4in;height:6in;padding:10px 14px;font-size:9px;line-height:1.35;overflow:hidden;font-weight:600;-webkit-print-color-adjust:exact}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#000;width:4in;padding:0;margin:0;font-size:9px;line-height:1.35;font-weight:600;-webkit-print-color-adjust:exact}
 .hdr{display:flex;justify-content:space-between;align-items:center;padding-bottom:6px;border-bottom:1.5px solid #000;margin-bottom:6px}
 .hdr img{height:28px}
 .hdr-r{text-align:right}
@@ -246,9 +246,13 @@ table td{padding:3px 4px;font-size:9px;font-weight:600;border-bottom:0.5px solid
 .cred span{font-weight:800}
 .qs-link{margin-top:3px;font-size:7px;color:#666}
 .ftr{text-align:center;font-size:7px;color:#666;padding-top:4px;border-top:0.5px solid #ccc}
+.page{width:4in;height:6in;padding:10px 14px;overflow:hidden;page-break-after:always}
+.label-page{width:4in;height:6in;padding:0;margin:0;page-break-before:always;overflow:hidden}
+.label-page iframe{width:100%;height:100%;border:none}
 @media print{.no-print{display:none!important}}
 </style></head><body>
 <div style="text-align:right;margin-bottom:6px" class="no-print"><button onclick="window.print()" style="padding:6px 16px;background:#000;color:#fff;border:none;border-radius:4px;font-size:12px;cursor:pointer">Print</button></div>
+<div class="page">
 <div class="hdr">
 <img src="https://fpvgate.xyz/logo-black.png" alt="FPVGate">
 <div class="hdr-r"><h1>PACKING SLIP</h1><p>#${esc(String(invNum))} | ${dt}</p></div>
@@ -279,6 +283,8 @@ table td{padding:3px 4px;font-size:9px;font-weight:600;border-bottom:0.5px solid
 </div>
 </div>
 <div class="ftr">Thank you for your order! | fpvgate.xyz</div>
+</div>
+${o.label_url?'<div class="label-page"><iframe src="'+esc(o.label_url)+'#toolbar=0&navpanes=0"></iframe></div>':''}
 </body></html>`);
         w.document.close();
     }catch(e){alert('Failed to generate invoice: '+e.message)}
