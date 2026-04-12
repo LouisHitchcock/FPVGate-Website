@@ -183,24 +183,22 @@ function downloadQR(format){
     }
 }
 
-// --- Printable Invoice ---
+// --- Printable Invoice (4x6" label) ---
 async function printInvoice(id){
     try{
         const o=await storeApi(`/api/orders/${id}`);
         const a=o.shipping_address||{};
         const items=Array.isArray(o.items)?o.items:[];
-        const dt=new Date(o.created_at).toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+        const dt=new Date(o.created_at).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
         const invNum=o.invoice_number||o.id;
 
-        // Generate QR code as data URL
         const qr=qrcode(0,'M');
         qr.addData('https://fpvgate.xyz/quickstart.html');
         qr.make();
         const qrCvs=document.createElement('canvas');
         const mc=qr.getModuleCount();
-        const cs=4;
-        qrCvs.width=mc*cs;
-        qrCvs.height=mc*cs;
+        const cs=3;
+        qrCvs.width=mc*cs;qrCvs.height=mc*cs;
         const qx=qrCvs.getContext('2d');
         qx.fillStyle='#fff';qx.fillRect(0,0,mc*cs,mc*cs);
         qx.fillStyle='#000';
@@ -209,78 +207,78 @@ async function printInvoice(id){
 
         const esc=s=>{if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML};
         const addr=[a.name||o.customer_name,a.company,a.address1,a.address2,[a.city,a.province].filter(Boolean).join(', '),a.postalCode,a.country].filter(Boolean).map(l=>esc(l)).join('<br>');
-        const itemRows=items.map(i=>`<tr><td style="padding:8px 12px;border-bottom:1px solid #e2e8f0">${esc(i.name)}</td><td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;text-align:center">${i.quantity}</td><td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;text-align:right">&pound;${parseFloat(i.price||0).toFixed(2)}</td><td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;text-align:right">&pound;${parseFloat(i.totalPrice||i.price*i.quantity).toFixed(2)}</td></tr>`).join('');
+        const itemRows=items.map(i=>`<tr><td>${esc(i.name)}</td><td style="text-align:center">${i.quantity}</td><td style="text-align:right">&pound;${parseFloat(i.totalPrice||i.price*i.quantity).toFixed(2)}</td></tr>`).join('');
 
         const w=window.open('','_blank');
         w.document.write(`<!DOCTYPE html><html><head><title>Invoice #${invNum}</title>
 <style>
+@page{size:4in 6in;margin:0}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#1a202c;padding:40px;max-width:800px;margin:0 auto;font-size:13px;line-height:1.5}
-@media print{body{padding:20px}}
-.header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:24px;border-bottom:2px solid #1a202c;margin-bottom:24px}
-.header-left img{height:48px}
-.header-right{text-align:right}
-.header-right h1{font-size:22px;font-weight:700;letter-spacing:1px;margin-bottom:4px}
-.header-right p{font-size:12px;color:#4a5568}
-.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px}
-.info-box h3{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#718096;margin-bottom:6px;font-weight:600}
-.info-box p{font-size:13px;line-height:1.7}
-.tracking-box{background:#f7fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px 14px;margin-top:8px;font-size:13px}
-.tracking-box strong{color:#2d3748}
-table{width:100%;border-collapse:collapse;margin-bottom:24px}
-table thead th{background:#f7fafc;padding:8px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#4a5568;font-weight:600;border-bottom:2px solid #e2e8f0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#000;width:4in;height:6in;padding:10px 14px;font-size:9px;line-height:1.35;overflow:hidden}
+.hdr{display:flex;justify-content:space-between;align-items:center;padding-bottom:6px;border-bottom:1.5px solid #000;margin-bottom:6px}
+.hdr img{height:28px}
+.hdr-r{text-align:right}
+.hdr-r h1{font-size:13px;font-weight:700;letter-spacing:0.5px}
+.hdr-r p{font-size:8px;color:#444}
+.grid{display:flex;gap:12px;margin-bottom:6px}
+.grid .col{flex:1}
+.grid h3{font-size:7px;text-transform:uppercase;letter-spacing:0.8px;color:#666;margin-bottom:2px;font-weight:700}
+.grid p{font-size:9px;line-height:1.4}
+.trk{background:#f0f0f0;border:1px solid #ccc;border-radius:3px;padding:3px 6px;margin-top:3px;font-size:8px}
+.trk strong{color:#000}
+table{width:100%;border-collapse:collapse;margin-bottom:4px}
+table thead th{padding:3px 4px;text-align:left;font-size:7px;text-transform:uppercase;letter-spacing:0.3px;color:#666;font-weight:700;border-bottom:1.5px solid #000}
 table thead th:nth-child(2){text-align:center}
-table thead th:nth-child(3),table thead th:nth-child(4){text-align:right}
-.totals{margin-left:auto;width:240px;margin-bottom:24px}
-.totals .row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px}
-.totals .row.total{border-top:2px solid #1a202c;margin-top:4px;padding-top:8px;font-weight:700;font-size:15px}
-.qs-card{border:2px solid #1a202c;border-radius:8px;padding:20px;margin-bottom:24px;page-break-inside:avoid}
-.qs-card h2{font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
-.qs-body{display:flex;gap:20px;align-items:flex-start}
-.qs-body img{width:120px;height:120px;flex-shrink:0}
-.qs-steps{flex:1}
-.qs-steps ol{margin:0;padding-left:18px}
-.qs-steps ol li{margin-bottom:6px;font-size:12px}
-.qs-steps ol li strong{color:#1a202c}
-.qs-cred{display:inline-flex;gap:16px;background:#f7fafc;border:1px solid #e2e8f0;border-radius:4px;padding:6px 12px;margin-top:8px;font-size:12px}
-.qs-cred span{font-weight:600}
-.qs-url{margin-top:8px;font-size:11px;color:#718096}
-.footer{text-align:center;padding-top:16px;border-top:1px solid #e2e8f0;font-size:11px;color:#718096}
-.footer a{color:#4299e1;text-decoration:none}
+table thead th:last-child{text-align:right}
+table td{padding:3px 4px;font-size:9px;border-bottom:0.5px solid #ddd}
+.tots{display:flex;justify-content:flex-end;margin-bottom:6px}
+.tots-inner{width:140px}
+.tots .r{display:flex;justify-content:space-between;font-size:9px;padding:1px 0}
+.tots .r.t{border-top:1.5px solid #000;margin-top:2px;padding-top:3px;font-weight:700;font-size:10px}
+.qs{border:1.5px solid #000;border-radius:4px;padding:8px;margin-bottom:6px}
+.qs h2{font-size:10px;font-weight:700;margin-bottom:5px;display:flex;align-items:center;gap:4px}
+.qs-inner{display:flex;gap:8px;align-items:flex-start}
+.qs-inner img{width:68px;height:68px;flex-shrink:0}
+.qs-inner ol{margin:0;padding-left:12px}
+.qs-inner li{margin-bottom:2px;font-size:8px;line-height:1.3}
+.qs-inner li strong{color:#000}
+.cred{display:inline-flex;gap:8px;background:#f0f0f0;border:1px solid #ccc;border-radius:2px;padding:2px 6px;margin-top:2px;font-size:7.5px}
+.cred span{font-weight:700}
+.qs-link{margin-top:3px;font-size:7px;color:#666}
+.ftr{text-align:center;font-size:7px;color:#666;padding-top:4px;border-top:0.5px solid #ccc}
 @media print{.no-print{display:none!important}}
 </style></head><body>
-<div style="text-align:right;margin-bottom:16px" class="no-print"><button onclick="window.print()" style="padding:8px 20px;background:#1a202c;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer">Print</button></div>
-<div class="header">
-<div class="header-left"><img src="https://fpvgate.xyz/logo-black.png" alt="FPVGate"></div>
-<div class="header-right"><h1>PACKING SLIP</h1><p>Invoice #${esc(String(invNum))}</p><p>${dt}</p></div>
+<div style="text-align:right;margin-bottom:6px" class="no-print"><button onclick="window.print()" style="padding:6px 16px;background:#000;color:#fff;border:none;border-radius:4px;font-size:12px;cursor:pointer">Print</button></div>
+<div class="hdr">
+<img src="https://fpvgate.xyz/logo-black.png" alt="FPVGate">
+<div class="hdr-r"><h1>PACKING SLIP</h1><p>#${esc(String(invNum))} | ${dt}</p></div>
 </div>
-<div class="info-grid">
-<div class="info-box"><h3>Ship To</h3><p>${addr}</p>${a.phone?'<p style="margin-top:4px;color:#4a5568">'+esc(a.phone)+'</p>':''}</div>
-<div class="info-box"><h3>Order Details</h3><p>Order #${esc(String(invNum))}<br>${esc(o.shipping_method||'Standard Shipping')}</p>${o.tracking_number?'<div class="tracking-box"><strong>Tracking:</strong> '+esc(o.tracking_number)+'</div>':''}</div>
+<div class="grid">
+<div class="col"><h3>Ship To</h3><p>${addr}</p></div>
+<div class="col"><h3>Order Details</h3><p>#${esc(String(invNum))}<br>${esc(o.shipping_method||'Standard Shipping')}</p>${o.tracking_number?'<div class="trk"><strong>Tracking:</strong> '+esc(o.tracking_number)+'</div>':''}</div>
 </div>
-<table><thead><tr><th>Item</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead><tbody>${itemRows}</tbody></table>
-<div class="totals">
-<div class="row"><span>Subtotal</span><span>&pound;${items.reduce((s,i)=>s+parseFloat(i.totalPrice||i.price*i.quantity),0).toFixed(2)}</span></div>
-<div class="row"><span>Shipping</span><span>&pound;${parseFloat(o.shipping_fees||0).toFixed(2)}</span></div>
-<div class="row total"><span>Total</span><span>&pound;${parseFloat(o.total).toFixed(2)}</span></div>
-</div>
-<div class="qs-card">
-<h2><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> FPVGate AIO Quick Start</h2>
-<div class="qs-body">
-<img src="${qrUrl}" alt="QR Code">
-<div class="qs-steps">
+<table><thead><tr><th>Item</th><th>Qty</th><th>Total</th></tr></thead><tbody>${itemRows}</tbody></table>
+<div class="tots"><div class="tots-inner">
+<div class="r"><span>Subtotal</span><span>&pound;${items.reduce((s,i)=>s+parseFloat(i.totalPrice||i.price*i.quantity),0).toFixed(2)}</span></div>
+<div class="r"><span>Shipping</span><span>&pound;${parseFloat(o.shipping_fees||0).toFixed(2)}</span></div>
+<div class="r t"><span>Total</span><span>&pound;${parseFloat(o.total).toFixed(2)}</span></div>
+</div></div>
+<div class="qs">
+<h2><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> Quick Start</h2>
+<div class="qs-inner">
+<img src="${qrUrl}" alt="QR">
+<div>
 <ol>
-<li>Confirm the <strong>SD card</strong> is inserted, then connect via <strong>USB-C</strong> to any power source.</li>
-<li>On your phone or computer, connect to WiFi:
-<div class="qs-cred"><span>Network:</span> FPVGate &nbsp; <span>Password:</span> fpvgate1</div></li>
-<li>Open a browser and go to <strong>http://fpvgate.local</strong> (or <strong>192.168.4.1</strong>).</li>
-<li>Head to <strong>Configuration</strong> to set your pilot name, voice, and LED preset - then race!</li>
+<li>Insert <strong>SD card</strong>, connect <strong>USB-C</strong> power.</li>
+<li>Connect to WiFi: <div class="cred"><span>SSID:</span> FPVGate <span>Pass:</span> fpvgate1</div></li>
+<li>Open <strong>http://fpvgate.local</strong> or <strong>192.168.4.1</strong></li>
+<li>Set pilot name, voice & LEDs in <strong>Configuration</strong>.</li>
 </ol>
-<div class="qs-url">Full setup guide: <strong>fpvgate.xyz/quickstart</strong> or scan the QR code</div>
+<div class="qs-link">Full guide: <strong>fpvgate.xyz/quickstart</strong></div>
 </div>
 </div>
 </div>
-<div class="footer"><p>Thank you for your order!</p><p><a href="https://fpvgate.xyz">fpvgate.xyz</a></p></div>
+<div class="ftr">Thank you for your order! | fpvgate.xyz</div>
 </body></html>`);
         w.document.close();
     }catch(e){alert('Failed to generate invoice: '+e.message)}
