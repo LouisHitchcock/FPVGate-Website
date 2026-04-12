@@ -138,22 +138,31 @@ function renderProductTable(products){const tb=document.getElementById('an-produ
 function renderCountryTable(countries){const ct=document.getElementById('an-country-table');const em=document.getElementById('an-country-empty');if(countries.length===0){ct.innerHTML='';em.style.display='block';return}em.style.display='none';ct.innerHTML=countries.map(c=>'<div class="country-row-analytics"><div class="country-info"><span style="font-size:20px">'+countryFlag(c.country)+'</span><span><strong>'+escHtml(c.country)+'</strong></span></div><div class="country-stats"><span>'+c.orders+' order'+(c.orders!==1?'s':'')+'</span><span>£'+c.revenue.toFixed(2)+'</span></div></div>').join('')}
 
 // --- QR Code Tools ---
-let lastQRUrl='';
 function generateQR(){
     const url=document.getElementById('qr-url').value.trim();
     const size=parseInt(document.getElementById('qr-size').value);
     if(!url){alert('Enter a URL');return}
-    lastQRUrl=url;
+    const qr=qrcode(0,'M');
+    qr.addData(url);
+    qr.make();
     const canvas=document.getElementById('qr-canvas');
-    QRCode.toCanvas(canvas,url,{width:size,margin:2,color:{dark:'#000000',light:'#ffffff'}},function(err){
-        if(err){alert('Failed to generate QR: '+err.message);return}
-        document.getElementById('qr-output').style.display='block';
-        document.getElementById('qr-url-label').textContent=url;
-    });
+    const count=qr.getModuleCount();
+    const cellSize=Math.floor(size/count);
+    const realSize=cellSize*count;
+    canvas.width=realSize;
+    canvas.height=realSize;
+    const ctx=canvas.getContext('2d');
+    ctx.fillStyle='#ffffff';
+    ctx.fillRect(0,0,realSize,realSize);
+    ctx.fillStyle='#000000';
+    for(let r=0;r<count;r++)for(let c=0;c<count;c++)if(qr.isDark(r,c))ctx.fillRect(c*cellSize,r*cellSize,cellSize,cellSize);
+    document.getElementById('qr-output').style.display='block';
+    document.getElementById('qr-url-label').textContent=url;
 }
 function downloadQR(format){
     const url=document.getElementById('qr-url').value.trim();
     const size=parseInt(document.getElementById('qr-size').value);
+    if(!url)return;
     if(format==='png'){
         const canvas=document.getElementById('qr-canvas');
         const link=document.createElement('a');
@@ -161,14 +170,15 @@ function downloadQR(format){
         link.href=canvas.toDataURL('image/png');
         link.click();
     } else if(format==='svg'){
-        QRCode.toString(url,{type:'svg',width:size,margin:2},function(err,svgStr){
-            if(err){alert('Failed: '+err.message);return}
-            const blob=new Blob([svgStr],{type:'image/svg+xml'});
-            const link=document.createElement('a');
-            link.download='fpvgate-quickstart-qr.svg';
-            link.href=URL.createObjectURL(blob);
-            link.click();
-            URL.revokeObjectURL(link.href);
-        });
+        const qr=qrcode(0,'M');
+        qr.addData(url);
+        qr.make();
+        const svgStr=qr.createSvgTag({cellSize:Math.floor(size/qr.getModuleCount()),margin:0});
+        const blob=new Blob([svgStr],{type:'image/svg+xml'});
+        const link=document.createElement('a');
+        link.download='fpvgate-quickstart-qr.svg';
+        link.href=URL.createObjectURL(blob);
+        link.click();
+        URL.revokeObjectURL(link.href);
     }
 }
