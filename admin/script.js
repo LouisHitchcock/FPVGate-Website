@@ -64,7 +64,7 @@ if(refunds.length>0){h+=`<div class="detail-section"><h3>Refund History</h3>`;re
 h+=`<div class="detail-section"><h3>Comments</h3><div class="comment-list" id="cl-${o.id}">`;if(comments.length===0)h+='<div style="color:#a0aec0;font-size:13px">No comments yet</div>';comments.forEach(c=>{const cd=new Date(c.created_at).toLocaleString('en-GB');h+=`<div class="comment-item">${escHtml(c.comment)}<div class="comment-date">${cd}</div></div>`});h+=`</div><div class="comment-input-row"><input type="text" id="ci-${o.id}" placeholder="Add a comment..." onkeypress="if(event.key==='Enter')addComment(${o.id})"><button class="btn btn-sm btn-primary" onclick="addComment(${o.id})">Post</button></div></div>`;
 // Return section
 if(returnData){const rs=returnData;const rStatusLabels={requested:'Requested',label_created:'Label Created',in_transit:'In Transit',received:'Received',refunded:'Refunded',cancelled:'Cancelled'};const rStatusCls={requested:'status-new',label_created:'status-label_created',in_transit:'status-shipped',received:'status-completed',refunded:'status-refunded',cancelled:'status-cancelled'};h+=`<div class="detail-section"><h3>Return</h3><div class="detail-row"><span class="label">Status</span><span class="value"><span class="status-badge ${rStatusCls[rs.status]||''}">${rStatusLabels[rs.status]||rs.status}</span></span></div>`;if(rs.reason)h+=`<div class="detail-row"><span class="label">Reason</span><span class="value">${escHtml(rs.reason)}</span></div>`;if(rs.refund_amount)h+=`<div class="detail-row"><span class="label">Refund Amount</span><span class="value">&pound;${parseFloat(rs.refund_amount).toFixed(2)}</span></div>`;if(rs.tracking_number)h+=`<div class="detail-row"><span class="label">Return Tracking</span><span class="value">${escHtml(rs.tracking_number)}</span></div>`;if(rs.label_url)h+=`<div style="margin-top:8px"><a href="${escHtml(rs.label_url)}" target="_blank" class="label-link">View Return Label (PDF)</a></div>`;h+=`<div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">`;if(rs.status==='requested')h+=`<button class="btn btn-primary btn-sm" onclick="fetchReturnRates(${o.id})">Get Return Rates</button><button class="btn btn-secondary btn-sm" onclick="updateReturnStatus(${o.id},'cancelled')">Cancel Return</button>`;if(rs.status==='received')h+=`<button class="btn btn-success btn-sm" onclick="updateReturnStatus(${o.id},'refunded')">Process Refund</button>`;if(rs.status==='in_transit')h+=`<button class="btn btn-secondary btn-sm" onclick="updateReturnStatus(${o.id},'received')">Mark Received</button>`;if(rs.status==='label_created')h+=`<button class="btn btn-secondary btn-sm" onclick="updateReturnStatus(${o.id},'in_transit')">Mark In Transit</button><button class="btn btn-secondary btn-sm" onclick="updateReturnStatus(${o.id},'received')">Mark Received</button>`;h+=`</div></div>`}
-h+=`<div class="action-bar">`;if(!o.label_url&&o.status!=='cancelled'&&o.status!=='refunded'){h+=`<button class="btn btn-secondary" onclick="triggerLabelUpload(${o.id})">Upload Label PDF</button><input type="file" id="label-file-${o.id}" accept="application/pdf" style="display:none" onchange="uploadLabelFile(${o.id})">`;if(!o.tracking_number){h+=`<button class="btn btn-primary" onclick="fetchRates(${o.id})">Create Shipping Label</button>`;h+=`<button class="btn btn-secondary" onclick="setManualTracking(${o.id})">Set Tracking Number</button>`}}if(o.status==='label_created')h+=`<button class="btn btn-success" onclick="updateStatus(${o.id},'shipped')">Mark as Shipped</button>`;if(o.status==='shipped')h+=`<button class="btn btn-secondary" onclick="updateStatus(${o.id},'completed')">Mark as Completed</button>`;if(o.status!=='cancelled'&&o.status!=='refunded'){h+=`<button class="btn btn-danger" onclick="toggleRefund(${o.id})">Issue Refund</button>`;if((o.status==='shipped'||o.status==='completed')&&!returnData)h+=`<button class="btn btn-secondary" onclick="initiateReturn(${o.id})">Initiate Return</button>`;h+=`<button class="btn btn-secondary" onclick="confirmCancel(${o.id})">Cancel Order</button>`}if(o.archived)h+=`<button class="btn btn-secondary" onclick="archiveOrder(${o.id},false)">Unarchive</button>`;else h+=`<button class="btn btn-secondary" onclick="archiveOrder(${o.id},true)">Archive</button>`;h+=`</div>`;
+h+=`<div class="action-bar"><button class="btn btn-secondary" onclick="printInvoice(${o.id})"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:14px;height:14px;vertical-align:-2px;margin-right:4px"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6v-8z"/></svg>Print Invoice</button>`;if(!o.label_url&&o.status!=='cancelled'&&o.status!=='refunded'){h+=`<button class="btn btn-secondary" onclick="triggerLabelUpload(${o.id})">Upload Label PDF</button><input type="file" id="label-file-${o.id}" accept="application/pdf" style="display:none" onchange="uploadLabelFile(${o.id})">`;if(!o.tracking_number){h+=`<button class="btn btn-primary" onclick="fetchRates(${o.id})">Create Shipping Label</button>`;h+=`<button class="btn btn-secondary" onclick="setManualTracking(${o.id})">Set Tracking Number</button>`}}if(o.status==='label_created')h+=`<button class="btn btn-success" onclick="updateStatus(${o.id},'shipped')">Mark as Shipped</button>`;if(o.status==='shipped')h+=`<button class="btn btn-secondary" onclick="updateStatus(${o.id},'completed')">Mark as Completed</button>`;if(o.status!=='cancelled'&&o.status!=='refunded'){h+=`<button class="btn btn-danger" onclick="toggleRefund(${o.id})">Issue Refund</button>`;if((o.status==='shipped'||o.status==='completed')&&!returnData)h+=`<button class="btn btn-secondary" onclick="initiateReturn(${o.id})">Initiate Return</button>`;h+=`<button class="btn btn-secondary" onclick="confirmCancel(${o.id})">Cancel Order</button>`}if(o.archived)h+=`<button class="btn btn-secondary" onclick="archiveOrder(${o.id},false)">Unarchive</button>`;else h+=`<button class="btn btn-secondary" onclick="archiveOrder(${o.id},true)">Archive</button>`;h+=`</div>`;
 h+=`<div class=\"detail-section\"><h3>Customer Emails</h3><div style=\"display:flex;gap:8px;flex-wrap:wrap\"><button class=\"btn btn-sm btn-secondary\" onclick=\"sendOrderEmail(${o.id},'tracking')\">${o.tracking_number?'Send Tracking Email':'No Tracking Set'}</button><button class=\"btn btn-sm btn-secondary\" onclick=\"sendOrderEmail(${o.id},'shipped')\">Send Shipped Email</button><button class=\"btn btn-sm btn-secondary\" onclick=\"sendOrderEmail(${o.id},'confirmation')\">Resend Confirmation</button></div></div>`;
 h+=`<div class="refund-form" id="rf-${o.id}"><label>Refund Amount (&pound;)</label><input type="number" id="ra-${o.id}" step="0.01" min="0.01" max="${o.total}" value="${o.total}"><label>Reason (optional)</label><textarea id="rr-${o.id}" placeholder="Reason for refund..."></textarea><div id="re-${o.id}" class="error-text" style="margin-bottom:8px"></div><div style="display:flex;gap:8px"><button class="btn btn-danger" onclick="submitRefund(${o.id})">Confirm Refund</button><button class="btn btn-secondary" onclick="toggleRefund(${o.id})">Cancel</button></div></div>`;
 h+=`<div id="rates-container"></div>`;return h}
@@ -181,4 +181,107 @@ function downloadQR(format){
         link.click();
         URL.revokeObjectURL(link.href);
     }
+}
+
+// --- Printable Invoice ---
+async function printInvoice(id){
+    try{
+        const o=await storeApi(`/api/orders/${id}`);
+        const a=o.shipping_address||{};
+        const items=Array.isArray(o.items)?o.items:[];
+        const dt=new Date(o.created_at).toLocaleDateString('en-GB',{day:'2-digit',month:'long',year:'numeric'});
+        const invNum=o.invoice_number||o.id;
+
+        // Generate QR code as data URL
+        const qr=qrcode(0,'M');
+        qr.addData('https://fpvgate.xyz/quickstart.html');
+        qr.make();
+        const qrCvs=document.createElement('canvas');
+        const mc=qr.getModuleCount();
+        const cs=4;
+        qrCvs.width=mc*cs;
+        qrCvs.height=mc*cs;
+        const qx=qrCvs.getContext('2d');
+        qx.fillStyle='#fff';qx.fillRect(0,0,mc*cs,mc*cs);
+        qx.fillStyle='#000';
+        for(let r=0;r<mc;r++)for(let c=0;c<mc;c++)if(qr.isDark(r,c))qx.fillRect(c*cs,r*cs,cs,cs);
+        const qrUrl=qrCvs.toDataURL('image/png');
+
+        const esc=s=>{if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML};
+        const addr=[a.name||o.customer_name,a.company,a.address1,a.address2,[a.city,a.province].filter(Boolean).join(', '),a.postalCode,a.country].filter(Boolean).map(l=>esc(l)).join('<br>');
+        const itemRows=items.map(i=>`<tr><td style="padding:8px 12px;border-bottom:1px solid #e2e8f0">${esc(i.name)}</td><td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;text-align:center">${i.quantity}</td><td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;text-align:right">&pound;${parseFloat(i.price||0).toFixed(2)}</td><td style="padding:8px 12px;border-bottom:1px solid #e2e8f0;text-align:right">&pound;${parseFloat(i.totalPrice||i.price*i.quantity).toFixed(2)}</td></tr>`).join('');
+
+        const w=window.open('','_blank');
+        w.document.write(`<!DOCTYPE html><html><head><title>Invoice #${invNum}</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#1a202c;padding:40px;max-width:800px;margin:0 auto;font-size:13px;line-height:1.5}
+@media print{body{padding:20px}}
+.header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:24px;border-bottom:2px solid #1a202c;margin-bottom:24px}
+.header-left img{height:48px}
+.header-right{text-align:right}
+.header-right h1{font-size:22px;font-weight:700;letter-spacing:1px;margin-bottom:4px}
+.header-right p{font-size:12px;color:#4a5568}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px}
+.info-box h3{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#718096;margin-bottom:6px;font-weight:600}
+.info-box p{font-size:13px;line-height:1.7}
+.tracking-box{background:#f7fafc;border:1px solid #e2e8f0;border-radius:6px;padding:10px 14px;margin-top:8px;font-size:13px}
+.tracking-box strong{color:#2d3748}
+table{width:100%;border-collapse:collapse;margin-bottom:24px}
+table thead th{background:#f7fafc;padding:8px 12px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:#4a5568;font-weight:600;border-bottom:2px solid #e2e8f0}
+table thead th:nth-child(2){text-align:center}
+table thead th:nth-child(3),table thead th:nth-child(4){text-align:right}
+.totals{margin-left:auto;width:240px;margin-bottom:24px}
+.totals .row{display:flex;justify-content:space-between;padding:4px 0;font-size:13px}
+.totals .row.total{border-top:2px solid #1a202c;margin-top:4px;padding-top:8px;font-weight:700;font-size:15px}
+.qs-card{border:2px solid #1a202c;border-radius:8px;padding:20px;margin-bottom:24px;page-break-inside:avoid}
+.qs-card h2{font-size:16px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.qs-body{display:flex;gap:20px;align-items:flex-start}
+.qs-body img{width:120px;height:120px;flex-shrink:0}
+.qs-steps{flex:1}
+.qs-steps ol{margin:0;padding-left:18px}
+.qs-steps ol li{margin-bottom:6px;font-size:12px}
+.qs-steps ol li strong{color:#1a202c}
+.qs-cred{display:inline-flex;gap:16px;background:#f7fafc;border:1px solid #e2e8f0;border-radius:4px;padding:6px 12px;margin-top:8px;font-size:12px}
+.qs-cred span{font-weight:600}
+.qs-url{margin-top:8px;font-size:11px;color:#718096}
+.footer{text-align:center;padding-top:16px;border-top:1px solid #e2e8f0;font-size:11px;color:#718096}
+.footer a{color:#4299e1;text-decoration:none}
+@media print{.no-print{display:none!important}}
+</style></head><body>
+<div style="text-align:right;margin-bottom:16px" class="no-print"><button onclick="window.print()" style="padding:8px 20px;background:#1a202c;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer">Print</button></div>
+<div class="header">
+<div class="header-left"><img src="https://fpvgate.xyz/logo-black.png" alt="FPVGate"></div>
+<div class="header-right"><h1>PACKING SLIP</h1><p>Invoice #${esc(String(invNum))}</p><p>${dt}</p></div>
+</div>
+<div class="info-grid">
+<div class="info-box"><h3>Ship To</h3><p>${addr}</p>${a.phone?'<p style="margin-top:4px;color:#4a5568">'+esc(a.phone)+'</p>':''}</div>
+<div class="info-box"><h3>Order Details</h3><p>Order #${esc(String(invNum))}<br>${esc(o.shipping_method||'Standard Shipping')}</p>${o.tracking_number?'<div class="tracking-box"><strong>Tracking:</strong> '+esc(o.tracking_number)+'</div>':''}</div>
+</div>
+<table><thead><tr><th>Item</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead><tbody>${itemRows}</tbody></table>
+<div class="totals">
+<div class="row"><span>Subtotal</span><span>&pound;${items.reduce((s,i)=>s+parseFloat(i.totalPrice||i.price*i.quantity),0).toFixed(2)}</span></div>
+<div class="row"><span>Shipping</span><span>&pound;${parseFloat(o.shipping_fees||0).toFixed(2)}</span></div>
+<div class="row total"><span>Total</span><span>&pound;${parseFloat(o.total).toFixed(2)}</span></div>
+</div>
+<div class="qs-card">
+<h2><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg> FPVGate AIO Quick Start</h2>
+<div class="qs-body">
+<img src="${qrUrl}" alt="QR Code">
+<div class="qs-steps">
+<ol>
+<li>Confirm the <strong>SD card</strong> is inserted, then connect via <strong>USB-C</strong> to any power source.</li>
+<li>On your phone or computer, connect to WiFi:
+<div class="qs-cred"><span>Network:</span> FPVGate &nbsp; <span>Password:</span> fpvgate1</div></li>
+<li>Open a browser and go to <strong>http://fpvgate.local</strong> (or <strong>192.168.4.1</strong>).</li>
+<li>Head to <strong>Configuration</strong> to set your pilot name, voice, and LED preset - then race!</li>
+</ol>
+<div class="qs-url">Full setup guide: <strong>fpvgate.xyz/quickstart</strong> or scan the QR code</div>
+</div>
+</div>
+</div>
+<div class="footer"><p>Thank you for your order!</p><p><a href="https://fpvgate.xyz">fpvgate.xyz</a></p></div>
+</body></html>`);
+        w.document.close();
+    }catch(e){alert('Failed to generate invoice: '+e.message)}
 }
