@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Redirecting... | FPVGate</title>
+<link rel="icon" type="image/png" href="/logo-black.png">
+<script>
+(function(){
+    var slug = window.location.pathname.replace(/^\/+|\/+$/g, '');
+    if (slug && /^[a-z0-9_-]+$/i.test(slug)) {
+        var API = 'https://fpvgate-store.fpvgate-analytics.workers.dev';
+        var x = new XMLHttpRequest();
+        x.open('GET', API + '/s/' + encodeURIComponent(slug), true);
+        x.timeout = 3000;
+        x.onload = function() {
+            if (x.status === 200) {
+                try {
+                    var d = JSON.parse(x.responseText);
+                    if (d.url) { window.location.replace(d.url); return; }
+                } catch(e) {}
+            }
+            show404();
+        };
+        x.onerror = x.ontimeout = function() { show404(); };
+        x.send();
+    } else {
+        show404();
+    }
+    function show404() {
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('notfound').style.display = 'flex';
+    }
+})();
+</script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: #0a0a0a; color: #fff; min-height: 100vh; }
+#loader { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+.spinner { width: 32px; height: 32px; border: 3px solid #333; border-top-color: #4299e1; border-radius: 50%; animation: spin .6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+#notfound { display: none; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; text-align: center; padding: 40px 20px; }
+#notfound h1 { font-size: 120px; font-weight: 800; background: linear-gradient(135deg, #4299e1, #9f7aea); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; }
+#notfound p { color: #a0aec0; font-size: 18px; margin: 16px 0 32px; max-width: 400px; }
+#notfound a { display: inline-block; padding: 12px 28px; background: #4299e1; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px; transition: background .2s; }
+#notfound a:hover { background: #3182ce; }
+</style>
+</head>
+<body>
+<div id="loader"><div class="spinner"></div></div>
+<div id="notfound">
+<h1>404</h1>
+<p>The page you're looking for doesn't exist or has been moved.</p>
+<a href="/">Back to FPVGate</a>
+</div>
+</body>
+</html>

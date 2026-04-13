@@ -432,7 +432,18 @@ export default {
                 }
             }
 
-            // Public short URL redirect
+            // Public short URL lookup (for 404.html redirect)
+            const slugLookup = url.pathname.match(/^\/s\/([a-z0-9_-]+)$/i);
+            if (slugLookup && request.method === 'GET') {
+                const row = await env.DB.prepare('SELECT url FROM short_urls WHERE slug = ?').bind(slugLookup[1].toLowerCase()).first();
+                if (row) {
+                    await env.DB.prepare('UPDATE short_urls SET clicks = clicks + 1 WHERE slug = ?').bind(slugLookup[1].toLowerCase()).run();
+                    return jsonResponse({ url: row.url }, corsHeaders);
+                }
+                return jsonResponse({ error: 'Not found' }, corsHeaders, 404);
+            }
+
+            // Public short URL redirect (direct worker access)
             const slugMatch = url.pathname.match(/^\/([a-z0-9_-]+)$/i);
             if (slugMatch && request.method === 'GET') {
                 const row = await env.DB.prepare('SELECT url FROM short_urls WHERE slug = ?').bind(slugMatch[1].toLowerCase()).first();
