@@ -81,7 +81,7 @@
 <button class="btn btn-sm btn-secondary" onclick="bulkArchive(false)">Unarchive</button>
 <button class="btn btn-sm btn-secondary" onclick="clearSelection()">Clear</button>
 </div>
-<table id="orders-table" style="display:none"><thead><tr><th style="width:36px"><input type="checkbox" id="select-all" onchange="toggleSelectAll(this.checked)"></th><th>Order</th><th>Date</th><th>Customer</th><th>Items</th><th>Total</th><th>Labels</th><th>Status</th><th>Tracking</th></tr></thead><tbody id="orders-body"></tbody></table>
+<div class="table-responsive"><table id="orders-table" style="display:none"><thead><tr><th style="width:36px"><input type="checkbox" id="select-all" onchange="toggleSelectAll(this.checked)"></th><th>Order</th><th>Date</th><th>Customer</th><th>Items</th><th>Total</th><th>Labels</th><th>Status</th><th>Tracking</th></tr></thead><tbody id="orders-body"></tbody></table></div>
 </div>
 </div>
 
@@ -94,7 +94,7 @@
 <div class="metric-card" style="border-left-color:#667eea"><h3>30-Day Conversion Rate</h3><div class="metric-value" id="live-conversion">-</div><div class="metric-sub" id="live-conversion-detail"></div></div>
 </div>
 <div class="card"><h2>Visitor Locations (Last Hour)</h2><div id="geo-loading" class="loading"><div class="spinner"></div>Loading...</div><div class="geo-table" id="geo-table" style="display:none"></div></div>
-<div class="card"><h2>Hourly Activity (Last 24h)</h2><div id="hourly-loading" class="loading"><div class="spinner"></div>Loading...</div><table id="hourly-table" style="display:none"><thead><tr><th>Hour</th><th>Unique Visitors</th><th>Store Views</th><th>Cart Adds</th></tr></thead><tbody id="hourly-body"></tbody></table></div>
+<div class="card"><h2>Hourly Activity (Last 24h)</h2><div id="hourly-loading" class="loading"><div class="spinner"></div>Loading...</div><div class="table-responsive"><table id="hourly-table" style="display:none"><thead><tr><th>Hour</th><th>Unique Visitors</th><th>Store Views</th><th>Cart Adds</th></tr></thead><tbody id="hourly-body"></tbody></table></div></div>
 </div>
 
 <div id="section-inventory" class="section">
@@ -103,7 +103,7 @@
 <div class="card">
 <div id="inventory-loading" class="loading"><div class="spinner"></div>Loading inventory...</div>
 <div id="inventory-empty" class="empty-state" style="display:none">No products in inventory. Add one to get started.</div>
-<table id="inventory-table" style="display:none"><thead><tr><th>Product</th><th>SKU</th><th>Stock</th><th>Low Threshold</th><th>Actions</th></tr></thead><tbody id="inventory-body"></tbody></table>
+<div class="table-responsive"><table id="inventory-table" style="display:none"><thead><tr><th>Product</th><th>SKU</th><th>Stock</th><th>Low Threshold</th><th>Actions</th></tr></thead><tbody id="inventory-body"></tbody></table></div>
 </div>
 <div class="card" id="stock-log-card" style="display:none"><h2 id="stock-log-title">Stock History</h2><div id="stock-log-content"></div></div>
 </div>
@@ -139,7 +139,7 @@
 <div class="card"><h2>Flash Events</h2><canvas id="fl-flash-events-chart" style="max-height:300px"></canvas></div>
 <div class="card"><h2>User Activity Recency</h2><canvas id="fl-recency-chart" style="max-height:300px"></canvas></div>
 <div class="card"><h2>Common Errors</h2>
-<table id="fl-error-table"><thead><tr><th>Error Message</th><th>Board</th><th>Version</th><th>Count</th><th>Last Occurred</th></tr></thead><tbody></tbody></table>
+<div class="table-responsive"><table id="fl-error-table"><thead><tr><th>Error Message</th><th>Board</th><th>Version</th><th>Count</th><th>Last Occurred</th></tr></thead><tbody></tbody></table></div>
 </div>
 </div>
 </div>
@@ -170,7 +170,7 @@
 <div class="card"><h2>Revenue & Profit Over Time</h2><canvas id="an-revenue-chart" style="max-height:350px"></canvas></div>
 <div class="card"><h2>Revenue Forecast</h2><div class="analytics-forecast-controls" style="display:flex;gap:8px;margin-bottom:12px"><button class="filter-btn active" onclick="setForecastPeriod(30,this)">30 Days</button><button class="filter-btn" onclick="setForecastPeriod(60,this)">60 Days</button><button class="filter-btn" onclick="setForecastPeriod(90,this)">90 Days</button></div><canvas id="an-forecast-chart" style="max-height:300px"></canvas><div id="an-forecast-summary" style="margin-top:12px;font-size:14px;color:#4a5568"></div></div>
 <div class="card"><h2>Product Profitability</h2>
-<table id="an-product-table"><thead><tr><th>Product</th><th>Units Sold</th><th>Revenue</th><th>Mfg Cost</th><th>Profit</th><th>Margin</th></tr></thead><tbody id="an-product-body"></tbody></table>
+<div class="table-responsive"><table id="an-product-table"><thead><tr><th>Product</th><th>Units Sold</th><th>Revenue</th><th>Mfg Cost</th><th>Profit</th><th>Margin</th></tr></thead><tbody id="an-product-body"></tbody></table></div>
 <div id="an-product-empty" class="empty-state" style="display:none">No product data yet. Set manufacture costs in Inventory to see profitability.</div>
 </div>
 <div class="card"><h2>Top Shipping Countries</h2>
@@ -201,7 +201,7 @@
 <h2>Additional Users</h2>
 <div id="users-loading" class="loading"><div class="spinner"></div>Loading users...</div>
 <div id="users-empty" class="empty-state" style="display:none">No additional users added yet</div>
-<table id="users-table" style="display:none"><thead><tr><th>Email</th><th>Name</th><th>Added</th><th>Actions</th></tr></thead><tbody id="users-body"></tbody></table>
+<div class="table-responsive"><table id="users-table" style="display:none"><thead><tr><th>Email</th><th>Name</th><th>Added</th><th>Actions</th></tr></thead><tbody id="users-body"></tbody></table></div>
 </div>
 </div>
 
@@ -222,7 +222,7 @@
 <div class="card">
 <div id="emails-loading" class="loading"><div class="spinner"></div>Loading emails...</div>
 <div id="emails-empty" class="empty-state" style="display:none">No emails found</div>
-<table id="emails-table" style="display:none"><thead><tr><th>Date</th><th>Type</th><th>Recipient</th><th>Subject</th><th>Order</th><th>Status</th></tr></thead><tbody id="emails-body"></tbody></table>
+<div class="table-responsive"><table id="emails-table" style="display:none"><thead><tr><th>Date</th><th>Type</th><th>Recipient</th><th>Subject</th><th>Order</th><th>Status</th></tr></thead><tbody id="emails-body"></tbody></table></div>
 </div>
 </div>
 
