@@ -256,12 +256,39 @@
 </div>
 </div>
 </div>
+<div class="card">
+<h2>URL Shortener</h2>
+<p style="color:#718096;font-size:14px;margin-bottom:16px">Create short links using fpvgate.xyz. Leave the slug blank to generate a random one.</p>
+<div style="display:flex;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:20px">
+<div style="flex:2;min-width:250px">
+<label style="font-size:13px;font-weight:600;color:#4a5568;display:block;margin-bottom:4px">Destination URL</label>
+<input type="url" id="short-url-dest" placeholder="https://example.com/some/long/url" style="width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px">
+</div>
+<div style="flex:1;min-width:160px">
+<label style="font-size:13px;font-weight:600;color:#4a5568;display:block;margin-bottom:4px">Custom Slug <span style="color:#a0aec0;font-weight:normal">(optional)</span></label>
+<div style="display:flex;align-items:center;border:1px solid #e2e8f0;border-radius:6px;overflow:hidden"><span style="padding:10px 8px 10px 12px;color:#a0aec0;font-size:13px;white-space:nowrap;background:#f7fafc">fpvgate.xyz/</span><input type="text" id="short-url-slug" placeholder="my-link" style="flex:1;padding:10px 12px 10px 4px;border:none;font-size:14px;outline:none;min-width:0"></div>
+</div>
+<button class="btn btn-primary" onclick="createShortUrl()">Shorten</button>
+</div>
+<div id="short-url-error" class="error-text" style="margin-bottom:12px"></div>
+<div id="short-url-result" style="display:none;background:#f0fff4;border:1px solid #c6f6d5;border-radius:8px;padding:16px;margin-bottom:20px">
+<div style="font-size:13px;color:#718096;margin-bottom:4px">Short URL</div>
+<div style="display:flex;align-items:center;gap:10px">
+<code id="short-url-value" style="font-size:16px;font-weight:600;color:#276749;flex:1;word-break:break-all"></code>
+<button class="btn btn-sm btn-secondary" onclick="copyShortUrl()" id="short-url-copy-btn">Copy</button>
+</div>
+</div>
+<h3 style="font-size:14px;font-weight:600;color:#4a5568;margin-bottom:12px">Existing Short URLs</h3>
+<div id="short-urls-loading" class="loading" style="display:none"><div class="spinner"></div>Loading...</div>
+<div id="short-urls-empty" class="empty-state" style="display:none;padding:20px">No short URLs created yet</div>
+<div class="table-responsive"><table id="short-urls-table" style="display:none"><thead><tr><th>Short URL</th><th>Destination</th><th>Clicks</th><th>Created</th><th>Actions</th></tr></thead><tbody id="short-urls-body"></tbody></table></div>
+</div>
 </div>
 
 </main>
 </div>
 
-<div id="detail-overlay" class="detail-overlay" onclick="closeDetail()"></div>
+<div id="detail-overlay"
 <div id="detail-panel" class="detail-panel"><div class="detail-header"><h2 id="detail-title">Order #</h2><button class="close-btn" onclick="closeDetail()">&times;</button></div><div id="detail-content"></div></div>
 
 <div id="test-order-modal" class="modal-overlay" onclick="if(event.target===this) closeTestOrderModal()">

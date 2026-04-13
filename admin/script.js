@@ -26,7 +26,7 @@ function signOut(){sessionStorage.removeItem('fpvgate_admin_token');adminToken='
 window.addEventListener('DOMContentLoaded',()=>{initAuth()});
 
 let currentEmailFilter=null;
-function switchSection(name,btn){document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.getElementById('section-'+name).classList.add('active');if(btn)btn.classList.add('active');document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-overlay').classList.remove('open');document.body.classList.remove('no-scroll');if(liveStatsInterval){clearInterval(liveStatsInterval);liveStatsInterval=null}if(name==='dashboard')loadDashboard();else if(name==='orders')loadOrders();else if(name==='livestats'){loadLiveStats();liveStatsInterval=setInterval(loadLiveStats,30000)}else if(name==='inventory')loadInventory();else if(name==='flasherstats')loadFlasherStats();else if(name==='analytics')loadAnalytics();else if(name==='users')loadUsers();else if(name==='emails')loadEmails()}
+function switchSection(name,btn){document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.getElementById('section-'+name).classList.add('active');if(btn)btn.classList.add('active');document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-overlay').classList.remove('open');document.body.classList.remove('no-scroll');if(liveStatsInterval){clearInterval(liveStatsInterval);liveStatsInterval=null}if(name==='dashboard')loadDashboard();else if(name==='orders')loadOrders();else if(name==='livestats'){loadLiveStats();liveStatsInterval=setInterval(loadLiveStats,30000)}else if(name==='inventory')loadInventory();else if(name==='flasherstats')loadFlasherStats();else if(name==='analytics')loadAnalytics();else if(name==='users')loadUsers();else if(name==='emails')loadEmails();else if(name==='tools')loadShortUrls()}
 function toggleSidebar(){const sb=document.getElementById('sidebar');const ov=document.getElementById('sidebar-overlay');sb.classList.toggle('open');ov.classList.toggle('open');document.body.classList.toggle('no-scroll',sb.classList.contains('open'))}
 
 async function storeApi(path,method='GET',body=null){const o={method,headers:{'Authorization':`Bearer ${adminToken}`,'Content-Type':'application/json'}};if(body)o.body=JSON.stringify(body);const r=await fetch(`${STORE_API}${path}`,o);return r.json()}
@@ -181,6 +181,88 @@ function downloadQR(format){
         link.click();
         URL.revokeObjectURL(link.href);
     }
+}
+
+// --- URL Shortener ---
+function generateRandomSlug(){
+    const chars='abcdefghijkmnpqrstuvwxyz23456789';
+    let s='';
+    for(let i=0;i<6;i++)s+=chars[Math.floor(Math.random()*chars.length)];
+    return s;
+}
+async function createShortUrl(){
+    const dest=document.getElementById('short-url-dest').value.trim();
+    const slugInput=document.getElementById('short-url-slug').value.trim();
+    const err=document.getElementById('short-url-error');
+    const result=document.getElementById('short-url-result');
+    err.textContent='';result.style.display='none';
+    if(!dest){err.textContent='Enter a destination URL';return}
+    try{new URL(dest)}catch(e){err.textContent='Enter a valid URL';return}
+    const slug=slugInput||generateRandomSlug();
+    try{
+        const r=await storeApi('/api/urls','POST',{slug,url:dest});
+        if(r.error){err.textContent=r.error;return}
+        const shortUrl='https://fpvgate.xyz/'+r.slug;
+        document.getElementById('short-url-value').textContent=shortUrl;
+        result.style.display='block';
+        document.getElementById('short-url-dest').value='';
+        document.getElementById('short-url-slug').value='';
+        loadShortUrls();
+    }catch(e){err.textContent='Failed: '+e.message}
+}
+function copyShortUrl(){
+    const url=document.getElementById('short-url-value').textContent;
+    const btn=document.getElementById('short-url-copy-btn');
+    navigator.clipboard.writeText(url).then(()=>{
+        btn.textContent='Copied!';
+        setTimeout(()=>btn.textContent='Copy',2000);
+    }).catch(()=>{
+        const ta=document.createElement('textarea');
+        ta.value=url;document.body.appendChild(ta);ta.select();
+        document.execCommand('copy');document.body.removeChild(ta);
+        btn.textContent='Copied!';
+        setTimeout(()=>btn.textContent='Copy',2000);
+    });
+}
+async function loadShortUrls(){
+    const ld=document.getElementById('short-urls-loading'),tb=document.getElementById('short-urls-table'),em=document.getElementById('short-urls-empty');
+    ld.style.display='block';tb.style.display='none';em.style.display='none';
+    try{
+        const d=await storeApi('/api/urls');
+        const urls=d.urls||[];
+        ld.style.display='none';
+        if(urls.length===0){em.style.display='block';return}
+        tb.style.display='table';
+        const bd=document.getElementById('short-urls-body');
+        bd.innerHTML='';
+        urls.forEach(u=>{
+            const tr=document.createElement('tr');
+            const short='fpvgate.xyz/'+escHtml(u.slug);
+            const dt=u.created_at?new Date(u.created_at).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}):'-';
+            tr.innerHTML=`<td><strong>${short}</strong></td><td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="${escHtml(u.url)}" target="_blank" style="color:#4299e1;text-decoration:none">${escHtml(u.url)}</a></td><td>${u.clicks||0}</td><td>${dt}</td><td><button class="btn btn-sm btn-secondary" onclick="copyUrlValue('https://${short}')">Copy</button> <button class="btn btn-sm btn-danger" onclick="deleteShortUrl('${escHtml(u.slug)}')">Delete</button></td>`;
+            bd.appendChild(tr);
+        });
+    }catch(e){ld.innerHTML=`<div class="error-text">Failed to load: ${e.message}</div>`}
+}
+function copyUrlValue(url){
+    navigator.clipboard.writeText(url).then(()=>{
+        const btn=event.target;btn.textContent='Copied!';
+        setTimeout(()=>btn.textContent='Copy',2000);
+    }).catch(()=>{
+        const ta=document.createElement('textarea');
+        ta.value=url;document.body.appendChild(ta);ta.select();
+        document.execCommand('copy');document.body.removeChild(ta);
+        const btn=event.target;btn.textContent='Copied!';
+        setTimeout(()=>btn.textContent='Copy',2000);
+    });
+}
+async function deleteShortUrl(slug){
+    if(!confirm('Delete short URL fpvgate.xyz/'+slug+'?'))return;
+    try{
+        const r=await storeApi('/api/urls/'+encodeURIComponent(slug),'DELETE');
+        if(r.error){alert(r.error);return}
+        loadShortUrls();
+    }catch(e){alert('Failed: '+e.message)}
 }
 
 // --- Printable Invoice (4x6" label) ---

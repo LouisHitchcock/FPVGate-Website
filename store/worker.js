@@ -345,6 +345,36 @@ export default {
                     return jsonResponse({ success: true }, corsHeaders);
                 }
 
+                // URL Shortener
+                if (url.pathname === '/api/urls' && request.method === 'GET') {
+                    const result = await env.DB.prepare('SELECT slug, url, clicks, created_at FROM short_urls ORDER BY created_at DESC').all();
+                    return jsonResponse({ urls: result.results || [] }, corsHeaders);
+                }
+                if (url.pathname === '/api/urls' && request.method === 'POST') {
+                    const body = await request.json();
+                    const slug = (body.slug || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '');
+                    const destUrl = (body.url || '').trim();
+                    if (!slug) return jsonResponse({ error: 'Slug is required' }, corsHeaders, 400);
+                    if (!destUrl) return jsonResponse({ error: 'URL is required' }, corsHeaders, 400);
+                    try { new URL(destUrl); } catch { return jsonResponse({ error: 'Invalid URL' }, corsHeaders, 400); }
+                    const reserved = ['checkout', 'webhook', 'auth', 'api', 'products', 'images', 'shipping-rates', 'order-status', 'admin', 'shop', 'store', 'quickstart', 'docs', 'flasher'];
+                    if (reserved.includes(slug)) return jsonResponse({ error: 'This slug is reserved' }, corsHeaders, 400);
+                    try {
+                        await env.DB.prepare('INSERT INTO short_urls (slug, url) VALUES (?, ?)').bind(slug, destUrl).run();
+                        return jsonResponse({ slug, url: destUrl }, corsHeaders);
+                    } catch (e) {
+                        if (e.message.includes('UNIQUE')) return jsonResponse({ error: 'Slug already exists' }, corsHeaders, 409);
+                        throw e;
+                    }
+                }
+                const urlDeleteMatch = url.pathname.match(/^\/api\/urls\/(.+)$/);
+                if (urlDeleteMatch && request.method === 'DELETE') {
+                    const slug = decodeURIComponent(urlDeleteMatch[1]).toLowerCase();
+                    const result = await env.DB.prepare('DELETE FROM short_urls WHERE slug = ?').bind(slug).run();
+                    if (result.meta.changes === 0) return jsonResponse({ error: 'Short URL not found' }, corsHeaders, 404);
+                    return jsonResponse({ success: true }, corsHeaders);
+                }
+
                 // Email log
                 if (url.pathname === '/api/emails' && request.method === 'GET') {
                     return await handleListEmails(request, env, corsHeaders);
@@ -399,6 +429,16 @@ export default {
                 const deleteMatch = url.pathname.match(/^\/api\/inventory\/([^/]+)$/);
                 if (deleteMatch && request.method === 'DELETE') {
                     return await handleDeleteProduct(decodeURIComponent(deleteMatch[1]), env, corsHeaders);
+                }
+            }
+
+            // Public short URL redirect
+            const slugMatch = url.pathname.match(/^\/([a-z0-9_-]+)$/i);
+            if (slugMatch && request.method === 'GET') {
+                const row = await env.DB.prepare('SELECT url FROM short_urls WHERE slug = ?').bind(slugMatch[1].toLowerCase()).first();
+                if (row) {
+                    env.DB.prepare('UPDATE short_urls SET clicks = clicks + 1 WHERE slug = ?').bind(slugMatch[1].toLowerCase()).run();
+                    return Response.redirect(row.url, 302);
                 }
             }
 
