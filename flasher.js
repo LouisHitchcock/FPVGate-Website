@@ -77,8 +77,8 @@ const BOARD_CONFIGS = {
             { path: 'filesystem.bin', offset: 0x410000 }
         ]
     },
-    fpvgateaiov3: {
-        name: 'FPVGate AIO V3 (8MB)',
+    fpvgateaio: {
+        name: 'FPVGate AIO',
         chipFamily: 'ESP32-S3',
         firmwareDir: 'FPVGate-AIO-V3',
         filePrefix: 'FPVGate_AIO_V3',
@@ -176,13 +176,13 @@ async function loadBoardConfigurations() {
 // Fallback board configurations if GitHub fetch fails
 function useFallbackBoards() {
     ALL_BOARDS = [
-        { value: 'seeedxiaos3', label: 'Seeed Studio XIAO ESP32S3 (8MB) - Recommended', expert_mode: 0 },
+        { value: 'fpvgateaio', label: 'FPVGate AIO - Recommended', expert_mode: 0 },
+        { value: 'seeedxiaos3', label: 'Seeed Studio XIAO ESP32S3 (8MB)', expert_mode: 0 },
         { value: 'esp32s3', label: 'ESP32-S3 DevKitC-1 (8MB Flash)', expert_mode: 0 },
         { value: 'esp32s3supermini', label: 'ESP32-S3 Super Mini (4MB Flash)', expert_mode: 1 },
         { value: 'esp32c3', label: 'ESP32-C3', expert_mode: 1 },
         { value: 'lilygo', label: 'LilyGO T-Energy S3', expert_mode: 1 },
         { value: 'xiaos3plus', label: 'XIAO ESP32S3 Plus (16MB Flash)', expert_mode: 1 },
-        { value: 'fpvgateaiov3', label: 'FPVGate AIO V3 (8MB) - Coming Soon', expert_mode: 1 },
         { value: 'wavesharelcd2', label: 'Waveshare ESP32-S3-LCD-2 (16MB Flash)', expert_mode: 1 },
         { value: 'novablade', label: 'NovaBlade (16MB Flash)', expert_mode: 1 }
     ];
@@ -307,8 +307,9 @@ function updateFlashSection() {
     
     if (selectedBoard && selectedVersion) {
         flashSection.style.display = 'block';
-        updateFlashInfo();
-        prepareFlashButton();
+        if (updateFlashInfo()) {
+            prepareFlashButton();
+        }
     } else {
         flashSection.style.display = 'none';
     }
@@ -317,9 +318,17 @@ function updateFlashSection() {
 // Update flash information display
 function updateFlashInfo() {
     const boardConfig = BOARD_CONFIGS[selectedBoard];
-    
+
+    if (!boardConfig) {
+        console.error(`No BOARD_CONFIGS entry for selected board "${selectedBoard}"`);
+        showError(`Unsupported board "${selectedBoard}". Please pick a different board or refresh the page.`);
+        document.getElementById('flash-section').style.display = 'none';
+        return false;
+    }
+
     document.getElementById('selected-board').textContent = boardConfig.name;
     document.getElementById('selected-version').textContent = selectedVersion.tag_name;
+    return true;
 }
 
 // Prepare the custom flash button
