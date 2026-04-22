@@ -5,6 +5,7 @@ import {
     getShippingRates,
     getReturnRates,
     purchaseLabel,
+    DEFAULT_LABEL_FILE_TYPE,
     transformRatesForStripe,
     getFallbackShippingOptions
 } from './shippo.js';
@@ -1072,7 +1073,8 @@ async function handleCreateLabel(orderId, request, env, corsHeaders) {
     if (!body.rateId) return jsonResponse({ error: 'rateId is required' }, corsHeaders, 400);
 
     try {
-        const label = await purchaseLabel(env.SHIPPO_API_TOKEN, body.rateId);
+        const labelFileType = resolveShippoLabelFileType(env, body.labelFileType);
+        const label = await purchaseLabel(env.SHIPPO_API_TOKEN, body.rateId, labelFileType);
 
         await env.DB.prepare(`
             UPDATE orders SET tracking_number = ?, shippo_transaction_id = ?, label_url = ?,
@@ -1092,7 +1094,7 @@ async function handleCreateLabel(orderId, request, env, corsHeaders) {
             console.error('Tracking email failed:', e.message);
         }
 
-        return jsonResponse({ success: true, trackingNumber: label.trackingNumber, labelUrl: label.labelUrl, transactionId: label.transactionId }, corsHeaders);
+        return jsonResponse({ success: true, trackingNumber: label.trackingNumber, labelUrl: label.labelUrl, labelFileType: label.labelFileType, transactionId: label.transactionId }, corsHeaders);
     } catch (error) {
         return jsonResponse({ error: `Label creation failed: ${error.message}` }, corsHeaders, 500);
     }
@@ -1372,7 +1374,8 @@ async function handleCreateReturnLabel(orderId, request, env, corsHeaders) {
     if (!body.rateId) return jsonResponse({ error: 'rateId is required' }, corsHeaders, 400);
 
     try {
-        const label = await purchaseLabel(env.SHIPPO_API_TOKEN, body.rateId);
+        const labelFileType = resolveShippoLabelFileType(env, body.labelFileType);
+        const label = await purchaseLabel(env.SHIPPO_API_TOKEN, body.rateId, labelFileType);
 
         await env.DB.prepare(`
             UPDATE returns SET tracking_number = ?, shippo_transaction_id = ?, label_url = ?,
@@ -1400,7 +1403,7 @@ async function handleCreateReturnLabel(orderId, request, env, corsHeaders) {
             console.error('Return label email failed:', e.message);
         }
 
-        return jsonResponse({ success: true, trackingNumber: label.trackingNumber, labelUrl: label.labelUrl }, corsHeaders);
+        return jsonResponse({ success: true, trackingNumber: label.trackingNumber, labelUrl: label.labelUrl, labelFileType: label.labelFileType }, corsHeaders);
     } catch (error) {
         return jsonResponse({ error: `Return label creation failed: ${error.message}` }, corsHeaders, 500);
     }
@@ -1978,6 +1981,11 @@ function parseOrderJson(order) {
 
 function tryParseJson(str) {
     try { return JSON.parse(str); } catch { return str; }
+}
+
+function resolveShippoLabelFileType(env, requestedLabelFileType) {
+    const value = requestedLabelFileType || env.SHIPPO_LABEL_FILE_TYPE || DEFAULT_LABEL_FILE_TYPE;
+    return String(value || '').trim() || DEFAULT_LABEL_FILE_TYPE;
 }
 
 function jsonResponse(data, corsHeaders, status = 200) {

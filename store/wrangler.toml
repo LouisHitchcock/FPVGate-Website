@@ -15,6 +15,8 @@ bucket_name = "fpvgate-product-images"
 
 [vars]
 FROM_EMAIL = "FPVGate <orders@fpvgate.xyz>"
+# Optional override for Shippo label output format
+SHIPPO_LABEL_FILE_TYPE = "PDF_4x6"
 
 # Secrets (set via `wrangler secret put`):
 # SHIPPO_API_TOKEN - Shippo API token

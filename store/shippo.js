@@ -2,6 +2,19 @@
 // Handles shipping rate lookups and label purchases via Shippo's REST API
 
 const SHIPPO_API_BASE = 'https://api.goshippo.com';
+const DEFAULT_LABEL_FILE_TYPE = 'PDF_4x6';
+const SUPPORTED_LABEL_FILE_TYPES = [
+    'PNG',
+    'PNG_2.3x7.5',
+    'PDF',
+    'PDF_2.3x7.5',
+    'PDF_4x6',
+    'PDF_4x8',
+    'PDF_A4',
+    'PDF_A5',
+    'PDF_A6',
+    'ZPLII'
+];
 
 // Your return/from address - update with your actual details
 const FROM_ADDRESS = {
@@ -145,10 +158,11 @@ export async function getShippingRates(token, toAddress, parcel = null, items = 
  * Purchase a shipping label for a given rate
  * Returns the transaction with tracking number and label URL
  */
-export async function purchaseLabel(token, rateObjectId) {
+export async function purchaseLabel(token, rateObjectId, requestedLabelFileType = DEFAULT_LABEL_FILE_TYPE) {
+    const labelFileType = resolveLabelFileType(requestedLabelFileType);
     const transaction = await shippoRequest(token, '/transactions', 'POST', {
         rate: rateObjectId,
-        label_file_type: 'PDF',
+        label_file_type: labelFileType,
         async: false
     });
 
@@ -160,8 +174,16 @@ export async function purchaseLabel(token, rateObjectId) {
         transactionId: transaction.object_id,
         trackingNumber: transaction.tracking_number,
         labelUrl: transaction.label_url,
+        labelFileType: transaction.label_file_type || labelFileType,
         trackingUrlProvider: transaction.tracking_url_provider || ''
     };
+}
+
+function resolveLabelFileType(labelFileType = DEFAULT_LABEL_FILE_TYPE) {
+    const normalized = String(labelFileType || '').trim();
+    if (!normalized) return DEFAULT_LABEL_FILE_TYPE;
+    const matched = SUPPORTED_LABEL_FILE_TYPES.find(type => type.toLowerCase() === normalized.toLowerCase());
+    return matched || DEFAULT_LABEL_FILE_TYPE;
 }
 
 /**
@@ -275,4 +297,4 @@ export async function getReturnRates(token, fromCustomerAddress, parcel = null, 
     return shipment;
 }
 
-export { FROM_ADDRESS, DEFAULT_PARCEL };
+export { FROM_ADDRESS, DEFAULT_PARCEL, DEFAULT_LABEL_FILE_TYPE };
