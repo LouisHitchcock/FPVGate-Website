@@ -25,7 +25,12 @@ function exampleReadOnly(){if(!IS_DEBUG_PORTAL)return false;alert('Debug mode is
 async function initAuth(){
   const params=new URLSearchParams(window.location.search);
   const urlToken=params.get('token');
-  if(urlToken){sessionStorage.setItem('fpvgate_admin_token',urlToken);window.history.replaceState({},'',window.location.pathname)}
+  if(urlToken){
+    sessionStorage.setItem('fpvgate_admin_token',urlToken);
+    params.delete('token');
+    const query=params.toString();
+    window.history.replaceState({},'',query?`${window.location.pathname}?${query}`:window.location.pathname)
+  }
   const token=sessionStorage.getItem('fpvgate_admin_token');
   if(!token){showAuthOverlay();return}
   try{
