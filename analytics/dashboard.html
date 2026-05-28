@@ -532,11 +532,10 @@
             dashboard.style.display = 'none';
 
             try {
-                const response = await fetch(`${API_ENDPOINT}/stats/detailed`);
+                const response = await fetch(`${API_ENDPOINT}/stats/detailed?days=${currentDateRange}`);
                 const data = await response.json();
                 
-                const filteredData = filterDataByDateRange(data);
-                displayStats(filteredData);
+                displayStats(data);
                 
                 loading.style.display = 'none';
                 dashboard.style.display = 'block';

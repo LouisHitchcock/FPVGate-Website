@@ -79,7 +79,8 @@ export default {
 
       // GET /stats/detailed - Get detailed analytics
       if (url.pathname === '/stats/detailed' && request.method === 'GET') {
-        const detailedStats = await getDetailedStats(env.DB);
+        const days = parseInt(url.searchParams.get('days')) || null;
+        const detailedStats = await getDetailedStats(env.DB, days);
         
         return new Response(JSON.stringify(detailedStats), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -157,12 +158,16 @@ async function hashIP(ip) {
 }
 
 // Get basic statistics
-async function getStats(db) {
+async function getStats(db, days = null) {
   const results = {};
+
+  const dateFilter = days !== null
+    ? `WHERE timestamp >= datetime('now', '-${days} days')`
+    : '';
 
   // Total events
   const totalEvents = await db.prepare(
-    'SELECT COUNT(*) as count FROM analytics_events'
+    `SELECT COUNT(*) as count FROM analytics_events ${dateFilter}`
   ).first();
   results.total_events = totalEvents.count;
 
@@ -173,6 +178,7 @@ async function getStats(db) {
       COUNT(*) as count
     FROM analytics_events
     WHERE event_name LIKE 'flash_%'
+      ${days !== null ? `AND timestamp >= datetime('now', '-${days} days')` : ''}
     GROUP BY event_name
     ORDER BY count DESC
   `).all();
@@ -185,6 +191,7 @@ async function getStats(db) {
       COUNT(*) as count
     FROM analytics_events
     WHERE board IS NOT NULL
+      ${days !== null ? `AND timestamp >= datetime('now', '-${days} days')` : ''}
     GROUP BY board
     ORDER BY count DESC
   `).all();
@@ -197,29 +204,30 @@ async function getStats(db) {
       COUNT(*) as count
     FROM analytics_events
     WHERE version IS NOT NULL
+      ${days !== null ? `AND timestamp >= datetime('now', '-${days} days')` : ''}
     GROUP BY version
     ORDER BY count DESC
     LIMIT 10
   `).all();
   results.version_stats = versionStats.results;
 
-  // Events over last 30 days
+  // Events over last N days (or all time)
   const recentEvents = await db.prepare(`
     SELECT 
       DATE(timestamp) as date,
       COUNT(*) as count
     FROM analytics_events
-    WHERE timestamp >= datetime('now', '-30 days')
+    ${days !== null ? `WHERE timestamp >= datetime('now', '-${days} days')` : ''}
     GROUP BY DATE(timestamp)
     ORDER BY date DESC
   `).all();
   results.recent_activity = recentEvents.results;
 
-  // Unique users (by IP hash) in last 30 days
+  // Unique users (by IP hash) in filtered date range
   const uniqueUsers = await db.prepare(`
     SELECT COUNT(DISTINCT ip_hash) as count
     FROM analytics_events
-    WHERE timestamp >= datetime('now', '-30 days')
+    ${days !== null ? `WHERE timestamp >= datetime('now', '-${days} days')` : 'WHERE 1=1'}
       AND ip_hash IS NOT NULL
   `).first();
   results.unique_users_30d = uniqueUsers.count;
@@ -232,6 +240,7 @@ async function getStats(db) {
     FROM analytics_events
     WHERE country IS NOT NULL
       AND ip_hash IS NOT NULL
+      ${days !== null ? `AND timestamp >= datetime('now', '-${days} days')` : ''}
     GROUP BY country
     ORDER BY count DESC
     LIMIT 20
@@ -331,8 +340,12 @@ async function getLiveStats(db) {
 }
 
 // Get detailed statistics
-async function getDetailedStats(db) {
-  const stats = await getStats(db);
+async function getDetailedStats(db, days = null) {
+  const stats = await getStats(db, days);
+
+  const dateFilter = days !== null
+    ? `AND timestamp >= datetime('now', '-${days} days')`
+    : '';
 
   // Add error details
   const errors = await db.prepare(`
@@ -345,6 +358,7 @@ async function getDetailedStats(db) {
     FROM analytics_events
     WHERE event_name = 'flash_failed'
       AND error_message IS NOT NULL
+      ${dateFilter}
     GROUP BY error_message, board, version
     ORDER BY count DESC
     LIMIT 20
@@ -358,6 +372,7 @@ async function getDetailedStats(db) {
       COUNT(*) as count
     FROM analytics_events
     WHERE event_name = 'flash_complete'
+      ${dateFilter}
     GROUP BY expert_mode
   `).all();
   stats.expert_mode_usage = expertMode.results;
@@ -369,6 +384,7 @@ async function getDetailedStats(db) {
       SUM(CASE WHEN event_name = 'flash_failed' THEN 1 ELSE 0 END) as failures
     FROM analytics_events
     WHERE event_name IN ('flash_complete', 'flash_failed')
+      ${dateFilter}
   `).first();
   
   if (successRate.successes + successRate.failures > 0) {
@@ -379,33 +395,59 @@ async function getDetailedStats(db) {
     };
   }
 
-  // New users in last 30 days (users whose first event was in the last 30 days)
-  const newUsers = await db.prepare(`
-    SELECT COUNT(DISTINCT ip_hash) as count
-    FROM analytics_events
-    WHERE ip_hash IN (
-      SELECT ip_hash
+  // New users in last filtered period
+  const newUsers = days !== null
+    ? await db.prepare(`
+      SELECT COUNT(DISTINCT ip_hash) as count
       FROM analytics_events
-      WHERE ip_hash IS NOT NULL
-      GROUP BY ip_hash
-      HAVING MIN(timestamp) >= datetime('now', '-30 days')
-    )
-  `).first();
+      WHERE ip_hash IN (
+        SELECT ip_hash
+        FROM analytics_events
+        WHERE ip_hash IS NOT NULL
+        ${dateFilter}
+        GROUP BY ip_hash
+        HAVING MIN(timestamp) >= datetime('now', '-${days} days')
+      )
+    `).first()
+    : await db.prepare(`
+      SELECT COUNT(DISTINCT ip_hash) as count
+      FROM analytics_events
+      WHERE ip_hash IN (
+        SELECT ip_hash
+        FROM analytics_events
+        WHERE ip_hash IS NOT NULL
+        GROUP BY ip_hash
+        HAVING MIN(timestamp) >= datetime('now', '-30 days')
+      )
+    `).first();
   stats.new_users_30d = newUsers.count;
 
-  // Returning users in last 30 days (users who had events before AND during last 30 days)
-  const returningUsers = await db.prepare(`
-    SELECT COUNT(DISTINCT ip_hash) as count
-    FROM analytics_events
-    WHERE ip_hash IN (
-      SELECT ip_hash
+  // Returning users in filtered period
+  const returningUsers = days !== null
+    ? await db.prepare(`
+      SELECT COUNT(DISTINCT ip_hash) as count
       FROM analytics_events
-      WHERE ip_hash IS NOT NULL
-      GROUP BY ip_hash
-      HAVING MIN(timestamp) < datetime('now', '-30 days')
-        AND MAX(timestamp) >= datetime('now', '-30 days')
-    )
-  `).first();
+      WHERE ip_hash IN (
+        SELECT ip_hash
+        FROM analytics_events
+        WHERE ip_hash IS NOT NULL
+        GROUP BY ip_hash
+        HAVING MIN(timestamp) < datetime('now', '-${days} days')
+          AND MAX(timestamp) >= datetime('now', '-${days} days')
+      )
+    `).first()
+    : await db.prepare(`
+      SELECT COUNT(DISTINCT ip_hash) as count
+      FROM analytics_events
+      WHERE ip_hash IN (
+        SELECT ip_hash
+        FROM analytics_events
+        WHERE ip_hash IS NOT NULL
+        GROUP BY ip_hash
+        HAVING MIN(timestamp) < datetime('now', '-30 days')
+          AND MAX(timestamp) >= datetime('now', '-30 days')
+      )
+    `).first();
   stats.returning_users_30d = returningUsers.count;
 
   // Users by recency (last seen)
