@@ -176,6 +176,13 @@ tr.clickable { cursor: pointer; }
 .modal input:focus { outline: none; border-color: #4299e1; }
 .modal select { font-size: 16px; }
 .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px; }
+.edit-order-modal { max-width: 760px; }
+.edit-order-subtitle { font-size: 13px; color: #718096; margin-top: -8px; margin-bottom: 16px; }
+.edit-order-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px 12px; }
+.edit-order-field-full { grid-column: 1 / -1; }
+.edit-order-field input { margin-bottom: 0; }
+.edit-order-error { min-height: 18px; margin-top: 12px; }
+#edit-order-country { text-transform: uppercase; }
 
 /* --- Loading / Empty --- */
 .loading { text-align: center; padding: 40px; color: #718096; }
@@ -294,6 +301,8 @@ tr.clickable { cursor: pointer; }
     .modal-overlay { padding: 12px; }
     .modal-actions { flex-direction: column-reverse; }
     .modal-actions .btn { width: 100%; justify-content: center; }
+    .edit-order-grid { grid-template-columns: 1fr; }
+    .edit-order-field-full { grid-column: auto; }
 
     .bulk-bar { flex-wrap: wrap; padding: 10px 12px; }
 

@@ -290,6 +290,32 @@
 
 <div id="detail-overlay" class="detail-overlay" onclick="closeDetail()"></div>
 <div id="detail-panel" class="detail-panel"><div class="detail-header"><h2 id="detail-title">Order #</h2><button class="close-btn" onclick="closeDetail()">&times;</button></div><div id="detail-content"></div></div>
+<div id="edit-order-modal" class="modal-overlay" onclick="if(event.target===this) closeEditOrderModal()">
+<div class="modal edit-order-modal">
+<h2>Edit Order Info</h2>
+<p class="edit-order-subtitle">Update shipping and contact details for this order.</p>
+<form id="edit-order-form" onsubmit="submitEditOrder(event)">
+<input type="hidden" id="edit-order-id">
+<div class="edit-order-grid">
+<div class="edit-order-field"><label for="edit-order-customer-name">Customer Name</label><input type="text" id="edit-order-customer-name" autocomplete="name" required></div>
+<div class="edit-order-field"><label for="edit-order-customer-email">Customer Email</label><input type="email" id="edit-order-customer-email" autocomplete="email" required></div>
+<div class="edit-order-field"><label for="edit-order-phone">Phone</label><input type="text" id="edit-order-phone" autocomplete="tel"></div>
+<div class="edit-order-field"><label for="edit-order-company">Company (optional)</label><input type="text" id="edit-order-company" autocomplete="organization"></div>
+<div class="edit-order-field edit-order-field-full"><label for="edit-order-address1">Address Line 1</label><input type="text" id="edit-order-address1" autocomplete="address-line1" required></div>
+<div class="edit-order-field edit-order-field-full"><label for="edit-order-address2">Address Line 2 (optional)</label><input type="text" id="edit-order-address2" autocomplete="address-line2"></div>
+<div class="edit-order-field"><label for="edit-order-city">City</label><input type="text" id="edit-order-city" autocomplete="address-level2" required></div>
+<div class="edit-order-field"><label for="edit-order-province">County/State</label><input type="text" id="edit-order-province" autocomplete="address-level1"></div>
+<div class="edit-order-field"><label for="edit-order-postal-code">Postal Code</label><input type="text" id="edit-order-postal-code" autocomplete="postal-code" required></div>
+<div class="edit-order-field"><label for="edit-order-country">Country Code</label><input type="text" id="edit-order-country" placeholder="GB" maxlength="2" autocomplete="country" required></div>
+</div>
+<div id="edit-order-error" class="error-text edit-order-error"></div>
+<div class="modal-actions">
+<button type="button" class="btn btn-secondary" onclick="closeEditOrderModal()">Cancel</button>
+<button type="submit" class="btn btn-primary" id="edit-order-submit">Save Changes</button>
+</div>
+</form>
+</div>
+</div>
 
 <div id="test-order-modal" class="modal-overlay" onclick="if(event.target===this) closeTestOrderModal()">
 <div class="modal" style="max-width:500px">
