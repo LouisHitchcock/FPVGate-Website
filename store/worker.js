@@ -217,6 +217,9 @@ export default {
                 if (orderMatch && request.method === 'GET') {
                     return await handleGetOrder(orderMatch[1], env, corsHeaders);
                 }
+                if (orderMatch && request.method === 'PUT') {
+                    return await handleUpdateOrder(orderMatch[1], request, env, corsHeaders);
+                }
 
                 const labelMatch = url.pathname.match(/^\/api\/orders\/(\d+)\/label$/);
                 if (labelMatch && request.method === 'POST') {
@@ -1029,6 +1032,64 @@ async function handleGetOrder(orderId, env, corsHeaders) {
     const order = await env.DB.prepare('SELECT * FROM orders WHERE id = ?').bind(orderId).first();
     if (!order) return jsonResponse({ error: 'Order not found' }, corsHeaders, 404);
     return jsonResponse(parseOrderJson(order), corsHeaders);
+}
+
+async function handleUpdateOrder(orderId, request, env, corsHeaders) {
+    const order = await env.DB.prepare('SELECT * FROM orders WHERE id = ?').bind(orderId).first();
+    if (!order) return jsonResponse({ error: 'Order not found' }, corsHeaders, 404);
+
+    const body = await request.json().catch(() => null);
+    if (!body || typeof body !== 'object') {
+        return jsonResponse({ error: 'Invalid JSON body' }, corsHeaders, 400);
+    }
+
+    const parsedShipping = tryParseJson(order.shipping_address);
+    const currentShipping = parsedShipping && typeof parsedShipping === 'object' && !Array.isArray(parsedShipping) ? parsedShipping : {};
+    const incomingShipping = body.shipping_address && typeof body.shipping_address === 'object' && !Array.isArray(body.shipping_address) ? body.shipping_address : {};
+    const mergedShipping = { ...currentShipping, ...incomingShipping };
+
+    if (body.phone !== undefined) mergedShipping.phone = body.phone;
+    if (mergedShipping.street1 && !mergedShipping.address1) mergedShipping.address1 = mergedShipping.street1;
+    if (mergedShipping.street2 && !mergedShipping.address2) mergedShipping.address2 = mergedShipping.street2;
+    if (mergedShipping.state && !mergedShipping.province) mergedShipping.province = mergedShipping.state;
+    if (mergedShipping.zip && !mergedShipping.postalCode) mergedShipping.postalCode = mergedShipping.zip;
+    if (mergedShipping.countryCode && !mergedShipping.country) mergedShipping.country = mergedShipping.countryCode;
+
+    const customerName = (typeof body.customer_name === 'string' ? body.customer_name : (mergedShipping.name || order.customer_name || '')).trim();
+    const customerEmail = (typeof body.customer_email === 'string' ? body.customer_email : (mergedShipping.email || order.customer_email || '')).trim();
+
+    if (!customerName) return jsonResponse({ error: 'customer_name is required' }, corsHeaders, 400);
+    if (!customerEmail) return jsonResponse({ error: 'customer_email is required' }, corsHeaders, 400);
+    if (!customerEmail.includes('@')) return jsonResponse({ error: 'customer_email must be valid' }, corsHeaders, 400);
+
+    const shippingAddress = {
+        name: String(mergedShipping.name || customerName).trim(),
+        company: String(mergedShipping.company || '').trim(),
+        address1: String(mergedShipping.address1 || '').trim(),
+        address2: String(mergedShipping.address2 || '').trim(),
+        city: String(mergedShipping.city || '').trim(),
+        province: String(mergedShipping.province || '').trim(),
+        postalCode: String(mergedShipping.postalCode || '').trim(),
+        country: String(mergedShipping.country || '').trim().toUpperCase(),
+        phone: String(mergedShipping.phone || '').trim(),
+        email: String(mergedShipping.email || customerEmail).trim()
+    };
+
+    if (!shippingAddress.name || !shippingAddress.address1 || !shippingAddress.city || !shippingAddress.postalCode || !shippingAddress.country) {
+        return jsonResponse({ error: 'shipping_address must include name, address1, city, postalCode, and country' }, corsHeaders, 400);
+    }
+
+    await env.DB.prepare(
+        "UPDATE orders SET customer_name = ?, customer_email = ?, shipping_address = ?, updated_at = datetime('now') WHERE id = ?"
+    ).bind(
+        customerName,
+        customerEmail,
+        JSON.stringify(shippingAddress),
+        orderId
+    ).run();
+
+    const updated = await env.DB.prepare('SELECT * FROM orders WHERE id = ?').bind(orderId).first();
+    return jsonResponse({ success: true, order: parseOrderJson(updated) }, corsHeaders);
 }
 
 async function handleGetOrderRates(orderId, env, corsHeaders) {
