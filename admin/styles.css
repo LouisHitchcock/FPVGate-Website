@@ -27,6 +27,8 @@ a, button, input, select, textarea, .nav-item, .filter-btn, .rate-option, .click
 .auth-box button { width: 100%; padding: 12px; background: #4299e1; color: #fff; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; }
 .auth-box button:hover { background: #3182ce; }
 .auth-error { color: #e53e3e; font-size: 13px; margin-top: 8px; display: none; }
+.remember-me { display:flex; align-items:center; gap:8px; margin:16px 0 0; cursor:pointer; font-size:14px; color:#4a5568; justify-content:center; }
+.remember-me input[type="checkbox"] { width:16px; height:16px; margin:0; cursor:pointer; }
 
 /* --- Layout --- */
 .app-layout { display: flex; min-height: 100vh; }

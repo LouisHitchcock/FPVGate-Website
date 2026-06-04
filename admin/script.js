@@ -29,16 +29,19 @@ async function initAuth(){
   const params=new URLSearchParams(window.location.search);
   const urlToken=params.get('token');
   if(urlToken){
-    sessionStorage.setItem('fpvgate_admin_token',urlToken);
-    params.delete('token');
+    const remember=params.get('remember')==='1';
+    if(remember){localStorage.setItem('fpvgate_admin_token',urlToken)}else{sessionStorage.setItem('fpvgate_admin_token',urlToken)}
+    params.delete('token');params.delete('remember');
     const query=params.toString();
     window.history.replaceState({},'',query?`${window.location.pathname}?${query}`:window.location.pathname)
   }
-  const token=sessionStorage.getItem('fpvgate_admin_token');
+  const rememberMe=localStorage.getItem('fpvgate_remember')==='1';
+  const token=rememberMe?localStorage.getItem('fpvgate_admin_token'):sessionStorage.getItem('fpvgate_admin_token');
   if(!token){showAuthOverlay();return}
+  if(rememberMe)document.getElementById('remember-me').checked=true;
   try{
     const r=await fetch(STORE_API+'/auth/verify',{headers:{'Authorization':'Bearer '+token}});
-    if(!r.ok){sessionStorage.removeItem('fpvgate_admin_token');showAuthOverlay();return}
+    if(!r.ok){localStorage.removeItem('fpvgate_admin_token');sessionStorage.removeItem('fpvgate_admin_token');showAuthOverlay();return}
     const user=await r.json();
     adminToken=token;
     document.getElementById('auth-overlay').style.display='none';
@@ -47,10 +50,10 @@ async function initAuth(){
     if(user.picture){const av=document.getElementById('user-avatar');av.src=user.picture;av.style.display='block'}
     document.getElementById('sign-out-btn').style.display='block';
     loadDashboard();
-  }catch(e){sessionStorage.removeItem('fpvgate_admin_token');showAuthOverlay()}
+  }catch(e){localStorage.removeItem('fpvgate_admin_token');sessionStorage.removeItem('fpvgate_admin_token');showAuthOverlay()}
 }
 function showAuthOverlay(){document.getElementById('auth-overlay').style.display='flex';document.getElementById('main-content').style.display='none'}
-function signOut(){sessionStorage.removeItem('fpvgate_admin_token');adminToken='';showAuthOverlay()}
+function signOut(){localStorage.removeItem('fpvgate_admin_token');localStorage.removeItem('fpvgate_remember');sessionStorage.removeItem('fpvgate_admin_token');adminToken='';showAuthOverlay()}
 window.addEventListener('DOMContentLoaded',()=>{initAuth()});
 
 let currentEmailFilter=null;
