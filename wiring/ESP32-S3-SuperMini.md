@@ -20,7 +20,7 @@ GPIO5    ───────────────────────�
 GPIO0    ─────────────────────────────────── Battery Voltage (via divider)
 GPIO1    ─────────────────────────────────── Mode Switch
 GND      ────── GND           ─── GND      ─── GND
-5V       ────── +5V           ─── 5V       ─── 5V
+3V3      ────── +5V/VCC (power)  ─── 3V3     ─── VCC
 ```
 
 ## Component Requirements
