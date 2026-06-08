@@ -72,17 +72,6 @@
     <div id="search-results" style="display:none"><div class="container"></div></div>
     <div id="search-default-content">
 
-    <section class="store-section" id="section-featured">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-label">New to the Store</h2>
-            </div>
-            <div class="horizontal-strip" id="featured-strip">
-                <div class="loading-strip" style="text-align:center;padding:20px;color:var(--text-secondary);">Loading...</div>
-            </div>
-        </div>
-    </section>
-
     <section class="store-section" id="section-fpvgate">
         <div class="container">
             <div class="section-header">
@@ -95,6 +84,17 @@
         </div>
     </section>
 
+    <section class="store-section" id="section-featured">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-label">New to the Store</h2>
+            </div>
+            <div class="horizontal-strip" id="featured-strip">
+                <div class="loading-strip" style="text-align:center;padding:20px;color:var(--text-secondary);">Loading...</div>
+            </div>
+        </div>
+    </section>
+
     <section class="store-section" id="section-components">
         <div class="container">
             <div class="section-header">
@@ -102,18 +102,6 @@
                 <a href="shop-components.html" class="section-view-all">View All &rarr;</a>
             </div>
             <div class="product-grid" id="components-grid">
-                <div class="loading-products" style="text-align:center;padding:40px;color:var(--text-secondary);">Loading...</div>
-            </div>
-        </div>
-    </section>
-
-    <section class="store-section" id="section-misc">
-        <div class="container">
-            <div class="section-header">
-                <h2 class="section-label">Miscellaneous</h2>
-                <a href="shop-misc.html" class="section-view-all">View All &rarr;</a>
-            </div>
-            <div class="product-grid" id="misc-grid">
                 <div class="loading-products" style="text-align:center;padding:40px;color:var(--text-secondary);">Loading...</div>
             </div>
         </div>
@@ -201,44 +189,59 @@
     <script>
     (async function() {
         try {
-            const [featuredResp, fpvgateResp, componentsResp, miscResp] = await Promise.all([
+            const [featuredResp, fpvgateResp, componentsResp] = await Promise.all([
                 fetch(STORE_API + '/products?sort=featured'),
                 fetch(STORE_API + '/products?category=fpvgate'),
-                fetch(STORE_API + '/products?category=components'),
-                fetch(STORE_API + '/products?category=misc')
+                fetch(STORE_API + '/products?category=components')
             ]);
 
-            // Featured strip
-            const featured = await featuredResp.json();
-            const featuredStrip = document.getElementById('featured-strip');
+            var featured = await featuredResp.json();
+            var featuredStrip = document.getElementById('featured-strip');
             if (featured.length) {
                 window._featured = featured;
-                featuredStrip.innerHTML = featured.map((p, pi) =>
-                    `<div class="strip-card" onclick="openProductModal(${pi}, '_featured')" style="cursor:pointer"><div class="strip-card-img">${p.image ? `<img src="${p.image}" alt="${escHtml(p.name)}">` : '<div class="strip-card-placeholder"><span>No Image</span></div>'}</div><div class="strip-card-info"><span class="strip-card-name">${escHtml(p.name)}</span><span class="strip-card-price">&pound;${p.price.toFixed(2)}</span></div></div>`
-                ).join('');
+                featuredStrip.innerHTML = featured.map(function(p, pi) {
+                    return '<div class="strip-card" onclick="openProductModal(' + pi + ', \'_featured\')" style="cursor:pointer"><div class="strip-card-img">' + (p.image ? '<img src="' + p.image + '" alt="' + escHtml(p.name) + '">' : '<div class="strip-card-placeholder"><span>No Image</span></div>') + '</div><div class="strip-card-info"><span class="strip-card-name">' + escHtml(p.name) + '</span><span class="strip-card-price">&pound;' + p.price.toFixed(2) + '</span></div></div>';
+                }).join('');
             } else {
-                const newestResp = await fetch(STORE_API + '/products?sort=newest');
-                const newest = await newestResp.json();
+                var newest = [];
+                try {
+                    var newestResp = await fetch(STORE_API + '/products?sort=newest');
+                    newest = await newestResp.json();
+                } catch(e) {}
                 if (newest.length) {
                     window._featured = newest;
-                    featuredStrip.innerHTML = newest.slice(0, 8).map((p, pi) =>
-                        `<div class="strip-card" onclick="openProductModal(${pi}, '_featured')" style="cursor:pointer"><div class="strip-card-img">${p.image ? `<img src="${p.image}" alt="${escHtml(p.name)}">` : '<div class="strip-card-placeholder"><span>No Image</span></div>'}</div><div class="strip-card-info"><span class="strip-card-name">${escHtml(p.name)}</span><span class="strip-card-price">&pound;${p.price.toFixed(2)}</span></div></div>`
-                    ).join('');
+                    featuredStrip.innerHTML = newest.slice(0, 8).map(function(p, pi) {
+                        return '<div class="strip-card" onclick="openProductModal(' + pi + ', \'_featured\')" style="cursor:pointer"><div class="strip-card-img">' + (p.image ? '<img src="' + p.image + '" alt="' + escHtml(p.name) + '">' : '<div class="strip-card-placeholder"><span>No Image</span></div>') + '</div><div class="strip-card-info"><span class="strip-card-name">' + escHtml(p.name) + '</span><span class="strip-card-price">&pound;' + p.price.toFixed(2) + '</span></div></div>';
+                    }).join('');
                 }
             }
 
-            // Category grids (4 items each)
-            [
-                [fpvgateResp, 'fpvgate-grid', '_fpvgate'],
-                [componentsResp, 'components-grid', '_components'],
-                [miscResp, 'misc-grid', '_misc']
-            ].forEach(async ([resp, gridId, key]) => {
-                const products = await resp.json();
-                const grid = document.getElementById(gridId);
-                if (!products.length) { grid.innerHTML = '<div class="loading-products" style="text-align:center;padding:40px;color:var(--text-secondary);">No products yet.</div>'; return; }
-                window[key] = products;
-                grid.innerHTML = products.slice(0, 4).map((p, pi) => renderProductCard(p, pi)).join('');
-            });
+            function attachCards(grid, key) {
+                grid.querySelectorAll('.product-card').forEach(function(card, i) {
+                    card.style.cursor = 'pointer';
+                    card.addEventListener('click', function() { openProductModal(i, key); });
+                });
+            }
+
+            var fpvgate = await fpvgateResp.json();
+            var fgrid = document.getElementById('fpvgate-grid');
+            if (fpvgate.length) {
+                window._fpvgate = fpvgate;
+                fgrid.innerHTML = fpvgate.slice(0, 4).map(function(p, pi) { return renderProductCard(p, pi); }).join('');
+                attachCards(fgrid, '_fpvgate');
+            } else {
+                fgrid.innerHTML = '<div class="loading-products" style="text-align:center;padding:40px;color:var(--text-secondary);">No products yet.</div>';
+            }
+
+            var components = await componentsResp.json();
+            var cgrid = document.getElementById('components-grid');
+            if (components.length) {
+                window._components = components;
+                cgrid.innerHTML = components.slice(0, 4).map(function(p, pi) { return renderProductCard(p, pi); }).join('');
+                attachCards(cgrid, '_components');
+            } else {
+                cgrid.innerHTML = '<div class="loading-products" style="text-align:center;padding:40px;color:var(--text-secondary);">No products yet.</div>';
+            }
 
         } catch (e) {
             console.error('Failed to load products:', e);
