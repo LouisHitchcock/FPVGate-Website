@@ -183,7 +183,7 @@ function hideSearchResults() {
 
 // --- Product Rendering ---
 function renderProductCard(p, pi) {
-    return `<div class="product-card" onclick="openProductModal(${pi})" style="cursor:pointer">
+    return `<div class="product-card" data-pi="${pi}" style="cursor:pointer">
         <div class="product-image">
             ${p.images && p.images.length > 1
                 ? `<div class="carousel" id="carousel-${pi}">

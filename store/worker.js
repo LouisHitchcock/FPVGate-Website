@@ -2065,10 +2065,10 @@ async function handleProducts(request, env, corsHeaders) {
     }
 
     let orderBy = 'product_name ASC';
-    if (sort === 'newest') orderBy = 'created_at DESC';
+    if (sort === 'newest') orderBy = 'updated_at DESC';
     else if (sort === 'price_asc') orderBy = 'price ASC';
     else if (sort === 'price_desc') orderBy = 'price DESC';
-    else if (sort === 'featured') orderBy = 'featured DESC, created_at DESC';
+    else if (sort === 'featured') orderBy = 'featured DESC, updated_at DESC';
 
     const query = `SELECT product_id, product_name, price, description, short_description, long_description, image_url, images, weight, max_quantity, stock_quantity, low_stock_threshold, active, category, featured FROM inventory WHERE ${conditions.join(' AND ')} ORDER BY ${orderBy}`;
 

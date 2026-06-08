@@ -160,6 +160,7 @@
             }
             window._products = products;
             grid.innerHTML = products.map((p, pi) => renderProductCard(p, pi)).join('');
+            grid.querySelectorAll('.product-card').forEach((card, i) => { card.addEventListener('click', () => openProductModal(i, '_products')); });
         } catch (e) {
             grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--error-color);">Failed to load products. Please refresh.</div>';
         }

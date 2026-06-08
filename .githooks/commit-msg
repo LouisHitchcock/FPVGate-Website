@@ -1,0 +1,17 @@
+#!/bin/sh
+
+MSG_FILE="$1"
+
+if [ -z "$MSG_FILE" ] || [ ! -f "$MSG_FILE" ]; then
+  echo "ERROR: commit-msg hook could not read the commit message file."
+  exit 1
+fi
+
+if grep -Eiq '^[[:space:]]*Co-Authored-By:' "$MSG_FILE"; then
+  echo "ERROR: Commit blocked."
+  echo "Commit messages in this repository must not include Co-Authored-By trailers."
+  echo "Remove the trailer and commit again."
+  exit 1
+fi
+
+exit 0
