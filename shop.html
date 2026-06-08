@@ -4,26 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FPVGate Shop | FPV Lap Timer Hardware</title>
-    <meta name="description" content="Shop FPVGate hardware - RSSI-based FPV lap timer boards, kits, and prebuilt AIO units for ESP32-S3. The modern PhobosLT alternative.">
-    <meta name="keywords" content="FPVGate shop, buy FPV lap timer, FPV timer hardware, ESP32-S3 lap timer kit, PhobosLT hardware, drone racing timer buy, RSSI timer board, FPV gate timer purchase, prebuilt FPV timer">
+    <meta name="description" content="Shop FPVGate hardware - RSSI-based FPV lap timer boards, kits, and prebuilt AIO units for ESP32-S3.">
+    <meta name="keywords" content="FPVGate shop, buy FPV lap timer, FPV timer hardware, ESP32-S3 lap timer kit">
     <link rel="canonical" href="https://fpvgate.xyz/shop.html">
-
-    <!-- Open Graph -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="FPVGate Shop | FPV Lap Timer Hardware">
     <meta property="og:description" content="Shop FPVGate hardware - RSSI-based FPV lap timer boards and kits for ESP32-S3.">
     <meta property="og:url" content="https://fpvgate.xyz/shop.html">
     <meta property="og:image" content="https://fpvgate.xyz/logo-black.png">
-
-    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="FPVGate Shop | FPV Lap Timer Hardware">
-    <meta name="twitter:description" content="Shop FPVGate hardware - RSSI-based FPV lap timer boards, kits, and prebuilt AIO units for ESP32-S3.">
+    <meta name="twitter:description" content="Shop FPVGate hardware - RSSI-based FPV lap timer boards.">
     <meta name="twitter:image" content="https://fpvgate.xyz/logo-black.png">
-
     <link rel="icon" type="image/png" href="logo-black.png">
     <link rel="stylesheet" href="styles.css">
-
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -32,16 +26,8 @@
       "url": "https://fpvgate.xyz/shop.html",
       "description": "Official hardware store for the FPVGate RSSI-based FPV lap timing system.",
       "image": "https://fpvgate.xyz/logo-black.png",
-      "brand": {
-        "@type": "Brand",
-        "name": "FPVGate"
-      },
-      "publisher": {
-        "@type": "Organization",
-        "name": "FPVGate",
-        "url": "https://fpvgate.xyz/",
-        "logo": "https://fpvgate.xyz/logo-black.png"
-      }
+      "brand": {"@type": "Brand","name": "FPVGate"},
+      "publisher": {"@type": "Organization","name": "FPVGate","url": "https://fpvgate.xyz/","logo": "https://fpvgate.xyz/logo-black.png"}
     }
     </script>
 </head>
@@ -65,6 +51,17 @@
         </div>
     </nav>
 
+    <div class="store-search-bar">
+        <div class="container">
+            <div class="search-input-wrapper">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                    <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                </svg>
+                <input type="text" id="store-search" class="search-input" placeholder="Search all products..." autocomplete="off">
+            </div>
+        </div>
+    </div>
+
     <section class="store-hero">
         <div class="container">
             <h1>FPVGate Shop</h1>
@@ -72,29 +69,63 @@
         </div>
     </section>
 
-    <section class="store-content">
+    <div id="search-results" style="display:none"><div class="container"></div></div>
+    <div id="search-default-content">
+
+    <section class="store-section" id="section-featured">
         <div class="container">
-            <div class="product-grid" id="product-grid">
-                <div class="loading-products" style="text-align:center;padding:40px;color:var(--text-secondary);">
-                    Loading products...
-                </div>
+            <div class="section-header">
+                <h2 class="section-label">New to the Store</h2>
+            </div>
+            <div class="horizontal-strip" id="featured-strip">
+                <div class="loading-strip" style="text-align:center;padding:20px;color:var(--text-secondary);">Loading...</div>
             </div>
         </div>
     </section>
 
-    <!-- Product Detail Modal -->
-    <div class="product-modal-overlay" id="product-modal" onclick="if(event.target===this)closeProductModal()">
-        <div class="product-modal">
-            <button class="product-modal-close" onclick="closeProductModal()">&times;</button>
-            <div class="product-modal-image" id="modal-image"></div>
-            <div class="product-modal-body">
-                <h2 id="modal-name"></h2>
-                <div class="modal-price" id="modal-price"></div>
-                <div class="modal-description" id="modal-description"></div>
-                <div class="modal-stock" id="modal-stock"></div>
-                <div class="modal-actions" id="modal-actions"></div>
+    <section class="store-section" id="section-fpvgate">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-label">FPVGate Products</h2>
+                <a href="shop-fpvgate.html" class="section-view-all">View All &rarr;</a>
+            </div>
+            <div class="product-grid" id="fpvgate-grid">
+                <div class="loading-products" style="text-align:center;padding:40px;color:var(--text-secondary);">Loading...</div>
             </div>
         </div>
+    </section>
+
+    <section class="store-section" id="section-components">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-label">Components</h2>
+                <a href="shop-components.html" class="section-view-all">View All &rarr;</a>
+            </div>
+            <div class="product-grid" id="components-grid">
+                <div class="loading-products" style="text-align:center;padding:40px;color:var(--text-secondary);">Loading...</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="store-section" id="section-misc">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-label">Miscellaneous</h2>
+                <a href="shop-misc.html" class="section-view-all">View All &rarr;</a>
+            </div>
+            <div class="product-grid" id="misc-grid">
+                <div class="loading-products" style="text-align:center;padding:40px;color:var(--text-secondary);">Loading...</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="recently-viewed-section" style="display:none">
+        <div class="container">
+            <h2 class="section-label">Recently Viewed</h2>
+            <div class="horizontal-strip" id="recently-viewed"></div>
+        </div>
+    </section>
+
     </div>
 
     <section class="store-info">
@@ -130,7 +161,21 @@
         </div>
     </footer>
 
-    <!-- Floating Cart Button -->
+    <!-- Product Detail Modal -->
+    <div class="product-modal-overlay" id="product-modal" onclick="if(event.target===this)closeProductModal()">
+        <div class="product-modal">
+            <button class="product-modal-close" onclick="closeProductModal()">&times;</button>
+            <div class="product-modal-image" id="modal-image"></div>
+            <div class="product-modal-body">
+                <h2 id="modal-name"></h2>
+                <div class="modal-price" id="modal-price"></div>
+                <div class="modal-description" id="modal-description"></div>
+                <div class="modal-stock" id="modal-stock"></div>
+                <div class="modal-actions" id="modal-actions"></div>
+            </div>
+        </div>
+    </div>
+
     <button class="cart-fab" title="View Cart" onclick="toggleCart()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="24" height="24">
             <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
@@ -139,7 +184,6 @@
         <span class="cart-count" id="cart-count">0</span>
     </button>
 
-    <!-- Cart Slide-out Panel -->
     <div class="cart-overlay" id="cart-overlay" onclick="toggleCart()"></div>
     <div class="cart-panel" id="cart-panel">
         <div class="cart-header">
@@ -153,183 +197,53 @@
         </div>
     </div>
 
+    <script src="store-shared.js"></script>
     <script>
-    const STORE_API = 'https://fpvgate-store.fpvgate-analytics.workers.dev';
-
-    // --- Cart (localStorage) ---
-    function getCart() { return JSON.parse(localStorage.getItem('fpvgate_cart') || '[]'); }
-    function saveCart(cart) { localStorage.setItem('fpvgate_cart', JSON.stringify(cart)); updateCartUI(); }
-    function updateCartUI() {
-        const cart = getCart();
-        const count = cart.reduce((s, i) => s + i.quantity, 0);
-        document.getElementById('cart-count').textContent = count;
-        document.getElementById('cart-count').style.display = count > 0 ? 'inline-flex' : 'none';
-        const el = document.getElementById('cart-items');
-        const footer = document.getElementById('cart-footer');
-        if (cart.length === 0) {
-            el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-secondary)">Your cart is empty</div>';
-            footer.style.display = 'none';
-            return;
-        }
-        footer.style.display = 'block';
-        let subtotal = 0;
-        el.innerHTML = cart.map((item, idx) => {
-            subtotal += item.price * item.quantity;
-            return `<div class="cart-item">
-                <div class="cart-item-img">${item.image ? `<img src="${item.image}" alt="${item.name}">` : ''}</div>
-                <div class="cart-item-info">
-                    <div class="cart-item-name">${item.name}</div>
-                    <div class="cart-item-price">&pound;${item.price.toFixed(2)}</div>
-                    <div class="cart-item-qty">
-                        <button onclick="changeQty(${idx},-1)">-</button>
-                        <span>${item.quantity}</span>
-                        <button onclick="changeQty(${idx},1)">+</button>
-                    </div>
-                </div>
-                <button class="cart-item-remove" onclick="removeFromCart(${idx})">&times;</button>
-            </div>`;
-        }).join('');
-        document.getElementById('cart-subtotal').innerHTML = '&pound;' + subtotal.toFixed(2);
-    }
-    function addToCart(product) {
-        const cart = getCart();
-        const existing = cart.find(i => i.id === product.id);
-        if (existing) {
-            if (existing.quantity < (product.maxQuantity || 5)) existing.quantity++;
-        } else {
-            cart.push({ id: product.id, name: product.name, price: product.price, quantity: 1, image: product.image || '', maxQuantity: product.maxQuantity || 5 });
-        }
-        saveCart(cart);
-        if (window.fpvgateAnalytics) window.fpvgateAnalytics.track('cart_add', { product_id: product.id, product_name: product.name, price: product.price });
-        // Open cart briefly
-        if (!document.getElementById('cart-panel').classList.contains('open')) toggleCart();
-    }
-    function removeFromCart(idx) {
-        const cart = getCart(); cart.splice(idx, 1); saveCart(cart);
-    }
-    function changeQty(idx, dir) {
-        const cart = getCart();
-        cart[idx].quantity += dir;
-        if (cart[idx].quantity <= 0) cart.splice(idx, 1);
-        else if (cart[idx].quantity > cart[idx].maxQuantity) cart[idx].quantity = cart[idx].maxQuantity;
-        saveCart(cart);
-    }
-    function toggleCart() {
-        const panel = document.getElementById('cart-panel');
-        const overlay = document.getElementById('cart-overlay');
-        const isOpen = panel.classList.toggle('open');
-        overlay.classList.toggle('open', isOpen);
-        document.body.style.overflow = isOpen ? 'hidden' : '';
-        if (isOpen && window.fpvgateAnalytics) window.fpvgateAnalytics.track('cart_open', {});
-    }
-    updateCartUI();
-
-    // --- Products ---
-    async function loadProducts() {
-        const grid = document.getElementById('product-grid');
+    (async function() {
         try {
-            const resp = await fetch(STORE_API + '/products');
-            const products = await resp.json();
-            if (!products.length) {
-                grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-secondary);">No products available right now.</div>';
-                return;
+            const [featuredResp, fpvgateResp, componentsResp, miscResp] = await Promise.all([
+                fetch(STORE_API + '/products?sort=featured'),
+                fetch(STORE_API + '/products?category=fpvgate'),
+                fetch(STORE_API + '/products?category=components'),
+                fetch(STORE_API + '/products?category=misc')
+            ]);
+
+            // Featured strip
+            const featured = await featuredResp.json();
+            const featuredStrip = document.getElementById('featured-strip');
+            if (featured.length) {
+                window._featured = featured;
+                featuredStrip.innerHTML = featured.map((p, pi) =>
+                    `<div class="strip-card" onclick="openProductModal(${pi}, '_featured')" style="cursor:pointer"><div class="strip-card-img">${p.image ? `<img src="${p.image}" alt="${escHtml(p.name)}">` : '<div class="strip-card-placeholder"><span>No Image</span></div>'}</div><div class="strip-card-info"><span class="strip-card-name">${escHtml(p.name)}</span><span class="strip-card-price">&pound;${p.price.toFixed(2)}</span></div></div>`
+                ).join('');
+            } else {
+                const newestResp = await fetch(STORE_API + '/products?sort=newest');
+                const newest = await newestResp.json();
+                if (newest.length) {
+                    window._featured = newest;
+                    featuredStrip.innerHTML = newest.slice(0, 8).map((p, pi) =>
+                        `<div class="strip-card" onclick="openProductModal(${pi}, '_featured')" style="cursor:pointer"><div class="strip-card-img">${p.image ? `<img src="${p.image}" alt="${escHtml(p.name)}">` : '<div class="strip-card-placeholder"><span>No Image</span></div>'}</div><div class="strip-card-info"><span class="strip-card-name">${escHtml(p.name)}</span><span class="strip-card-price">&pound;${p.price.toFixed(2)}</span></div></div>`
+                    ).join('');
+                }
             }
-            window._shopProducts = products;
-            grid.innerHTML = products.map((p,pi) => `
-                <div class="product-card" onclick="openProductModal(${pi})" style="cursor:pointer">
-                    <div class="product-image">
-                        ${p.images && p.images.length > 1
-                            ? `<div class="carousel" id="carousel-${pi}">
-                                <div class="carousel-track" style="transform:translateX(0)">${p.images.map(img => `<div class="carousel-slide"><img src="${img}" alt="${p.name}"></div>`).join('')}</div>
-                                <button class="carousel-btn carousel-prev" onclick="event.stopPropagation();moveCarousel(${pi},-1)">&#8249;</button>
-                                <button class="carousel-btn carousel-next" onclick="event.stopPropagation();moveCarousel(${pi},1)">&#8250;</button>
-                                <div class="carousel-dots">${p.images.map((_,i) => `<button class="carousel-dot${i===0?' active':''}" onclick="event.stopPropagation();goToSlide(${pi},${i})"></button>`).join('')}</div>
-                            </div>`
-                            : p.images && p.images.length === 1
-                                ? `<img src="${p.images[0]}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;">`
-                                : p.image
-                                    ? `<img src="${p.image}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;">`
-                                    : `<div class="product-image-placeholder">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                                            <line x1="8" y1="21" x2="16" y2="21"></line>
-                                            <line x1="12" y1="17" x2="12" y2="21"></line>
-                                        </svg>
-                                        <span>Product Image</span>
-                                    </div>`
-                        }
-                    </div>
-                    <div class="product-info">
-                        <h2 class="product-name">${p.name}</h2>
-                        <p class="product-description">${p.shortDescription || p.description}</p>
-                        ${p.stock <= 0 ? '<p style="color:var(--error-color);font-weight:600;margin-top:8px;">Out of Stock</p>' : ''}
-                        <div class="product-price-row">
-                            <span class="product-price">&pound;${p.price.toFixed(2)}</span>
-                            <button class="btn btn-primary" onclick="event.stopPropagation();addToCart(window._shopProducts[${pi}])"
-                                ${p.stock <= 0 ? 'disabled' : ''}>
-                                ${p.stock <= 0 ? 'Out of Stock' : 'Add to Cart'}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
+
+            // Category grids (4 items each)
+            [
+                [fpvgateResp, 'fpvgate-grid', '_fpvgate'],
+                [componentsResp, 'components-grid', '_components'],
+                [miscResp, 'misc-grid', '_misc']
+            ].forEach(async ([resp, gridId, key]) => {
+                const products = await resp.json();
+                const grid = document.getElementById(gridId);
+                if (!products.length) { grid.innerHTML = '<div class="loading-products" style="text-align:center;padding:40px;color:var(--text-secondary);">No products yet.</div>'; return; }
+                window[key] = products;
+                grid.innerHTML = products.slice(0, 4).map((p, pi) => renderProductCard(p, pi)).join('');
+            });
+
         } catch (e) {
-            grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--error-color);">Failed to load products. Please refresh.</div>';
+            console.error('Failed to load products:', e);
         }
-    }
-    loadProducts();
-
-    // --- Product Modal ---
-    let modalCarouselState = 0;
-    function openProductModal(pi) {
-        const p = window._shopProducts[pi];
-        if (!p) return;
-        const modal = document.getElementById('product-modal');
-        const imgEl = document.getElementById('modal-image');
-
-        if (p.images && p.images.length > 1) {
-            imgEl.innerHTML = `<div class="carousel" id="modal-carousel">
-                <div class="carousel-track" style="transform:translateX(0)">${p.images.map(img => `<div class="carousel-slide"><img src="${img}" alt="${p.name}"></div>`).join('')}</div>
-                <button class="carousel-btn carousel-prev" onclick="event.stopPropagation();moveModalCarousel(-1)">&#8249;</button>
-                <button class="carousel-btn carousel-next" onclick="event.stopPropagation();moveModalCarousel(1)">&#8250;</button>
-                <div class="carousel-dots">${p.images.map((_,i) => `<button class="carousel-dot${i===0?' active':''}" onclick="event.stopPropagation();goToModalSlide(${i})"></button>`).join('')}</div>
-            </div>`;
-            modalCarouselState = 0;
-        } else if ((p.images && p.images.length === 1) || p.image) {
-            const src = (p.images && p.images[0]) || p.image;
-            imgEl.innerHTML = `<img src="${src}" alt="${p.name}">`;
-        } else {
-            imgEl.innerHTML = `<div class="product-image-placeholder" style="height:100%"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg><span>No Image</span></div>`;
-        }
-
-        document.getElementById('modal-name').textContent = p.name;
-        document.getElementById('modal-price').innerHTML = '&pound;' + p.price.toFixed(2);
-        document.getElementById('modal-stock').textContent = p.stock <= 0 ? 'Out of Stock' : '';
-        document.getElementById('modal-actions').innerHTML = `
-            <button class="btn btn-primary" onclick="addToCart(window._shopProducts[${pi}])"
-                ${p.stock <= 0 ? 'disabled' : ''}>
-                ${p.stock <= 0 ? 'Out of Stock' : 'Add to Cart'}
-            </button>`;
-
-        // Render long description or fall back to short description
-        const descEl = document.getElementById('modal-description');
-        if (p.longDescription) {
-            descEl.innerHTML = '<div class="modal-product-details">' + p.longDescription + '</div>';
-        } else {
-            descEl.textContent = p.shortDescription || p.description;
-        }
-
-        modal.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-
-    function closeProductModal() { document.getElementById('product-modal').classList.remove('active'); document.body.style.overflow = ''; }
-    function moveModalCarousel(dir) { const c=document.getElementById('modal-carousel');if(!c)return;const t=c.querySelectorAll('.carousel-slide').length;modalCarouselState+=dir;if(modalCarouselState<0)modalCarouselState=t-1;if(modalCarouselState>=t)modalCarouselState=0;goToModalSlide(modalCarouselState); }
-    function goToModalSlide(idx) { const c=document.getElementById('modal-carousel');if(!c)return;modalCarouselState=idx;c.querySelector('.carousel-track').style.transform='translateX(-'+idx*100+'%)';c.querySelectorAll('.carousel-dot').forEach((d,i)=>d.classList.toggle('active',i===idx)); }
-    document.addEventListener('keydown', function(e) { if(!document.getElementById('product-modal').classList.contains('active'))return;if(e.key==='Escape')closeProductModal();if(e.key==='ArrowLeft')moveModalCarousel(-1);if(e.key==='ArrowRight')moveModalCarousel(1); });
-    const carouselState={};
-    function moveCarousel(pi,dir){const c=document.getElementById('carousel-'+pi);if(!c)return;const total=c.querySelectorAll('.carousel-slide').length;carouselState[pi]=(carouselState[pi]||0)+dir;if(carouselState[pi]<0)carouselState[pi]=total-1;if(carouselState[pi]>=total)carouselState[pi]=0;goToSlide(pi,carouselState[pi])}
-    function goToSlide(pi,idx){const c=document.getElementById('carousel-'+pi);if(!c)return;carouselState[pi]=idx;c.querySelector('.carousel-track').style.transform='translateX(-'+idx*100+'%)';c.querySelectorAll('.carousel-dot').forEach((d,i)=>d.classList.toggle('active',i===idx))}
+    })();
     </script>
     <script src="analytics-tracker.js"></script>
     <script src="animations.js"></script>
