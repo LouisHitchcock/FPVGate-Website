@@ -29,7 +29,7 @@ async function initAuth(){
   const params=new URLSearchParams(window.location.search);
   const urlToken=params.get('token');
   if(urlToken){
-    const remember=params.get('remember')==='1';
+    const remember=params.get('remember')==='1' || localStorage.getItem('fpvgate_remember')==='1';
     if(remember){localStorage.setItem('fpvgate_admin_token',urlToken)}else{sessionStorage.setItem('fpvgate_admin_token',urlToken)}
     params.delete('token');params.delete('remember');
     const query=params.toString();

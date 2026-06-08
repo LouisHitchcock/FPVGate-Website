@@ -127,25 +127,20 @@ export default {
 
             if (url.pathname === '/auth/google' && request.method === 'GET') {
                 const redirectUri = `${url.origin}/auth/callback`;
-                const remember = url.searchParams.get('remember') || '0';
                 const params = new URLSearchParams({
                     client_id: env.GOOGLE_CLIENT_ID,
                     redirect_uri: redirectUri,
                     response_type: 'code',
                     scope: 'openid email profile',
                     access_type: 'online',
-                    prompt: 'select_account',
-                    state: remember
+                    prompt: 'select_account'
                 });
-                const redirect = Response.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params}`, 302);
-                redirect.headers.set('Set-Cookie', `fpvgate_remember=${remember}; Path=/; HttpOnly; SameSite=Lax; Max-Age=600`);
-                return redirect;
+                return Response.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params}`, 302);
             }
 
             if (url.pathname === '/auth/callback' && request.method === 'GET') {
                 const code = url.searchParams.get('code');
                 const error = url.searchParams.get('error');
-                const remember = (request.headers.get('Cookie')||'').match(/fpvgate_remember=([^;]+)/)?.[1] || '0';
                 if (error || !code) {
                     return new Response('Authentication failed: ' + (error || 'no code'), { status: 400, headers: corsHeaders });
                 }
@@ -187,7 +182,7 @@ export default {
 
                     // Redirect to admin with token
                     const adminUrl = env.ADMIN_URL || 'https://fpvgate.xyz/admin/';
-                    return Response.redirect(`${adminUrl}?token=${jwt}&remember=${remember}`, 302);
+                    return Response.redirect(`${adminUrl}?token=${jwt}`, 302);
                 } catch (e) {
                     return new Response('OAuth error: ' + e.message, { status: 500, headers: corsHeaders });
                 }
