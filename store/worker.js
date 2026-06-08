@@ -137,13 +137,15 @@ export default {
                     prompt: 'select_account',
                     state: remember
                 });
-                return Response.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params}`, 302);
+                const redirect = Response.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params}`, 302);
+                redirect.headers.set('Set-Cookie', `fpvgate_remember=${remember}; Path=/; HttpOnly; SameSite=Lax; Max-Age=600`);
+                return redirect;
             }
 
             if (url.pathname === '/auth/callback' && request.method === 'GET') {
                 const code = url.searchParams.get('code');
                 const error = url.searchParams.get('error');
-                const remember = url.searchParams.get('state') || '0';
+                const remember = (request.headers.get('Cookie')||'').match(/fpvgate_remember=([^;]+)/)?.[1] || '0';
                 if (error || !code) {
                     return new Response('Authentication failed: ' + (error || 'no code'), { status: 400, headers: corsHeaders });
                 }
