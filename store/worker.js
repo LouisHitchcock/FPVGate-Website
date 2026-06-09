@@ -66,31 +66,19 @@ export default {
             // --- Public Products API (for shop page) ---
 
             if (url.pathname === '/products' && request.method === 'GET') {
+                return await handleProducts(request, env, corsHeaders);
+            }
+
+            if (url.pathname === '/products/categories' && request.method === 'GET') {
                 const result = await env.DB.prepare(
-                    'SELECT product_id, product_name, price, description, short_description, long_description, image_url, images, weight, max_quantity, stock_quantity, low_stock_threshold, active FROM inventory WHERE active = 1 ORDER BY product_name ASC'
+                    'SELECT category, COUNT(*) as count FROM inventory WHERE active = 1 GROUP BY category ORDER BY category ASC'
                 ).all();
-
-                const baseUrl = url.origin;
-                const products = (result.results || []).map(p => {
-                    const imgs = JSON.parse(p.images || '[]');
-                    return {
-                        id: p.product_id,
-                        name: p.product_name,
-                        price: p.price,
-                        url: '/products',
-                        description: p.description || '',
-                        shortDescription: p.short_description || p.description || '',
-                        longDescription: p.long_description || '',
-                        image: imgs.length > 0 ? `${baseUrl}/images/${imgs[0]}` : (p.image_url || ''),
-                        images: imgs.map(k => `${baseUrl}/images/${k}`),
-                        stock: p.stock_quantity,
-                        lowStockThreshold: p.low_stock_threshold,
-                        weight: p.weight || 100,
-                        maxQuantity: p.max_quantity || 5
-                    };
-                });
-
-                return jsonResponse(products, corsHeaders);
+                const categories = (result.results || []).map(r => ({
+                    slug: r.category,
+                    label: formatCategoryLabel(r.category),
+                    count: r.count
+                }));
+                return jsonResponse(categories, corsHeaders);
             }
 
             // --- Public: Shipping Rates Lookup ---
@@ -1701,7 +1689,7 @@ async function handleListInventory(env, corsHeaders) {
 
 async function handleUpdateInventory(productId, request, env, corsHeaders) {
     const body = await request.json();
-    const { stock_quantity, low_stock_threshold, reason, product_name, sku, price, description, short_description, long_description, image_url, weight, max_quantity, unit_cost } = body;
+    const { stock_quantity, low_stock_threshold, reason, product_name, sku, price, description, short_description, long_description, image_url, weight, max_quantity, unit_cost, category, featured } = body;
 
     const existing = await env.DB.prepare('SELECT * FROM inventory WHERE product_id = ?').bind(productId).first();
     if (!existing) return jsonResponse({ error: 'Product not found' }, corsHeaders, 404);
@@ -1727,6 +1715,8 @@ async function handleUpdateInventory(productId, request, env, corsHeaders) {
     if (weight !== undefined) { updates.push('weight = ?'); params.push(weight); }
     if (max_quantity !== undefined) { updates.push('max_quantity = ?'); params.push(max_quantity); }
     if (unit_cost !== undefined) { updates.push('unit_cost = ?'); params.push(unit_cost); }
+    if (category !== undefined) { updates.push('category = ?'); params.push(category); }
+    if (featured !== undefined) { updates.push('featured = ?'); params.push(featured ? 1 : 0); }
 
     if (updates.length === 0) return jsonResponse({ error: 'No fields to update' }, corsHeaders, 400);
 
@@ -1739,15 +1729,15 @@ async function handleUpdateInventory(productId, request, env, corsHeaders) {
 
 async function handleAddInventoryProduct(request, env, corsHeaders) {
     const body = await request.json();
-    const { product_id, product_name, sku, stock_quantity, low_stock_threshold, price, description, short_description, long_description, image_url, unit_cost } = body;
+    const { product_id, product_name, sku, stock_quantity, low_stock_threshold, price, description, short_description, long_description, image_url, unit_cost, category, featured } = body;
 
     if (!product_id || !product_name) return jsonResponse({ error: 'product_id and product_name are required' }, corsHeaders, 400);
     if (!price) return jsonResponse({ error: 'Price is required' }, corsHeaders, 400);
 
     try {
         await env.DB.prepare(
-            'INSERT INTO inventory (product_id, product_name, sku, stock_quantity, low_stock_threshold, price, description, short_description, long_description, image_url, unit_cost) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-        ).bind(product_id, product_name, sku || null, stock_quantity || 0, low_stock_threshold || 5, price || 0, description || null, short_description || null, long_description || null, image_url || null, unit_cost || 0).run();
+            'INSERT INTO inventory (product_id, product_name, sku, stock_quantity, low_stock_threshold, price, description, short_description, long_description, image_url, unit_cost, category, featured) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        ).bind(product_id, product_name, sku || null, stock_quantity || 0, low_stock_threshold || 5, price || 0, description || null, short_description || null, long_description || null, image_url || null, unit_cost || 0, category || 'fpvgate', featured ? 1 : 0).run();
 
         if (stock_quantity && stock_quantity > 0) {
             await env.DB.prepare('INSERT INTO inventory_log (product_id, change_amount, reason) VALUES (?, ?, ?)').bind(product_id, stock_quantity, 'Initial stock').run();
@@ -2047,6 +2037,75 @@ function tryParseJson(str) {
 function resolveShippoLabelFileType(env, requestedLabelFileType) {
     const value = requestedLabelFileType || env.SHIPPO_LABEL_FILE_TYPE || DEFAULT_LABEL_FILE_TYPE;
     return String(value || '').trim() || DEFAULT_LABEL_FILE_TYPE;
+}
+
+async function handleProducts(request, env, corsHeaders) {
+    const url = new URL(request.url);
+    const category = url.searchParams.get('category');
+    const search = url.searchParams.get('q');
+    const featured = url.searchParams.get('featured');
+    const sort = url.searchParams.get('sort');
+
+    const conditions = ['active = 1'];
+    const params = [];
+
+    if (category) {
+        conditions.push('category = ?');
+        params.push(category);
+    }
+
+    if (featured === '1') {
+        conditions.push('featured = 1');
+    }
+
+    if (search) {
+        conditions.push('(product_name LIKE ? OR short_description LIKE ? OR description LIKE ?)');
+        const like = `%${search}%`;
+        params.push(like, like, like);
+    }
+
+    let orderBy = 'product_name ASC';
+    if (sort === 'newest') orderBy = 'updated_at DESC';
+    else if (sort === 'price_asc') orderBy = 'price ASC';
+    else if (sort === 'price_desc') orderBy = 'price DESC';
+    else if (sort === 'featured') orderBy = 'featured DESC, updated_at DESC';
+
+    const query = `SELECT product_id, product_name, price, description, short_description, long_description, image_url, images, weight, max_quantity, stock_quantity, low_stock_threshold, active, category, featured FROM inventory WHERE ${conditions.join(' AND ')} ORDER BY ${orderBy}`;
+
+    const result = await env.DB.prepare(query).bind(...params).all();
+
+    const baseUrl = url.origin;
+    const products = (result.results || []).map(p => {
+        const imgs = JSON.parse(p.images || '[]');
+        return {
+            id: p.product_id,
+            name: p.product_name,
+            price: p.price,
+            url: '/products',
+            description: p.description || '',
+            shortDescription: p.short_description || p.description || '',
+            longDescription: p.long_description || '',
+            image: imgs.length > 0 ? `${baseUrl}/images/${imgs[0]}` : (p.image_url || ''),
+            images: imgs.map(k => `${baseUrl}/images/${k}`),
+            stock: p.stock_quantity,
+            lowStockThreshold: p.low_stock_threshold,
+            weight: p.weight || 100,
+            maxQuantity: p.max_quantity || 5,
+            category: p.category || 'fpvgate',
+            featured: p.featured === 1
+        };
+    });
+
+    return jsonResponse(products, corsHeaders);
+}
+
+function formatCategoryLabel(slug) {
+    const labels = {
+        'fpvgate': 'FPVGate Hardware',
+        'components': 'Components',
+        'misc': 'Misc'
+    };
+    return labels[slug] || slug.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
 function jsonResponse(data, corsHeaders, status = 200) {

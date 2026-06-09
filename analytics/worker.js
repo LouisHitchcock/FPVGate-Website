@@ -48,8 +48,8 @@ export default {
         // Insert into D1 database
         await env.DB.prepare(
           `INSERT INTO analytics_events 
-          (event_name, board, version, expert_mode, error_message, user_agent, referrer, country, ip_hash, timestamp) 
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          (event_name, board, version, expert_mode, error_message, user_agent, referrer, country, ip_hash, timestamp, product_id, product_name, category, price, event_data) 
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         ).bind(
           event.event_name,
           event.board,
@@ -60,7 +60,12 @@ export default {
           event.referrer,
           event.country,
           event.ip_hash,
-          event.timestamp
+          event.timestamp,
+          data.product_id || null,
+          data.product_name || null,
+          data.category || null,
+          data.price != null ? data.price : null,
+          data.event_data ? JSON.stringify(data.event_data) : null
         ).run();
 
         return new Response(JSON.stringify({ success: true }), {
@@ -108,6 +113,15 @@ export default {
 
         const liveStats = await getLiveStats(env.DB);
         return new Response(JSON.stringify(liveStats), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      // GET /store/stats - Store-specific analytics (product/category popularity)
+      if (url.pathname === '/store/stats' && request.method === 'GET') {
+        const days = parseInt(url.searchParams.get('days')) || 30;
+        const storeStats = await getStoreStats(env.DB, days);
+        return new Response(JSON.stringify(storeStats), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
       }
@@ -274,6 +288,23 @@ async function getLiveStats(db) {
   `).first();
   stats.active_cart_users = cartUsers.count;
 
+  // Top products currently in carts (cart_add in last 30 mins)
+  const topCartProducts = await db.prepare(`
+    SELECT
+      product_id,
+      product_name,
+      COUNT(DISTINCT ip_hash) as user_count,
+      COUNT(*) as add_count
+    FROM analytics_events
+    WHERE event_name = 'cart_add'
+      AND timestamp >= datetime('now', '-30 minutes')
+      AND product_id IS NOT NULL
+    GROUP BY product_id
+    ORDER BY user_count DESC
+    LIMIT 10
+  `).all();
+  stats.top_cart_products = topCartProducts.results;
+
   // Total active site viewers (any event in last 15 mins)
   const totalViewers = await db.prepare(`
     SELECT COUNT(DISTINCT ip_hash) as count
@@ -328,13 +359,156 @@ async function getLiveStats(db) {
       strftime('%Y-%m-%d %H:00', timestamp) as hour,
       COUNT(DISTINCT ip_hash) as unique_visitors,
       SUM(CASE WHEN event_name = 'store_view' THEN 1 ELSE 0 END) as store_views,
-      SUM(CASE WHEN event_name = 'cart_add' THEN 1 ELSE 0 END) as cart_adds
+    SUM(CASE WHEN event_name = 'cart_add' THEN 1 ELSE 0 END) as cart_adds,
+      SUM(CASE WHEN event_name = 'product_view' THEN 1 ELSE 0 END) as product_views
     FROM analytics_events
     WHERE timestamp >= datetime('now', '-24 hours')
     GROUP BY hour
     ORDER BY hour DESC
   `).all();
   stats.hourly_activity = hourlyActivity.results;
+
+  return stats;
+}
+
+// Get store-specific analytics (product/category popularity)
+async function getStoreStats(db, days = 30) {
+  const stats = {};
+
+  // Most viewed products
+  const topViewedProducts = await db.prepare(`
+    SELECT
+      product_id,
+      product_name,
+      category,
+      COUNT(*) as view_count,
+      COUNT(DISTINCT ip_hash) as unique_viewers
+    FROM analytics_events
+    WHERE event_name = 'product_view'
+      AND timestamp >= datetime('now', '-' || ? || ' days')
+      AND product_id IS NOT NULL
+    GROUP BY product_id
+    ORDER BY view_count DESC
+    LIMIT 20
+  `).bind(String(days)).all();
+  stats.top_viewed_products = topViewedProducts.results;
+
+  // Most added-to-cart products
+  const topCartProducts = await db.prepare(`
+    SELECT
+      product_id,
+      product_name,
+      category,
+      COUNT(*) as add_count,
+      COUNT(DISTINCT ip_hash) as unique_adders,
+      ROUND(AVG(price), 2) as avg_price
+    FROM analytics_events
+    WHERE event_name = 'cart_add'
+      AND timestamp >= datetime('now', '-' || ? || ' days')
+      AND product_id IS NOT NULL
+    GROUP BY product_id
+    ORDER BY add_count DESC
+    LIMIT 20
+  `).bind(String(days)).all();
+  stats.top_cart_products = topCartProducts.results;
+
+  // Category popularity (views)
+  const categoryViews = await db.prepare(`
+    SELECT
+      category,
+      COUNT(*) as view_count,
+      COUNT(DISTINCT ip_hash) as unique_viewers
+    FROM analytics_events
+    WHERE event_name IN ('product_view', 'store_view')
+      AND timestamp >= datetime('now', '-' || ? || ' days')
+      AND category IS NOT NULL
+    GROUP BY category
+    ORDER BY view_count DESC
+  `).bind(String(days)).all();
+  stats.category_views = categoryViews.results;
+
+  // Category cart popularity
+  const categoryCart = await db.prepare(`
+    SELECT
+      category,
+      COUNT(*) as add_count,
+      COUNT(DISTINCT ip_hash) as unique_adders
+    FROM analytics_events
+    WHERE event_name = 'cart_add'
+      AND timestamp >= datetime('now', '-' || ? || ' days')
+      AND category IS NOT NULL
+    GROUP BY category
+    ORDER BY add_count DESC
+  `).bind(String(days)).all();
+  stats.category_cart = categoryCart.results;
+
+  // Conversion metrics: product views -> cart adds
+  const conversionMetrics = await db.prepare(`
+    WITH views AS (
+      SELECT product_id, COUNT(*) as vc
+      FROM analytics_events
+      WHERE event_name = 'product_view'
+        AND timestamp >= datetime('now', '-' || ? || ' days')
+        AND product_id IS NOT NULL
+      GROUP BY product_id
+    ),
+    adds AS (
+      SELECT product_id, COUNT(*) as ac
+      FROM analytics_events
+      WHERE event_name = 'cart_add'
+        AND timestamp >= datetime('now', '-' || ? || ' days')
+        AND product_id IS NOT NULL
+      GROUP BY product_id
+    )
+    SELECT
+      COALESCE(v.product_id, a.product_id) as product_id,
+      COALESCE(v.vc, 0) as views,
+      COALESCE(a.ac, 0) as adds
+    FROM views v
+    FULL OUTER JOIN adds a ON v.product_id = a.product_id
+    WHERE COALESCE(v.vc, 0) + COALESCE(a.ac, 0) > 0
+    ORDER BY adds DESC, views DESC
+    LIMIT 20
+  `).bind(String(days), String(days)).all();
+  stats.product_conversion = conversionMetrics.results;
+
+  // Overall conversion
+  const storeVisitors = await db.prepare(`
+    SELECT COUNT(DISTINCT ip_hash) as count
+    FROM analytics_events
+    WHERE event_name = 'store_view'
+      AND timestamp >= datetime('now', '-' || ? || ' days')
+      AND ip_hash IS NOT NULL
+  `).bind(String(days)).first();
+  stats.store_visitors = storeVisitors.count;
+
+  const orders = await db.prepare(`
+    SELECT COUNT(DISTINCT ip_hash) as count
+    FROM analytics_events
+    WHERE event_name = 'order_completed'
+      AND timestamp >= datetime('now', '-' || ? || ' days')
+      AND ip_hash IS NOT NULL
+  `).bind(String(days)).first();
+  stats.orders = orders.count;
+
+  stats.conversion_rate = stats.store_visitors > 0
+    ? Math.round((stats.orders / stats.store_visitors) * 100 * 100) / 100
+    : 0;
+
+  // Daily store activity timeline
+  const dailyActivity = await db.prepare(`
+    SELECT
+      DATE(timestamp) as date,
+      SUM(CASE WHEN event_name = 'store_view' THEN 1 ELSE 0 END) as store_views,
+      SUM(CASE WHEN event_name = 'product_view' THEN 1 ELSE 0 END) as product_views,
+      SUM(CASE WHEN event_name = 'cart_add' THEN 1 ELSE 0 END) as cart_adds,
+      SUM(CASE WHEN event_name = 'order_completed' THEN 1 ELSE 0 END) as orders
+    FROM analytics_events
+    WHERE timestamp >= datetime('now', '-' || ? || ' days')
+    GROUP BY DATE(timestamp)
+    ORDER BY date ASC
+  `).bind(String(days)).all();
+  stats.daily_activity = dailyActivity.results;
 
   return stats;
 }
