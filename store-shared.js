@@ -63,7 +63,7 @@ function addToCart(product) {
         cart.push({ id: product.id, name: product.name, price: product.price, quantity: 1, image: product.image || '', maxQuantity: product.maxQuantity || 5 });
     }
     saveCart(cart);
-    if (window.fpvgateAnalytics) window.fpvgateAnalytics.track('cart_add', { product_id: product.id, product_name: product.name, price: product.price });
+    if (window.fpvgateAnalytics) window.fpvgateAnalytics.track('cart_add', { product_id: product.id, product_name: product.name, price: product.price, category: product.category || '' });
     if (!document.getElementById('cart-panel').classList.contains('open')) toggleCart();
 }
 
@@ -231,6 +231,15 @@ function openProductModal(pi, sourceArray) {
 
     addRecentlyViewed(p);
     renderRecentlyViewed();
+
+    if (window.fpvgateAnalytics) {
+        window.fpvgateAnalytics.track('product_view', {
+            product_id: p.id,
+            product_name: p.name,
+            price: p.price,
+            category: p.category || ''
+        });
+    }
 
     const modal = document.getElementById('product-modal');
     const imgEl = document.getElementById('modal-image');

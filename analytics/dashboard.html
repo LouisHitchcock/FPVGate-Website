@@ -471,8 +471,84 @@
                     <tbody></tbody>
                 </table>
             </div>
-        </div>
-    </div>
+
+            <!-- Store Analytics -->
+            <div class="chart-card full-width" style="border-top: 3px solid #48bb78; margin-top: 20px;">
+                <h2>🛒 Store Analytics</h2>
+                <p style="color: #718096; font-size: 13px; margin-bottom: 16px;">Product & category interest in selected date range</p>
+            </div>
+
+            <div class="metrics-grid" id="store-metrics">
+                <div class="metric-card" style="border-left-color: #48bb78;">
+                    <h3>Store Visitors</h3>
+                    <div class="metric-value" id="store-visitors">-</div>
+                    <div class="metric-label">In selected range</div>
+                </div>
+                <div class="metric-card" style="border-left-color: #38b2ac;">
+                    <h3>Orders</h3>
+                    <div class="metric-value" id="store-orders">-</div>
+                    <div class="metric-label">In selected range</div>
+                </div>
+                <div class="metric-card" style="border-left-color: #667eea;">
+                    <h3>Conversion Rate</h3>
+                    <div class="metric-value" id="store-conversion">-</div>
+                    <div class="metric-label">Visitors to orders</div>
+                </div>
+                <div class="metric-card" style="border-left-color: #9f7aea;">
+                    <h3>Product Views</h3>
+                    <div class="metric-value" id="store-product-views">-</div>
+                    <div class="metric-label">In selected range</div>
+                </div>
+            </div>
+
+            <div class="chart-card full-width">
+                <h2>Store Activity Over Time</h2>
+                <canvas id="store-activity-chart"></canvas>
+            </div>
+
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <h2>Top Viewed Products</h2>
+                    <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
+                        <table id="store-viewed-table">
+                            <thead><tr><th>Product</th><th>Views</th><th>Unique</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h2>Top Cart Products</h2>
+                    <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
+                        <table id="store-cart-table">
+                            <thead><tr><th>Product</th><th>Adds</th><th>Unique</th></tr></thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-grid">
+                <div class="chart-card">
+                    <h2>Category Views</h2>
+                    <canvas id="store-category-views-chart"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h2>Category Cart Adds</h2>
+                    <canvas id="store-category-cart-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card full-width">
+                <h2>Product View → Cart Conversion</h2>
+                <div class="table-responsive">
+                    <table id="store-conversion-table">
+                        <thead><tr><th>Product</th><th>Views</th><th>Cart Adds</th><th>Conversion</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Flasher Analytics -->
 
     <script>
         // Password protection
@@ -621,9 +697,12 @@
             createFlashEventsChart(data.flash_events || []);
             createRecencyChart(data.users_by_recency || []);
             displayErrorTable(data.common_errors || []);
+
+            // Also load store stats
+            loadStoreStats();
         }
 
-        async function createWorldMap(countries) {
+        function displayErrorTable(errors)
             const ctx = document.getElementById('world-map');
             
             if (charts.worldMap) charts.worldMap.destroy();
@@ -1001,6 +1080,152 @@
         // Only auto-load and refresh if authenticated
         if (sessionStorage.getItem('fpvgate_auth') === 'true') {
             setInterval(loadStats, 5 * 60 * 1000);
+        }
+
+        // --- Store Analytics ---
+
+        async function loadStoreStats() {
+            try {
+                const days = currentDateRange === 'all' ? 365 : currentDateRange;
+                const response = await fetch(`${API_ENDPOINT}/store/stats?days=${days}`);
+                const data = await response.json();
+                displayStoreStats(data);
+            } catch (error) {
+                console.error('Store stats failed:', error);
+            }
+        }
+
+        function displayStoreStats(data) {
+            document.getElementById('store-visitors').textContent = (data.store_visitors || 0).toLocaleString();
+            document.getElementById('store-orders').textContent = (data.orders || 0).toLocaleString();
+            document.getElementById('store-conversion').textContent = (data.conversion_rate || '0') + '%';
+
+            const tvp = data.top_viewed_products || [];
+            const totalViews = tvp.reduce((s, p) => s + p.view_count, 0);
+            document.getElementById('store-product-views').textContent = totalViews.toLocaleString();
+
+            createStoreActivityChart(data.daily_activity || []);
+            displayStoreViewedTable(data.top_viewed_products || []);
+            displayStoreCartTable(data.top_cart_products || []);
+            createCategoryViewsChart(data.category_views || []);
+            createCategoryCartChart(data.category_cart || []);
+            displayStoreConversionTable(data.product_conversion || []);
+        }
+
+        function createStoreActivityChart(activityData) {
+            const ctx = document.getElementById('store-activity-chart');
+            if (charts.storeActivity) charts.storeActivity.destroy();
+
+            activityData.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+            charts.storeActivity = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: activityData.map(d => d.date),
+                    datasets: [
+                        { label: 'Store Views', data: activityData.map(d => d.store_views), borderColor: '#4299e1', tension: 0.3, pointRadius: 2, borderWidth: 2 },
+                        { label: 'Product Views', data: activityData.map(d => d.product_views), borderColor: '#9f7aea', tension: 0.3, pointRadius: 2, borderWidth: 2 },
+                        { label: 'Cart Adds', data: activityData.map(d => d.cart_adds), borderColor: '#ed8936', tension: 0.3, pointRadius: 2, borderWidth: 2 },
+                        { label: 'Orders', data: activityData.map(d => d.orders), borderColor: '#48bb78', tension: 0.3, pointRadius: 2, borderWidth: 2 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 15 } } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: '#e2e8f0' }, ticks: { color: '#718096' } },
+                        x: { grid: { display: false }, ticks: { color: '#718096' } }
+                    }
+                }
+            });
+        }
+
+        function displayStoreViewedTable(products) {
+            const tbody = document.querySelector('#store-viewed-table tbody');
+            tbody.innerHTML = '';
+            if (products.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#a0aec0">No product views yet</td></tr>';
+                return;
+            }
+            products.forEach(p => {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td><strong>${escH(p.product_name)}</strong>${p.category ? '<br><span style="font-size:11px;color:#a0aec0">'+escH(CATEGORY_LABELS[p.category]||p.category)+'</span>' : ''}</td><td>${p.view_count}</td><td>${p.unique_viewers}</td>`;
+                tbody.appendChild(row);
+            });
+        }
+
+        function displayStoreCartTable(products) {
+            const tbody = document.querySelector('#store-cart-table tbody');
+            tbody.innerHTML = '';
+            if (products.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:#a0aec0">No cart data yet</td></tr>';
+                return;
+            }
+            products.forEach(p => {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td><strong>${escH(p.product_name)}</strong>${p.category ? '<br><span style="font-size:11px;color:#a0aec0">'+escH(CATEGORY_LABELS[p.category]||p.category)+'</span>' : ''}</td><td>${p.add_count}</td><td>${p.unique_adders}</td>`;
+                tbody.appendChild(row);
+            });
+        }
+
+        function createCategoryViewsChart(data) {
+            const ctx = document.getElementById('store-category-views-chart');
+            if (charts.categoryViews) charts.categoryViews.destroy();
+
+            charts.categoryViews = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.map(d => CATEGORY_LABELS[d.category] || d.category),
+                    datasets: [{ data: data.map(d => d.view_count), backgroundColor: ['#4299e1', '#48bb78', '#ed8936', '#9f7aea'] }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: true,
+                    plugins: { legend: { position: 'bottom', labels: { color: '#4a5568', padding: 15, font: { size: 12 } } } }
+                }
+            });
+        }
+
+        function createCategoryCartChart(data) {
+            const ctx = document.getElementById('store-category-cart-chart');
+            if (charts.categoryCart) charts.categoryCart.destroy();
+
+            charts.categoryCart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: data.map(d => CATEGORY_LABELS[d.category] || d.category),
+                    datasets: [{ data: data.map(d => d.add_count), backgroundColor: ['#ed8936', '#48bb78', '#4299e1', '#9f7aea'] }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: true,
+                    plugins: { legend: { position: 'bottom', labels: { color: '#4a5568', padding: 15, font: { size: 12 } } } }
+                }
+            });
+        }
+
+        function displayStoreConversionTable(data) {
+            const tbody = document.querySelector('#store-conversion-table tbody');
+            tbody.innerHTML = '';
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#a0aec0">No conversion data yet</td></tr>';
+                return;
+            }
+            data.forEach(d => {
+                const rate = d.views > 0 ? ((d.adds / d.views) * 100).toFixed(1) : '0.0';
+                const color = rate >= 20 ? '#48bb78' : rate >= 10 ? '#ed8936' : '#a0aec0';
+                const row = document.createElement('tr');
+                row.innerHTML = `<td><strong>${escH(d.product_id)}</strong></td><td>${d.views}</td><td>${d.adds}</td><td style="color:${color};font-weight:600">${rate}%</td>`;
+                tbody.appendChild(row);
+            });
+        }
+
+        const CATEGORY_LABELS = { 'fpvgate': 'FPVGate Hardware', 'components': 'Components', 'misc': 'Misc' };
+
+        function escH(s) {
+            if (!s) return '';
+            const d = document.createElement('div');
+            d.textContent = s;
+            return d.innerHTML;
         }
     </script>
 </body>

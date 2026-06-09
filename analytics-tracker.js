@@ -115,6 +115,15 @@ function initStoreTracking() {
     analytics.track('store_view', { page });
   }
 
+  // Category page tracking
+  if (page === '/shop-fpvgate.html') {
+    analytics.track('store_view', { page, category: 'fpvgate' });
+  } else if (page === '/shop-components.html') {
+    analytics.track('store_view', { page, category: 'components' });
+  } else if (page === '/shop-misc.html') {
+    analytics.track('store_view', { page, category: 'misc' });
+  }
+
   // Cart events (cart_add, cart_open, order_completed) are now
   // triggered directly by the cart widget in shop.html and order-success.html
   // via window.fpvgateAnalytics.track() calls.
