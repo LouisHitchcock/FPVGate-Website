@@ -10,6 +10,7 @@ const BOARD_CONFIGS = {
         name: 'ESP32-S3 DevKitC-1 (8MB)',
         chipFamily: 'ESP32-S3',
         firmwareDir: 'ESP32S3-Devkit-C1',
+        modernFirmwareDir: 'ESP32S3',
         filePrefix: 'S3_Devkit',
         parts: [
             { path: 'bootloader.bin', offset: 0x0 },
@@ -22,6 +23,7 @@ const BOARD_CONFIGS = {
         name: 'ESP32-S3 Super Mini (4MB)',
         chipFamily: 'ESP32-S3',
         firmwareDir: 'ESP32S3-SuperMini',
+        modernFirmwareDir: 'ESP32S3SuperMini',
         filePrefix: 'S3_SuperMini',
         parts: [
             { path: 'bootloader.bin', offset: 0x0 },
@@ -34,6 +36,7 @@ const BOARD_CONFIGS = {
         name: 'Seeed Studio XIAO ESP32S3 (8MB)',
         chipFamily: 'ESP32-S3',
         firmwareDir: 'XIAO-S3',
+        modernFirmwareDir: 'SeeedXIAOESP32S3',
         filePrefix: 'XIAO_S3',
         parts: [
             { path: 'bootloader.bin', offset: 0x0 },
@@ -57,6 +60,7 @@ const BOARD_CONFIGS = {
         name: 'LilyGO T-Energy S3',
         chipFamily: 'ESP32-S3',
         firmwareDir: 'LilyGo-T-Energy-S3',
+        modernFirmwareDir: 'LilyGOTEnergyS3',
         filePrefix: 'LilyGo_T_Energy_S3',
         parts: [
             { path: 'bootloader.bin', offset: 0x0 },
@@ -69,18 +73,20 @@ const BOARD_CONFIGS = {
         name: 'XIAO ESP32S3 Plus (16MB Flash)',
         chipFamily: 'ESP32-S3',
         firmwareDir: 'XIAO-S3-Plus',
+        modernFirmwareDir: 'XIAOS3Plus',
         filePrefix: 'XIAO_S3_Plus',
         parts: [
             { path: 'bootloader.bin', offset: 0x0 },
             { path: 'partitions.bin', offset: 0x8000 },
             { path: 'firmware.bin', offset: 0x10000 },
-            { path: 'filesystem.bin', offset: 0x410000 }
+            { path: 'filesystem.bin', offset: 0x610000 }
         ]
     },
     fpvgateaio: {
         name: 'FPVGate AIO',
         chipFamily: 'ESP32-S3',
         firmwareDir: 'FPVGate-AIO-V3',
+        modernFirmwareDir: 'FPVGateAIO',
         filePrefix: 'FPVGate_AIO_V3',
         parts: [
             { path: 'bootloader.bin', offset: 0x0 },
@@ -130,6 +136,8 @@ let customFirmware = {
     filesystem: null
 };
 let currentFileType = null;
+
+const MODERN_FIRMWARE_LAYOUT_VERSION = 'v1.7.3';
 
 // Board configurations - will be loaded from GitHub
 let ALL_BOARDS = [];
@@ -352,6 +360,34 @@ async function prepareFlashButton() {
 }
 
 // Generate ESP Web Tools manifest
+function parseVersionNumbers(tag) {
+    const cleaned = (tag || '').replace(/^[^0-9]*/, '').split('-')[0];
+    if (!cleaned) return [];
+    return cleaned.split('.').map(part => {
+        const parsed = parseInt(part, 10);
+        return Number.isFinite(parsed) ? parsed : 0;
+    });
+}
+
+function isVersionAtLeast(versionTag, minimumVersionTag) {
+    const a = parseVersionNumbers(versionTag);
+    const b = parseVersionNumbers(minimumVersionTag);
+    const maxLen = Math.max(a.length, b.length);
+
+    for (let i = 0; i < maxLen; i++) {
+        const av = a[i] || 0;
+        const bv = b[i] || 0;
+        if (av > bv) return true;
+        if (av < bv) return false;
+    }
+
+    return true;
+}
+
+function shouldUseModernFirmwareLayout(versionTag, firmwareFolder) {
+    if (firmwareFolder !== 'firmware') return false;
+    return isVersionAtLeast(versionTag, MODERN_FIRMWARE_LAYOUT_VERSION);
+}
 function generateManifest() {
     const boardConfig = BOARD_CONFIGS[selectedBoard];
     const version = selectedVersion.tag_name;
@@ -361,12 +397,19 @@ function generateManifest() {
     // Pre-release firmware uses preRelease/ folder instead of firmware/
     const baseUrl = new URL(window.location.href);
     const firmwareFolder = selectedVersion.isLocalPreRelease ? 'preRelease' : 'firmware';
-    const firmwareBaseUrl = new URL(`${firmwareFolder}/${version}/${boardConfig.firmwareDir}/`, baseUrl).href;
+    const useModernLayout = shouldUseModernFirmwareLayout(version, firmwareFolder);
+    const firmwareDir = useModernLayout
+        ? (boardConfig.modernFirmwareDir || boardConfig.firmwareDir)
+        : boardConfig.firmwareDir;
+    const firmwareBaseUrl = new URL(`${firmwareFolder}/${version}/${firmwareDir}/`, baseUrl).href;
     
     // Map parts to local firmware URLs with standardized naming
     const parts = boardConfig.parts.map(part => {
+        const fileName = useModernLayout
+            ? (part.path === 'filesystem.bin' ? 'littlefs.bin' : part.path)
+            : `${boardConfig.filePrefix}_${part.path}`;
         return {
-            path: `${firmwareBaseUrl}${boardConfig.filePrefix}_${part.path}`,
+            path: `${firmwareBaseUrl}${fileName}`,
             offset: part.offset
         };
     });
