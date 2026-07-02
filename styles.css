@@ -2065,7 +2065,7 @@ footer p {
 .carousel { position: relative; width: 100%; height: 100%; }
 .carousel-track { display: flex; height: 100%; transition: transform 0.3s ease; }
 .carousel-slide { min-width: 100%; height: 100%; }
-.carousel-slide img { width: 100%; height: 100%; object-fit: cover; }
+.carousel-slide img { width: 100%; height: 100%; object-fit: contain; }
 .carousel-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(0,0,0,0.5); color: #fff; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; z-index: 2; }
 .product-image:hover .carousel-btn { opacity: 1; }
 .carousel-btn:hover { background: rgba(0,212,255,0.7); }
@@ -2078,12 +2078,12 @@ footer p {
 .product-image img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     transition: transform 0.3s;
 }
 
 .product-card:hover .product-image img {
-    transform: scale(1.03);
+    transform: none;
 }
 
 .product-image-placeholder {
@@ -2297,7 +2297,7 @@ footer p {
 .product-modal-image img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
 }
 
 .product-modal-body {
@@ -2636,7 +2636,7 @@ footer p {
 .strip-card-img img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
 }
 
 .strip-card-placeholder {

@@ -193,9 +193,9 @@ function renderProductCard(p, pi) {
                     <div class="carousel-dots">${p.images.map((_,i) => `<button class="carousel-dot${i===0?' active':''}" onclick="event.stopPropagation();goToSlide(${pi},${i})"></button>`).join('')}</div>
                 </div>`
                 : p.images && p.images.length === 1
-                    ? `<img src="${p.images[0]}" alt="${escHtml(p.name)}" style="width:100%;height:100%;object-fit:cover;">`
+                    ? `<img src="${p.images[0]}" alt="${escHtml(p.name)}" style="width:100%;height:100%;object-fit:contain;">`
                     : p.image
-                        ? `<img src="${p.image}" alt="${escHtml(p.name)}" style="width:100%;height:100%;object-fit:cover;">`
+                        ? `<img src="${p.image}" alt="${escHtml(p.name)}" style="width:100%;height:100%;object-fit:contain;">`
                         : `<div class="product-image-placeholder">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                                 <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
