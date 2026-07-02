@@ -664,6 +664,19 @@ async function handleCheckout(request, env, corsHeaders) {
     if (!shipping || !shipping.country) {
         return jsonResponse({ error: 'Shipping address with country is required' }, corsHeaders, 400);
     }
+    const shippingEmail = String(shipping.email || '').trim();
+    const shippingPhone = String(shipping.phone || '').trim();
+    if (!shippingEmail) {
+        return jsonResponse({ error: 'Email is required for checkout' }, corsHeaders, 400);
+    }
+    if (!shippingPhone) {
+        return jsonResponse({ error: 'Phone number is required for checkout' }, corsHeaders, 400);
+    }
+    if (!shippingEmail.includes('@')) {
+        return jsonResponse({ error: 'Please provide a valid email address' }, corsHeaders, 400);
+    }
+    shipping.email = shippingEmail;
+    shipping.phone = shippingPhone;
 
     const lineItems = [];
     const orderItems = [];
@@ -683,9 +696,7 @@ async function handleCheckout(request, env, corsHeaders) {
         }
 
         const imgs = JSON.parse(product.images || '[]');
-        const imageUrl = imgs.length > 0
-            ? `${new URL(request.url).origin}/images/${imgs[0]}`
-            : (product.image_url || undefined);
+        const imageUrl = resolveStripeProductImageUrl(request.url, imgs, product.image_url);
 
         lineItems.push({
             price_data: {
@@ -2037,6 +2048,32 @@ function tryParseJson(str) {
 function resolveShippoLabelFileType(env, requestedLabelFileType) {
     const value = requestedLabelFileType || env.SHIPPO_LABEL_FILE_TYPE || DEFAULT_LABEL_FILE_TYPE;
     return String(value || '').trim() || DEFAULT_LABEL_FILE_TYPE;
+}
+
+function resolveStripeProductImageUrl(requestUrl, imageKeys, fallbackImageUrl) {
+    const origin = new URL(requestUrl).origin;
+
+    if (Array.isArray(imageKeys) && imageKeys.length > 0) {
+        const key = String(imageKeys[0] || '').trim();
+        if (key) {
+            const encodedKey = key
+                .split('/')
+                .map(segment => encodeURIComponent(segment))
+                .join('/');
+            return `${origin}/images/${encodedKey}`;
+        }
+    }
+
+    if (!fallbackImageUrl) return undefined;
+
+    try {
+        const absolute = new URL(String(fallbackImageUrl).trim(), origin);
+        if (absolute.protocol === 'http:' || absolute.protocol === 'https:') {
+            return absolute.toString();
+        }
+    } catch (_) {}
+
+    return undefined;
 }
 
 async function handleProducts(request, env, corsHeaders) {

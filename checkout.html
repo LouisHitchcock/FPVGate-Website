@@ -93,7 +93,7 @@
                 <label>Full Name *</label>
                 <input type="text" id="ship-name" autocomplete="name">
                 <label>Email *</label>
-                <input type="email" id="ship-email" autocomplete="email">
+                <input type="email" id="ship-email" autocomplete="email" required>
                 <label>Address Line 1 *</label>
                 <input type="text" id="ship-address1" autocomplete="address-line1">
                 <label>Address Line 2</label>
@@ -132,8 +132,8 @@
                         </select>
                     </div>
                 </div>
-                <label>Phone</label>
-                <input type="tel" id="ship-phone" autocomplete="tel">
+                <label>Phone *</label>
+                <input type="tel" id="ship-phone" autocomplete="tel" required>
 
                 <button class="btn-rates" id="btn-rates" onclick="fetchRates()">Calculate Shipping</button>
             </div>
@@ -200,8 +200,9 @@
         const postcode = document.getElementById('ship-postcode').value.trim();
         const country = document.getElementById('ship-country').value;
         const email = document.getElementById('ship-email').value.trim();
+        const phone = document.getElementById('ship-phone').value.trim();
 
-        if (!name || !addr1 || !city || !postcode || !country || !email) {
+        if (!name || !addr1 || !city || !postcode || !country || !email || !phone) {
             document.getElementById('checkout-error').textContent = 'Please fill in all required fields.';
             return;
         }
@@ -221,7 +222,8 @@
                         address2: document.getElementById('ship-address2').value.trim(),
                         city, province: document.getElementById('ship-province').value.trim(),
                         postalCode: postcode, country,
-                        phone: document.getElementById('ship-phone').value.trim()
+                        phone,
+                        email
                     }
                 })
             });
@@ -280,11 +282,6 @@
 
         const cart = getCart();
         if (!cart.length) return;
-
-        const btn = document.getElementById('btn-pay');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="loading-spinner"></span>Redirecting to payment...';
-
         const shipping = {
             name: document.getElementById('ship-name').value.trim(),
             address1: document.getElementById('ship-address1').value.trim(),
@@ -296,6 +293,15 @@
             phone: document.getElementById('ship-phone').value.trim(),
             email: document.getElementById('ship-email').value.trim()
         };
+
+        if (!shipping.phone || !shipping.email) {
+            errEl.textContent = 'Please enter both phone number and email.';
+            return;
+        }
+
+        const btn = document.getElementById('btn-pay');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="loading-spinner"></span>Redirecting to payment...';
 
         try {
             const resp = await fetch(STORE_API + '/checkout', {
