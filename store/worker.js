@@ -264,7 +264,7 @@ export default {
                     return await handleCancelOrder(cancelMatch[1], request, env, corsHeaders);
                 }
 
-                // Test order
+                // Manual order (review/test)
                 if (url.pathname === '/api/orders/test' && request.method === 'POST') {
                     return await handleCreateTestOrder(request, env, corsHeaders);
                 }
@@ -902,35 +902,78 @@ async function processCompletedCheckout(session, env) {
     }
 }
 
-// --- Admin: Test Order ---
+// --- Admin: Manual Review/Test Order ---
 
 async function handleCreateTestOrder(request, env, corsHeaders) {
     const body = await request.json().catch(() => ({}));
 
-    const customerName = body.customerName || 'Test Customer';
-    const customerEmail = body.customerEmail || 'test@example.com';
-    const shippingAddress = body.shippingAddress || {
-        name: customerName,
-        address1: '123 Test Street',
-        address2: '',
-        city: 'Bedford',
-        province: '',
-        postalCode: 'MK40 1AA',
-        country: 'GB',
-        phone: '07000000000',
-        email: customerEmail
+    const toFiniteNumber = (value, fallback = 0) => {
+        const parsed = Number.parseFloat(value);
+        return Number.isFinite(parsed) ? parsed : fallback;
     };
-    const items = body.items || [{
-        id: 'test-product',
-        name: 'Test Product',
-        price: 9.99,
+
+    const customerName = String(body.customerName || '').trim() || 'Review Recipient';
+    const customerEmail = String(body.customerEmail || '').trim();
+    if (!customerEmail || !customerEmail.includes('@')) {
+        return jsonResponse({ error: 'customerEmail must be a valid email address' }, corsHeaders, 400);
+    }
+
+    const incomingShipping = body.shippingAddress && typeof body.shippingAddress === 'object' ? body.shippingAddress : {};
+    const shippingAddress = {
+        name: String(incomingShipping.name || customerName).trim(),
+        company: String(incomingShipping.company || '').trim(),
+        address1: String(incomingShipping.address1 || incomingShipping.street1 || '').trim(),
+        address2: String(incomingShipping.address2 || incomingShipping.street2 || '').trim(),
+        city: String(incomingShipping.city || '').trim(),
+        province: String(incomingShipping.province || incomingShipping.state || '').trim(),
+        postalCode: String(incomingShipping.postalCode || incomingShipping.zip || '').trim(),
+        country: String(incomingShipping.country || incomingShipping.countryCode || 'GB').trim().toUpperCase(),
+        phone: String(incomingShipping.phone || '').trim(),
+        email: String(incomingShipping.email || customerEmail).trim()
+    };
+
+    if (!shippingAddress.name || !shippingAddress.address1 || !shippingAddress.city || !shippingAddress.postalCode || !shippingAddress.country) {
+        return jsonResponse({ error: 'shippingAddress must include name, address1, city, postalCode, and country' }, corsHeaders, 400);
+    }
+    if (shippingAddress.country.length !== 2) {
+        return jsonResponse({ error: 'shippingAddress.country must be a 2-letter country code' }, corsHeaders, 400);
+    }
+
+    const rawItems = Array.isArray(body.items) && body.items.length > 0 ? body.items : [{
+        id: 'review-unit',
+        name: 'FPVGate Review Unit',
+        price: 0,
         quantity: 1,
-        totalPrice: 9.99,
+        totalPrice: 0,
         weight: 100
     }];
-    const subtotal = items.reduce((s, i) => s + (i.totalPrice || i.price * (i.quantity || 1)), 0);
-    const shippingFees = body.shippingFees !== undefined ? body.shippingFees : 1.85;
-    const total = body.total !== undefined ? body.total : subtotal + shippingFees;
+    const zeroValue = body.zeroValue !== false;
+    const items = rawItems.map((item, index) => {
+        const quantity = Math.max(1, Number.parseInt(item?.quantity, 10) || 1);
+        const unitPrice = zeroValue ? 0 : Math.max(0, toFiniteNumber(item?.price, 0));
+        const computedTotal = zeroValue ? 0 : Number((unitPrice * quantity).toFixed(2));
+        return {
+            id: String(item?.id || `manual-item-${index + 1}`).trim(),
+            name: String(item?.name || `Manual Item ${index + 1}`).trim(),
+            price: unitPrice,
+            quantity,
+            totalPrice: computedTotal,
+            weight: Math.max(1, Number.parseInt(item?.weight, 10) || 100)
+        };
+    });
+
+    const subtotal = zeroValue ? 0 : Number(items.reduce((sum, item) => sum + (item.totalPrice || 0), 0).toFixed(2));
+    const shippingFees = zeroValue ? 0 : Math.max(0, toFiniteNumber(body.shippingFees, 0));
+    const total = zeroValue ? 0 : Number((body.total !== undefined ? toFiniteNumber(body.total, subtotal + shippingFees) : subtotal + shippingFees).toFixed(2));
+
+    const incomingLabels = Array.isArray(body.labels) ? body.labels : [];
+    const labels = [...new Set(incomingLabels.map((value) => String(value || '').trim().toLowerCase()).filter(Boolean))].slice(0, 10);
+    if (labels.length === 0 && zeroValue) labels.push('review');
+
+    const shippingMethod = String(body.shippingMethod || (zeroValue ? 'Review Unit Shipment' : 'Manual Shipment')).trim() || (zeroValue ? 'Review Unit Shipment' : 'Manual Shipment');
+    const notePrefix = zeroValue ? 'REVIEW ORDER' : 'MANUAL ORDER';
+    const noteText = String(body.notes || '').trim();
+    const notes = noteText ? `${notePrefix}: ${noteText}` : notePrefix;
 
     const countResult = await env.DB.prepare('SELECT COUNT(*) as c FROM orders').first();
     const invoiceNumber = `FPVG-${String((countResult?.c || 0) + 1).padStart(4, '0')}`;
@@ -939,10 +982,10 @@ async function handleCreateTestOrder(request, env, corsHeaders) {
         INSERT INTO orders
         (stripe_session_id, stripe_payment_intent, invoice_number, customer_name, customer_email,
          shipping_address, billing_address, items, subtotal, shipping_fees,
-         total, currency, shipping_method, status, notes)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new', 'TEST ORDER')
+         total, currency, shipping_method, status, labels, notes)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new', ?, ?)
     `).bind(
-        'test_' + Date.now(),
+        'manual_' + Date.now() + '_' + Math.floor(Math.random() * 1000000),
         null,
         invoiceNumber,
         customerName,
@@ -954,7 +997,9 @@ async function handleCreateTestOrder(request, env, corsHeaders) {
         shippingFees,
         total,
         'gbp',
-        body.shippingMethod || 'Test Shipping'
+        shippingMethod,
+        JSON.stringify(labels),
+        notes
     ).run();
 
     const order = await env.DB.prepare('SELECT * FROM orders WHERE invoice_number = ?').bind(invoiceNumber).first();

@@ -153,7 +153,64 @@ function formatStatus(s){return{new:'New',label_created:'Label Created',shipped:
 function escHtml(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML}
 function openTestOrderModal(){if(exampleReadOnly())return;document.getElementById('test-order-modal').classList.add('open');document.getElementById('test-order-error').textContent='';document.body.classList.add('no-scroll')}
 function closeTestOrderModal(){document.getElementById('test-order-modal').classList.remove('open');document.body.classList.remove('no-scroll')}
-async function submitTestOrder(){if(exampleReadOnly())return;const err=document.getElementById('test-order-error');const btn=document.getElementById('test-order-submit');err.textContent='';const name=document.getElementById('test-customer-name').value.trim();const email=document.getElementById('test-customer-email').value.trim();if(!name||!email){err.textContent='Name and email are required';return}const price=parseFloat(document.getElementById('test-item-price').value)||0;const qty=parseInt(document.getElementById('test-item-qty').value)||1;const itemName=document.getElementById('test-item-name').value.trim()||'Test Product';const shipping=parseFloat(document.getElementById('test-shipping').value)||0;btn.disabled=true;btn.textContent='Creating...';try{const r=await storeApi('/api/orders/test','POST',{customerName:name,customerEmail:email,shippingAddress:{name,address1:document.getElementById('test-address1').value.trim(),address2:document.getElementById('test-address2').value.trim(),city:document.getElementById('test-city').value.trim(),province:'',postalCode:document.getElementById('test-postcode').value.trim(),country:document.getElementById('test-country').value.trim()||'GB',phone:document.getElementById('test-phone').value.trim(),email},items:[{id:'test-product',name:itemName,price,quantity:qty,totalPrice:price*qty,weight:100}],shippingFees:shipping,shippingMethod:document.getElementById('test-shipping-method').value.trim()||'Test Shipping'});if(r.error){err.textContent=r.error;btn.disabled=false;btn.textContent='Create Test Order';return}closeTestOrderModal();if(document.getElementById('section-orders').classList.contains('active'))loadOrders();else{switchSection('orders',document.querySelectorAll('.nav-item')[1])}}catch(e){err.textContent='Failed: '+e.message}btn.disabled=false;btn.textContent='Create Test Order'}
+async function submitTestOrder(){
+if(exampleReadOnly())return;
+const err=document.getElementById('test-order-error');
+const btn=document.getElementById('test-order-submit');
+err.textContent='';
+const name=document.getElementById('test-customer-name').value.trim();
+const email=document.getElementById('test-customer-email').value.trim();
+const company=document.getElementById('test-company').value.trim();
+const phone=document.getElementById('test-phone').value.trim();
+const address1=document.getElementById('test-address1').value.trim();
+const address2=document.getElementById('test-address2').value.trim();
+const city=document.getElementById('test-city').value.trim();
+const province=document.getElementById('test-province').value.trim();
+const postalCode=document.getElementById('test-postcode').value.trim();
+const country=(document.getElementById('test-country').value.trim()||'GB').toUpperCase();
+const itemName=document.getElementById('test-item-name').value.trim()||'FPVGate Review Unit';
+const qty=Math.max(1,parseInt(document.getElementById('test-item-qty').value,10)||1);
+const shippingMethod=document.getElementById('test-shipping-method').value.trim()||'Review Unit Shipment';
+const notes=document.getElementById('test-order-notes').value.trim();
+const labelsInput=(document.getElementById('test-order-labels').value||'').split(',').map(v=>v.trim().toLowerCase()).filter(Boolean);
+const labels=[...new Set(labelsInput)];
+if(!name||!email||!address1||!city||!postalCode){err.textContent='Name, email, address line 1, city, and postcode are required';return}
+if(!email.includes('@')){err.textContent='Please enter a valid email address';return}
+if(country.length!==2){err.textContent='Country code must be a 2-letter code (for example, GB or US)';return}
+btn.disabled=true;
+btn.textContent='Creating...';
+try{
+const r=await storeApi('/api/orders/test','POST',{
+orderType:'review',
+zeroValue:true,
+customerName:name,
+customerEmail:email,
+shippingAddress:{
+name,
+company,
+address1,
+address2,
+city,
+province,
+postalCode,
+country,
+phone,
+email
+},
+items:[{id:'review-unit',name:itemName,price:0,quantity:qty,totalPrice:0,weight:100}],
+shippingFees:0,
+total:0,
+shippingMethod,
+labels:labels.length?labels:['review'],
+notes
+});
+if(r.error){err.textContent=r.error;btn.disabled=false;btn.textContent='Create Review Order';return}
+closeTestOrderModal();
+if(document.getElementById('section-orders').classList.contains('active'))loadOrders();else{switchSection('orders',document.querySelectorAll('.nav-item')[1])}
+}catch(e){err.textContent='Failed: '+e.message}
+btn.disabled=false;
+btn.textContent='Create Review Order'
+}
 function countryFlag(c){if(!c||c.length!==2)return'';const cp=[...c.toUpperCase()].map(x=>0x1F1E6-65+x.charCodeAt(0));return String.fromCodePoint(...cp)}
 
 // --- User Management ---

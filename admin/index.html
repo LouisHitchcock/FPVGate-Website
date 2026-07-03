@@ -28,7 +28,7 @@
 <button class="nav-item" onclick="switchSection('tools',this)"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>Tools</button>
 </nav>
 <div class="sidebar-footer">
-<button class="btn btn-secondary" id="test-order-btn" style="width:100%;margin-bottom:8px;font-size:12px;padding:8px" onclick="openTestOrderModal()">+ Test Order</button>
+<button class="btn btn-secondary" id="test-order-btn" style="width:100%;margin-bottom:8px;font-size:12px;padding:8px" onclick="openTestOrderModal()">+ Review Order</button>
 <div id="user-info" style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><img id="user-avatar" src="" style="width:24px;height:24px;border-radius:50%;display:none"><span id="user-email" style="font-size:11px;color:#a0aec0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span></div>
 <button class="btn btn-secondary" style="width:100%;font-size:11px;padding:6px;display:none" id="sign-out-btn" onclick="signOut()">Sign Out</button>
 </div>
@@ -319,38 +319,44 @@
 </div>
 
 <div id="test-order-modal" class="modal-overlay" onclick="if(event.target===this) closeTestOrderModal()">
-<div class="modal" style="max-width:500px">
-<h2>Create Test Order</h2>
-<label>Customer Name</label>
-<input type="text" id="test-customer-name" value="Test Customer">
-<label>Customer Email</label>
-<input type="email" id="test-customer-email" value="test@example.com">
+<div class="modal" style="max-width:620px">
+<h2>Create Review Order (&pound;0)</h2>
+<p style="font-size:13px;color:#718096;margin-top:-10px;margin-bottom:14px">Create an admin-only review-unit order with full shipping details so you can purchase a label from the Orders panel.</p>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-<div><label>Address Line 1</label><input type="text" id="test-address1" value="123 Test Street"></div>
-<div><label>Address Line 2</label><input type="text" id="test-address2" value=""></div>
+<div><label>Customer Name</label><input type="text" id="test-customer-name" value=""></div>
+<div><label>Customer Email</label><input type="email" id="test-customer-email" value=""></div>
 </div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-<div><label>City</label><input type="text" id="test-city" value="Bedford"></div>
-<div><label>Postcode</label><input type="text" id="test-postcode" value="MK40 1AA"></div>
+<div><label>Company (optional)</label><input type="text" id="test-company" value=""></div>
+<div><label>Phone</label><input type="text" id="test-phone" value=""></div>
 </div>
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-<div><label>Country</label><input type="text" id="test-country" value="GB"></div>
-<div><label>Phone</label><input type="text" id="test-phone" value="07000000000"></div>
+<div><label>Address Line 1</label><input type="text" id="test-address1" value=""></div>
+<div><label>Address Line 2 (optional)</label><input type="text" id="test-address2" value=""></div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<div><label>City</label><input type="text" id="test-city" value=""></div>
+<div><label>County/State (optional)</label><input type="text" id="test-province" value=""></div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<div><label>Postcode</label><input type="text" id="test-postcode" value=""></div>
+<div><label>Country Code</label><input type="text" id="test-country" value="GB" maxlength="2"></div>
 </div>
 <hr style="border:none;border-top:1px solid #e2e8f0;margin:10px 0">
-<label>Item Name</label>
-<input type="text" id="test-item-name" value="Test Product">
-<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
-<div><label>Price (GBP)</label><input type="number" id="test-item-price" value="9.99" step="0.01" min="0"></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<div><label>Item Name</label><input type="text" id="test-item-name" value="FPVGate Review Unit"></div>
 <div><label>Quantity</label><input type="number" id="test-item-qty" value="1" min="1"></div>
-<div><label>Shipping (GBP)</label><input type="number" id="test-shipping" value="1.85" step="0.01" min="0"></div>
 </div>
 <label>Shipping Method</label>
-<input type="text" id="test-shipping-method" value="Test Shipping">
+<input type="text" id="test-shipping-method" value="Review Unit Shipment">
+<label>Order Labels (comma separated)</label>
+<input type="text" id="test-order-labels" value="review">
+<label>Internal Notes (optional)</label>
+<textarea id="test-order-notes" rows="3" placeholder="Reviewer name, publication, or internal notes"></textarea>
 <div id="test-order-error" class="error-text" style="margin-bottom:8px"></div>
 <div class="modal-actions">
 <button class="btn btn-secondary" onclick="closeTestOrderModal()">Cancel</button>
-<button class="btn btn-primary" id="test-order-submit" onclick="submitTestOrder()">Create Test Order</button>
+<button class="btn btn-primary" id="test-order-submit" onclick="submitTestOrder()">Create Review Order</button>
 </div>
 </div>
 </div>
