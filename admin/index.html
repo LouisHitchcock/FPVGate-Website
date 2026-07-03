@@ -343,10 +343,11 @@
 <div><label>Country Code</label><input type="text" id="test-country" value="GB" maxlength="2"></div>
 </div>
 <hr style="border:none;border-top:1px solid #e2e8f0;margin:10px 0">
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-<div><label>Item Name</label><input type="text" id="test-item-name" value="FPVGate Review Unit"></div>
-<div><label>Quantity</label><input type="number" id="test-item-qty" value="1" min="1"></div>
-</div>
+<label>Shipment Products</label>
+<p class="review-order-help">Select one or more products to include in this shipment. Parcel weight/size will be calculated from your selected products.</p>
+<div id="review-product-rows" class="review-products-list"></div>
+<div style="margin-bottom:12px"><button type="button" class="btn btn-secondary btn-sm" onclick="addReviewProductRow()">+ Add Product</button></div>
+<div id="review-product-summary" class="review-product-summary">No products selected</div>
 <label>Shipping Method</label>
 <input type="text" id="test-shipping-method" value="Review Unit Shipment">
 <label>Order Labels (comma separated)</label>

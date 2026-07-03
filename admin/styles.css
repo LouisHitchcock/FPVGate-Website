@@ -185,6 +185,15 @@ tr.clickable { cursor: pointer; }
 .edit-order-field input { margin-bottom: 0; }
 .edit-order-error { min-height: 18px; margin-top: 12px; }
 #edit-order-country { text-transform: uppercase; }
+#test-country { text-transform: uppercase; }
+.review-order-help { font-size: 12px; color: #718096; margin-top: -4px; margin-bottom: 10px; }
+.review-products-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+.review-product-row { display: grid; grid-template-columns: minmax(0,1fr) 90px 34px; gap: 8px; align-items: start; }
+.review-product-row select, .review-product-row input { margin-bottom: 0; font-size: 14px; }
+.review-product-remove { width: 34px; height: 38px; border: 1px solid #e2e8f0; background: #fff; border-radius: 6px; cursor: pointer; color: #e53e3e; font-size: 18px; line-height: 1; }
+.review-product-remove:hover { background: #fff5f5; border-color: #feb2b2; }
+.review-product-meta { grid-column: 1 / -1; font-size: 12px; color: #718096; margin-top: -2px; }
+.review-product-summary { font-size: 12px; color: #4a5568; background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 10px; margin-bottom: 12px; }
 
 /* --- Loading / Empty --- */
 .loading { text-align: center; padding: 40px; color: #718096; }

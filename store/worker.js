@@ -939,28 +939,85 @@ async function handleCreateTestOrder(request, env, corsHeaders) {
         return jsonResponse({ error: 'shippingAddress.country must be a 2-letter country code' }, corsHeaders, 400);
     }
 
-    const rawItems = Array.isArray(body.items) && body.items.length > 0 ? body.items : [{
-        id: 'review-unit',
-        name: 'FPVGate Review Unit',
-        price: 0,
-        quantity: 1,
-        totalPrice: 0,
-        weight: 100
-    }];
     const zeroValue = body.zeroValue !== false;
-    const items = rawItems.map((item, index) => {
-        const quantity = Math.max(1, Number.parseInt(item?.quantity, 10) || 1);
-        const unitPrice = zeroValue ? 0 : Math.max(0, toFiniteNumber(item?.price, 0));
-        const computedTotal = zeroValue ? 0 : Number((unitPrice * quantity).toFixed(2));
-        return {
-            id: String(item?.id || `manual-item-${index + 1}`).trim(),
-            name: String(item?.name || `Manual Item ${index + 1}`).trim(),
-            price: unitPrice,
-            quantity,
-            totalPrice: computedTotal,
-            weight: Math.max(1, Number.parseInt(item?.weight, 10) || 100)
-        };
-    });
+    const parseQuantity = (value) => Math.max(1, Number.parseInt(value, 10) || 1);
+    const selectedProducts = Array.isArray(body.selectedProducts) ? body.selectedProducts : [];
+    const items = [];
+
+    if (selectedProducts.length > 0) {
+        const mergedSelections = new Map();
+        for (const selected of selectedProducts) {
+            const productId = String(selected?.id || selected?.productId || '').trim();
+            if (!productId) continue;
+            const quantity = parseQuantity(selected?.quantity);
+            mergedSelections.set(productId, (mergedSelections.get(productId) || 0) + quantity);
+        }
+
+        if (mergedSelections.size === 0) {
+            return jsonResponse({ error: 'selectedProducts must include at least one valid product ID' }, corsHeaders, 400);
+        }
+
+        for (const [productId, quantity] of mergedSelections.entries()) {
+            const product = await env.DB.prepare('SELECT * FROM inventory WHERE product_id = ?').bind(productId).first();
+            if (!product) {
+                return jsonResponse({ error: `Selected product not found: ${productId}` }, corsHeaders, 400);
+            }
+            if (product.active === 0) {
+                return jsonResponse({ error: `Selected product is archived: ${product.product_name || productId}` }, corsHeaders, 400);
+            }
+
+            const basePrice = Math.max(0, toFiniteNumber(product.price, 0));
+            const unitPrice = zeroValue ? 0 : basePrice;
+            const lineTotal = zeroValue ? 0 : Number((unitPrice * quantity).toFixed(2));
+            const weight = Math.max(1, Number.parseInt(product.weight, 10) || 100);
+            const lineItem = {
+                id: String(product.product_id || productId).trim(),
+                name: String(product.product_name || productId).trim(),
+                price: unitPrice,
+                quantity,
+                totalPrice: lineTotal,
+                weight
+            };
+
+            const length = toFiniteNumber(product.length_cm ?? product.length ?? product.parcel_length_cm, 0);
+            const width = toFiniteNumber(product.width_cm ?? product.width ?? product.parcel_width_cm, 0);
+            const height = toFiniteNumber(product.height_cm ?? product.height ?? product.parcel_height_cm, 0);
+            if (length > 0) lineItem.length = length;
+            if (width > 0) lineItem.width = width;
+            if (height > 0) lineItem.height = height;
+
+            items.push(lineItem);
+        }
+    } else {
+        const rawItems = Array.isArray(body.items) && body.items.length > 0 ? body.items : [{
+            id: 'review-unit',
+            name: 'FPVGate Review Unit',
+            price: 0,
+            quantity: 1,
+            totalPrice: 0,
+            weight: 100
+        }];
+        rawItems.forEach((item, index) => {
+            const quantity = parseQuantity(item?.quantity);
+            const unitPrice = zeroValue ? 0 : Math.max(0, toFiniteNumber(item?.price, 0));
+            const computedTotal = zeroValue ? 0 : Number((unitPrice * quantity).toFixed(2));
+            const lineItem = {
+                id: String(item?.id || `manual-item-${index + 1}`).trim(),
+                name: String(item?.name || `Manual Item ${index + 1}`).trim(),
+                price: unitPrice,
+                quantity,
+                totalPrice: computedTotal,
+                weight: Math.max(1, Number.parseInt(item?.weight, 10) || 100)
+            };
+            const length = toFiniteNumber(item?.length, 0);
+            const width = toFiniteNumber(item?.width, 0);
+            const height = toFiniteNumber(item?.height, 0);
+            if (length > 0) lineItem.length = length;
+            if (width > 0) lineItem.width = width;
+            if (height > 0) lineItem.height = height;
+            items.push(lineItem);
+        });
+    }
 
     const subtotal = zeroValue ? 0 : Number(items.reduce((sum, item) => sum + (item.totalPrice || 0), 0).toFixed(2));
     const shippingFees = zeroValue ? 0 : Math.max(0, toFiniteNumber(body.shippingFees, 0));

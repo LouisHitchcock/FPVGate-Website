@@ -3,7 +3,7 @@ const ANALYTICS_API='https://fpvgate-analytics.fpvgate-analytics.workers.dev';
 const PORTAL_PARAMS=new URLSearchParams(window.location.search);
 const DEBUG_ORDER_COUNT=Math.max(0,Number.parseInt(PORTAL_PARAMS.get('debug')||'0',10)||0);
 const IS_DEBUG_PORTAL=DEBUG_ORDER_COUNT>0;
-let adminToken='',currentFilter=null,ordersData=[],liveStatsInterval=null,currentEditImages=[],selectedOrderIds=new Set();
+let adminToken='',currentFilter=null,ordersData=[],liveStatsInterval=null,currentEditImages=[],selectedOrderIds=new Set(),reviewOrderProducts=[],reviewOrderSelections=[{productId:'',quantity:1}];
 
 function cloneData(value){return JSON.parse(JSON.stringify(value))}
 function toNumber(value){const n=Number.parseFloat(value);return Number.isFinite(n)?n:0}
@@ -151,7 +151,20 @@ function filterEmails(type,btn){currentEmailFilter=type;document.querySelectorAl
 async function loadEmails(){const ld=document.getElementById('emails-loading'),tb=document.getElementById('emails-table'),em=document.getElementById('emails-empty');ld.style.display='block';tb.style.display='none';em.style.display='none';try{let p='';if(currentEmailFilter)p=`?type=${currentEmailFilter}`;const d=await storeApi(`/api/emails${p}`);const emails=d.emails||[];ld.style.display='none';if(emails.length===0){em.style.display='block';return}tb.style.display='table';const bd=document.getElementById('emails-body');bd.innerHTML='';emails.forEach(e=>{const tr=document.createElement('tr');const dt=new Date(e.created_at).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});const typeLabels={confirmation:'Confirmation',shipped:'Shipped',tracking:'Tracking',refund:'Refund',comment:'Comment',return_label:'Return Label',unknown:'Unknown'};const statusCls=e.status==='sent'?'status-sent':e.status==='failed'?'status-failed':'status-skipped';tr.innerHTML=`<td>${dt}</td><td><span class="email-type-badge email-type-${e.email_type}">${typeLabels[e.email_type]||e.email_type}</span></td><td>${escHtml(e.recipient)}</td><td>${escHtml(e.subject)}</td><td>${e.invoice_number?'<strong>'+escHtml(e.invoice_number)+'</strong>':'-'}</td><td><span class="status-badge ${statusCls}">${e.status.charAt(0).toUpperCase()+e.status.slice(1)}</span>${e.error?'<div style="font-size:11px;color:#e53e3e;margin-top:2px">'+escHtml(e.error)+'</div>':''}</td>`;bd.appendChild(tr)})}catch(e){ld.innerHTML=`<div class="error-text">Failed to load emails: ${e.message}</div>`}}
 function formatStatus(s){return{new:'New',label_created:'Label Created',shipped:'Shipped',completed:'Completed',cancelled:'Cancelled',refunded:'Refunded'}[s]||s}
 function escHtml(s){if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML}
-function openTestOrderModal(){if(exampleReadOnly())return;document.getElementById('test-order-modal').classList.add('open');document.getElementById('test-order-error').textContent='';document.body.classList.add('no-scroll')}
+function parseReviewProductWeight(weight){const parsed=Number.parseFloat(weight);return Number.isFinite(parsed)&&parsed>0?parsed:100}
+function parseReviewProductDimension(value){const parsed=Number.parseFloat(value);return Number.isFinite(parsed)&&parsed>0?parsed:null}
+function parseReviewProductQuantity(value){const parsed=Number.parseInt(value,10);return Number.isFinite(parsed)&&parsed>0?parsed:1}
+function findReviewProductById(productId){return reviewOrderProducts.find((product)=>String(product.product_id||'')===String(productId||''))}
+function getReviewProductDimensions(product){if(!product)return null;const length=parseReviewProductDimension(product.length_cm??product.length??product.parcel_length_cm);const width=parseReviewProductDimension(product.width_cm??product.width??product.parcel_width_cm);const height=parseReviewProductDimension(product.height_cm??product.height??product.parcel_height_cm);if(length&&width&&height)return{length,width,height};return null}
+function getReviewProductOptionsHtml(selectedProductId){if(!reviewOrderProducts.length)return'<option value="">No active products available</option>';let html='<option value="">Select product</option>';reviewOrderProducts.forEach((product)=>{const productId=String(product.product_id||'');const selected=productId===selectedProductId?' selected':'';const weight=Math.round(parseReviewProductWeight(product.weight));html+=`<option value="${escHtml(productId)}"${selected}>${escHtml(product.product_name||productId)} (${weight}g)</option>`});return html}
+function getSelectedReviewProducts(){return reviewOrderSelections.map((row)=>({id:String(row.productId||'').trim(),quantity:parseReviewProductQuantity(row.quantity)})).filter((row)=>row.id)}
+function updateReviewProductSummary(){const summary=document.getElementById('review-product-summary');if(!summary)return;const selected=getSelectedReviewProducts();if(!selected.length){summary.textContent='No products selected';return}let totalUnits=0;let totalWeight=0;selected.forEach((row)=>{const product=findReviewProductById(row.id);const quantity=parseReviewProductQuantity(row.quantity);totalUnits+=quantity;totalWeight+=parseReviewProductWeight(product?.weight)*quantity});const totalKg=(totalWeight/1000).toFixed(2);summary.textContent=`${selected.length} product type(s), ${totalUnits} unit(s), estimated weight ${Math.round(totalWeight)}g (${totalKg}kg)`}
+function renderReviewProductRows(){const container=document.getElementById('review-product-rows');if(!container)return;if(!reviewOrderSelections.length)reviewOrderSelections=[{productId:'',quantity:1}];container.innerHTML=reviewOrderSelections.map((row,index)=>{const selectedId=String(row.productId||'');const quantity=parseReviewProductQuantity(row.quantity);const product=findReviewProductById(selectedId);const weight=parseReviewProductWeight(product?.weight);const lineWeight=Math.round(weight*quantity);const dimensions=getReviewProductDimensions(product);const dimensionsText=dimensions?` ${dimensions.length}x${dimensions.width}x${dimensions.height}cm`:'';const stockText=product&&Number.isFinite(Number(product.stock_quantity))?` • Stock ${product.stock_quantity}`:'';const meta=product?`${weight}g each • line ${lineWeight}g${dimensionsText}${stockText}`:'Choose a product and quantity';const disableRemove=reviewOrderSelections.length===1?' disabled':'';return`<div class="review-product-row"><select onchange="updateReviewProductSelection(${index},'productId',this.value)">${getReviewProductOptionsHtml(selectedId)}</select><input type="number" min="1" value="${quantity}" onchange="updateReviewProductSelection(${index},'quantity',this.value)" inputmode="numeric"><button type="button" class="review-product-remove" onclick="removeReviewProductRow(${index})"${disableRemove} title="Remove row">&times;</button><div class="review-product-meta">${escHtml(meta)}</div></div>`}).join('');updateReviewProductSummary()}
+function addReviewProductRow(){reviewOrderSelections.push({productId:'',quantity:1});renderReviewProductRows()}
+function removeReviewProductRow(index){if(index<0||index>=reviewOrderSelections.length)return;if(reviewOrderSelections.length===1){reviewOrderSelections=[{productId:'',quantity:1}]}else{reviewOrderSelections.splice(index,1)}renderReviewProductRows()}
+function updateReviewProductSelection(index,field,value){if(index<0||index>=reviewOrderSelections.length)return;if(field==='quantity'){reviewOrderSelections[index].quantity=parseReviewProductQuantity(value)}else{reviewOrderSelections[index].productId=String(value||'')}renderReviewProductRows()}
+async function ensureReviewOrderProductsLoaded(){const response=await storeApi('/api/inventory');const products=Array.isArray(response.products)?response.products:[];reviewOrderProducts=products.filter((product)=>product&&product.active!==0&&product.active!==false)}
+async function openTestOrderModal(){if(exampleReadOnly())return;document.getElementById('test-order-modal').classList.add('open');document.getElementById('test-order-error').textContent='';document.body.classList.add('no-scroll');reviewOrderSelections=[{productId:'',quantity:1}];try{await ensureReviewOrderProductsLoaded();renderReviewProductRows()}catch(e){document.getElementById('test-order-error').textContent='Failed to load products: '+e.message}}
 function closeTestOrderModal(){document.getElementById('test-order-modal').classList.remove('open');document.body.classList.remove('no-scroll')}
 async function submitTestOrder(){
 if(exampleReadOnly())return;
@@ -168,8 +181,7 @@ const city=document.getElementById('test-city').value.trim();
 const province=document.getElementById('test-province').value.trim();
 const postalCode=document.getElementById('test-postcode').value.trim();
 const country=(document.getElementById('test-country').value.trim()||'GB').toUpperCase();
-const itemName=document.getElementById('test-item-name').value.trim()||'FPVGate Review Unit';
-const qty=Math.max(1,parseInt(document.getElementById('test-item-qty').value,10)||1);
+const selectedProducts=getSelectedReviewProducts();
 const shippingMethod=document.getElementById('test-shipping-method').value.trim()||'Review Unit Shipment';
 const notes=document.getElementById('test-order-notes').value.trim();
 const labelsInput=(document.getElementById('test-order-labels').value||'').split(',').map(v=>v.trim().toLowerCase()).filter(Boolean);
@@ -177,6 +189,7 @@ const labels=[...new Set(labelsInput)];
 if(!name||!email||!address1||!city||!postalCode){err.textContent='Name, email, address line 1, city, and postcode are required';return}
 if(!email.includes('@')){err.textContent='Please enter a valid email address';return}
 if(country.length!==2){err.textContent='Country code must be a 2-letter code (for example, GB or US)';return}
+if(!selectedProducts.length){err.textContent='Select at least one shipment product';return}
 btn.disabled=true;
 btn.textContent='Creating...';
 try{
@@ -197,7 +210,7 @@ country,
 phone,
 email
 },
-items:[{id:'review-unit',name:itemName,price:0,quantity:qty,totalPrice:0,weight:100}],
+selectedProducts,
 shippingFees:0,
 total:0,
 shippingMethod,

@@ -38,6 +38,85 @@ const DEFAULT_PARCEL = {
     mass_unit: 'g'
 };
 
+function toPositiveNumber(value, fallback = 0) {
+    const parsed = Number.parseFloat(value);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function toPositiveInt(value, fallback = 1) {
+    const parsed = Number.parseInt(value, 10);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function getItemDimension(item, keys = []) {
+    for (const key of keys) {
+        const dimension = toPositiveNumber(item?.[key], 0);
+        if (dimension > 0) return dimension;
+    }
+    return 0;
+}
+
+export function buildParcelFromItems(items = [], baseParcel = DEFAULT_PARCEL) {
+    const defaultLength = toPositiveNumber(baseParcel.length, DEFAULT_PARCEL.length);
+    const defaultWidth = toPositiveNumber(baseParcel.width, DEFAULT_PARCEL.width);
+    const defaultHeight = toPositiveNumber(baseParcel.height, DEFAULT_PARCEL.height);
+    const defaultWeight = toPositiveInt(baseParcel.weight, DEFAULT_PARCEL.weight);
+
+    let totalUnits = 0;
+    let totalWeight = 0;
+    let totalVolume = 0;
+
+    (Array.isArray(items) ? items : []).forEach((item) => {
+        const quantity = toPositiveInt(item?.quantity, 1);
+        const itemWeight = toPositiveNumber(item?.weight, defaultWeight);
+        totalUnits += quantity;
+        totalWeight += itemWeight * quantity;
+
+        const itemLength = getItemDimension(item, ['length', 'length_cm', 'parcel_length_cm']);
+        const itemWidth = getItemDimension(item, ['width', 'width_cm', 'parcel_width_cm']);
+        const itemHeight = getItemDimension(item, ['height', 'height_cm', 'parcel_height_cm']);
+        if (itemLength && itemWidth && itemHeight) {
+            totalVolume += itemLength * itemWidth * itemHeight * quantity;
+        }
+    });
+
+    const safeWeight = Math.max(1, Math.round(totalWeight || defaultWeight));
+    let length = defaultLength;
+    let width = defaultWidth;
+    let height = defaultHeight;
+
+    if (totalVolume > 0) {
+        const footprint = defaultLength * defaultWidth;
+        if (footprint > 0) {
+            height = Math.max(defaultHeight, Number((totalVolume / footprint).toFixed(1)));
+        }
+    } else if (totalUnits > 1) {
+        height = Number((defaultHeight * Math.ceil(totalUnits / 2)).toFixed(1));
+    }
+
+    const weightMultiplier = safeWeight / Math.max(1, defaultWeight);
+    if (weightMultiplier > 2) {
+        const sideScale = Math.min(2.2, Math.sqrt(weightMultiplier / 2));
+        length = Number((length * sideScale).toFixed(1));
+        width = Number((width * sideScale).toFixed(1));
+    }
+
+    if (totalUnits > 4) {
+        const packScale = Math.min(1.8, 1 + (totalUnits - 4) * 0.08);
+        length = Number((length * packScale).toFixed(1));
+        width = Number((width * Math.min(packScale, 1.5)).toFixed(1));
+    }
+
+    return {
+        length,
+        width,
+        height: Number(Math.max(1, height).toFixed(1)),
+        distance_unit: baseParcel.distance_unit || DEFAULT_PARCEL.distance_unit,
+        weight: safeWeight,
+        mass_unit: baseParcel.mass_unit || DEFAULT_PARCEL.mass_unit
+    };
+}
+
 /**
  * Make an authenticated request to the Shippo API
  */
@@ -127,6 +206,7 @@ async function createCustomsDeclaration(token, items = [], eoriNumber = '') {
 export async function getShippingRates(token, toAddress, parcel = null, items = [], eoriNumber = '') {
     const destCountry = toAddress.country || toAddress.countryCode || '';
     const isInternational = destCountry && destCountry !== 'GB';
+    const resolvedParcel = parcel || buildParcelFromItems(items, DEFAULT_PARCEL);
 
     const shipmentData = {
         address_from: FROM_ADDRESS,
@@ -141,7 +221,7 @@ export async function getShippingRates(token, toAddress, parcel = null, items = 
             phone: toAddress.phone || '',
             email: toAddress.email || ''
         },
-        parcels: [parcel || DEFAULT_PARCEL],
+        parcels: [resolvedParcel],
         async: false
     };
 
@@ -270,6 +350,7 @@ export function getFallbackShippingOptions(destinationCountry, currency = 'gbp')
 export async function getReturnRates(token, fromCustomerAddress, parcel = null, items = [], eoriNumber = '') {
     const srcCountry = fromCustomerAddress.country || '';
     const isInternational = srcCountry && srcCountry !== 'GB';
+    const resolvedParcel = parcel || buildParcelFromItems(items, DEFAULT_PARCEL);
 
     const shipmentData = {
         address_from: {
@@ -284,7 +365,7 @@ export async function getReturnRates(token, fromCustomerAddress, parcel = null, 
             email: fromCustomerAddress.email || ''
         },
         address_to: FROM_ADDRESS,
-        parcels: [parcel || DEFAULT_PARCEL],
+        parcels: [resolvedParcel],
         async: false
     };
 
