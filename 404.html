@@ -35,22 +35,40 @@
 </script>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif; background: #0a0a0a; color: #fff; min-height: 100vh; }
+:root {
+  color-scheme: dark;
+  --surface: #14161A; --ink: #E9EAEC; --ink-2: #A0A4AB; --rule: #2B2F36;
+  --accent: #6FB2F2; --accent-fill: #1F6FCC; --accent-fill-hover: #2A80E0; --accent-ink: #fff;
+}
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: light;
+    --surface: #F2F3F4; --ink: #16181C; --ink-2: #52565D; --rule: #DEE0E3;
+    --accent: #0F55A8; --accent-fill: #12599F; --accent-fill-hover: #0E4880;
+  }
+}
+body {
+  font-family: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  background: var(--surface); color: var(--ink); min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
 #loader { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-.spinner { width: 32px; height: 32px; border: 3px solid #333; border-top-color: #4299e1; border-radius: 50%; animation: spin .6s linear infinite; }
+.spinner { width: 24px; height: 24px; border: 2px solid var(--rule); border-top-color: var(--accent); border-radius: 50%; animation: spin .6s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
-#notfound { display: none; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; text-align: center; padding: 40px 20px; }
-#notfound h1 { font-size: 120px; font-weight: 800; background: linear-gradient(135deg, #4299e1, #9f7aea); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; }
-#notfound p { color: #a0aec0; font-size: 18px; margin: 16px 0 32px; max-width: 400px; }
-#notfound a { display: inline-block; padding: 12px 28px; background: #4299e1; color: #fff; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 15px; transition: background .2s; }
-#notfound a:hover { background: #3182ce; }
+#notfound { display: none; flex-direction: column; align-items: flex-start; justify-content: center; min-height: 100vh; text-align: left; padding: 40px clamp(20px, 8vw, 80px); max-width: 640px; }
+#notfound .code { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent); margin-bottom: 20px; }
+#notfound h1 { font-size: clamp(2rem, 1.4rem + 2.4vw, 3rem); font-weight: 600; letter-spacing: -0.03em; line-height: 1.1; }
+#notfound p { color: var(--ink-2); font-size: 15px; margin: 12px 0 32px; max-width: 46ch; line-height: 1.6; }
+#notfound a { display: inline-block; padding: 10px 18px; background: var(--accent-fill); color: var(--accent-ink); text-decoration: none; border-radius: 5px; font-weight: 500; font-size: 14px; transition: background .15s ease; }
+#notfound a:hover { background: var(--accent-fill-hover); }
 </style>
 </head>
 <body>
 <div id="loader"><div class="spinner"></div></div>
 <div id="notfound">
-<h1>404</h1>
-<p>The page you're looking for doesn't exist or has been moved.</p>
+<span class="code">Error 404</span>
+<h1>That page doesn't exist.</h1>
+<p>The link may be out of date, or the page has moved. Head back to the site and try again from there.</p>
 <a href="/">Back to FPVGate</a>
 </div>
 </body>
