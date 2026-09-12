@@ -1,6 +1,11 @@
 {
     "versions": [
         {
+            "tag": "v1.8.0-beta-2",
+            "date": "2026-09-12",
+            "notes": "Adds over-the-air updates from the device web interface, so future updates no longer need a cable. Also USB networking on the AIO, the visual marshal, and a larger filesystem partition.\n\nInstalling this over a cable is still required if you are coming from 1.7.3 or earlier: the partition table changes and an over-the-air update cannot migrate to it."
+        },
+        {
             "tag": "v1.8.0-beta-1",
             "date": "2026-09-12",
             "notes": "USB networking on the AIO, visual marshal with SD RSSI capture, and a larger filesystem partition. Requires a full wire flash: the partition table changes, so an over-the-air update cannot migrate to it."
