@@ -385,7 +385,13 @@ function isVersionAtLeast(versionTag, minimumVersionTag) {
 }
 
 function shouldUseModernFirmwareLayout(versionTag, firmwareFolder) {
-    if (firmwareFolder !== 'firmware') return false;
+    // Layout is decided by version, not by which folder the build came from.
+    //
+    // Pre-releases used to be forced onto the legacy layout regardless of
+    // version, which meant a pre-release of 1.7.3 or later had to be packaged
+    // differently from the release it was previewing. The existing pre-releases
+    // are all older than 1.7.3, so they still resolve to the legacy layout and
+    // keep working unchanged.
     return isVersionAtLeast(versionTag, MODERN_FIRMWARE_LAYOUT_VERSION);
 }
 function generateManifest() {
