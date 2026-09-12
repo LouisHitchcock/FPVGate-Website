@@ -3,6 +3,36 @@
 
 import { ESPLoader, Transport } from 'https://unpkg.com/esptool-js@0.4.1/bundle.js';
 
+// Espressif's own USB vendor id. A board exposing this is talking through the
+// chip's built-in USB-serial-JTAG, which is what the ROM bootloader uses.
+const ESPRESSIF_VID = 0x303A;
+
+// How long to wait for the bootloader device to appear after a reset, and how
+// often to look for it.
+const REENUMERATE_TIMEOUT_MS = 8000;
+const REENUMERATE_POLL_MS = 250;
+
+/*
+ * Why this file is more complicated than "open port, flash it".
+ *
+ * From 1.8.0 the AIO runs USB networking, which means TinyUSB with a composite
+ * device (Seeed vid 0x2886) carrying both the RNDIS network interface and the
+ * serial console. Entering the bootloader still works exactly as before:
+ * esptool toggles DTR/RTS, the firmware sees the pattern and calls
+ * usb_persist_restart(RESTART_BOOTLOADER).
+ *
+ * The catch is in the Arduino core. On ESP32-S3 that function calls
+ * usb_switch_to_cdc_jtag() before restarting, so the board comes back as a
+ * DIFFERENT USB device, Espressif vid 0x303A, and the SerialPort we were
+ * holding no longer exists. esptool reports the port as not functioning and
+ * gives up, even though the reset it asked for worked perfectly.
+ *
+ * Boards running 1.7.3 and earlier used ARDUINO_USB_MODE=1, which is already
+ * the 0x303A serial-JTAG device, so their identity does not change on reset and
+ * none of this applies. Which device is in front of us therefore depends on the
+ * firmware currently installed, not on the version being flashed.
+ */
+
 export class CustomESPFlasher {
     constructor() {
         this.port = null;
@@ -12,14 +42,18 @@ export class CustomESPFlasher {
         this.onLog = null;
         this.onError = null;
         this.onComplete = null;
+        this.onNeedsPort = null;
     }
 
     // Set up event handlers
-    setHandlers({ onProgress, onLog, onError, onComplete }) {
+    setHandlers({ onProgress, onLog, onError, onComplete, onNeedsPort }) {
         this.onProgress = onProgress;
         this.onLog = onLog;
         this.onError = onError;
         this.onComplete = onComplete;
+        // Called when the board has re-enumerated and the user must pick it
+        // again, so the UI can explain the second dialog before it appears.
+        this.onNeedsPort = onNeedsPort;
     }
 
     log(message) {
@@ -35,41 +69,109 @@ export class CustomESPFlasher {
         }
     }
 
+    // True if this port is the chip's built-in serial-JTAG, meaning either the
+    // ROM bootloader or pre-1.8.0 firmware. Such a port keeps its identity
+    // across a reset, so no reconnection is needed.
+    isEspressifPort(port) {
+        try {
+            return (port && port.getInfo ? port.getInfo() : {}).usbVendorId === ESPRESSIF_VID;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    // Attach esptool to a port. Separated from connect() so it can be repeated
+    // against the replacement port after a re-enumeration.
+    async attach(port) {
+        this.port = port;
+        this.transport = new Transport(port, true);
+        this.esploader = new ESPLoader({
+            transport: this.transport,
+            baudrate: 115200,
+            romBaudrate: 115200,
+            terminal: {
+                clean: () => {},
+                writeLine: (msg) => this.log(msg),
+                write: (msg) => this.log(msg)
+            },
+            enableTracing: false
+        });
+        return await this.esploader.main();
+    }
+
+    // Find the bootloader device that replaced the one we were talking to.
+    // Web Serial grants permission per device, so a board whose 0x303A identity
+    // has been seen before is returned silently. A first-time board needs one
+    // more picker, filtered so only the right device is offered.
+    async awaitBootloaderPort() {
+        const deadline = Date.now() + REENUMERATE_TIMEOUT_MS;
+        while (Date.now() < deadline) {
+            const granted = await navigator.serial.getPorts();
+            const match = granted.find((p) => this.isEspressifPort(p) && p !== this.port);
+            if (match) {
+                this.log('Found the bootloader device automatically.');
+                return match;
+            }
+            await new Promise((r) => setTimeout(r, REENUMERATE_POLL_MS));
+        }
+
+        this.log('The board has reconnected in bootloader mode under a new identity.');
+        this.log('Select it in the dialog to continue. This is only needed the first');
+        this.log('time you flash this board on this computer.');
+        if (this.onNeedsPort) {
+            this.onNeedsPort();
+        }
+        return await navigator.serial.requestPort({
+            filters: [{ usbVendorId: ESPRESSIF_VID }]
+        });
+    }
+
+    async releaseTransport() {
+        try {
+            if (this.transport) await this.transport.disconnect();
+        } catch (e) { /* the device has already gone */ }
+        try {
+            if (this.port) await this.port.close();
+        } catch (e) { /* the device has already gone */ }
+        this.transport = null;
+        this.esploader = null;
+    }
+
     // Connect to ESP32 device
     async connect() {
         try {
             this.log('Requesting serial port...');
             this.updateProgress(5, 'Requesting port access');
 
-            // Request serial port
-            this.port = await navigator.serial.requestPort();
-            
+            const selected = await navigator.serial.requestPort();
+            const startedInBootloaderMode = this.isEspressifPort(selected);
+
             this.log('Opening serial port...');
             this.updateProgress(10, 'Opening port');
-
-            // Create transport
-            this.transport = new Transport(this.port, true);
-
-            // Create ESP loader
-            this.esploader = new ESPLoader({
-                transport: this.transport,
-                baudrate: 115200,
-                romBaudrate: 115200,
-                terminal: {
-                    clean: () => {},
-                    writeLine: (msg) => this.log(msg),
-                    write: (msg) => this.log(msg)
-                },
-                enableTracing: false
-            });
-
             this.log('Connecting to device...');
             this.updateProgress(20, 'Detecting chip');
 
-            const chip = await this.esploader.main();
-            
-            this.log(`Connected to ${chip}`);
-            this.updateProgress(25, `Connected to ${chip}`);
+            let chip;
+            try {
+                chip = await this.attach(selected);
+            } catch (error) {
+                // A board already on the serial-JTAG device keeps its identity
+                // across a reset, so a failure there is a genuine failure and
+                // there is nothing to reconnect to.
+                if (startedInBootloaderMode) throw error;
+
+                this.log('Initial connection failed: ' + error.message);
+                this.log('That is expected on a board running USB networking, because');
+                this.log('entering the bootloader changes its USB identity. Reconnecting...');
+                this.updateProgress(15, 'Reconnecting after reset');
+
+                await this.releaseTransport();
+                const bootPort = await this.awaitBootloaderPort();
+                chip = await this.attach(bootPort);
+            }
+
+            this.log('Connected to ' + chip);
+            this.updateProgress(25, 'Connected to ' + chip);
 
             return chip;
 

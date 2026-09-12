@@ -24,6 +24,20 @@
     <link rel="icon" type="image/png" href="logo-black.png">
     <link rel="stylesheet" href="styles.css">
 
+    <style>
+      /* Shown when a board re-enumerates into bootloader mode part way through
+         flashing and the browser needs permission for what it now sees as a new
+         device. Scoped here rather than styles.css so the flasher owns it. */
+      .flasher-reconnect-notice {
+        margin: 8px 0;
+        padding: 10px 12px;
+        border-left: 3px solid var(--accent-color, #ffb300);
+        background: rgba(255, 179, 0, 0.08);
+        border-radius: 4px;
+        line-height: 1.45;
+      }
+    </style>
+
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
