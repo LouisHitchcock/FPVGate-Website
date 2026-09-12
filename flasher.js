@@ -385,7 +385,13 @@ function isVersionAtLeast(versionTag, minimumVersionTag) {
 }
 
 function shouldUseModernFirmwareLayout(versionTag, firmwareFolder) {
-    if (firmwareFolder !== 'firmware') return false;
+    // Layout is decided by version, not by which folder the build came from.
+    //
+    // Pre-releases used to be forced onto the legacy layout regardless of
+    // version, which meant a pre-release of 1.7.3 or later had to be packaged
+    // differently from the release it was previewing. The existing pre-releases
+    // are all older than 1.7.3, so they still resolve to the legacy layout and
+    // keep working unchanged.
     return isVersionAtLeast(versionTag, MODERN_FIRMWARE_LAYOUT_VERSION);
 }
 function generateManifest() {
@@ -690,6 +696,22 @@ async function startFlashing() {
         
         // Setup event handlers
         flasher.setHandlers({
+            // A board running USB networking changes its USB identity when it
+            // enters the bootloader, so the browser sees a new device and asks
+            // for permission again. Explain that before the dialog appears,
+            // otherwise a second unexplained prompt looks like a fault.
+            onNeedsPort: () => {
+                progressStatus.textContent = 'Select the board again to continue';
+                const notice = document.createElement('div');
+                notice.className = 'flasher-reconnect-notice';
+                notice.innerHTML =
+                    '<strong>One more step.</strong> The board restarted into flashing mode ' +
+                    'and now appears as a new device, so your browser needs permission for it. ' +
+                    'Pick the FPVGate board in the dialog. This is only needed the first time ' +
+                    'you flash this board on this computer.';
+                progressLog.appendChild(notice);
+                progressLog.scrollTop = progressLog.scrollHeight;
+            },
             onProgress: (percent, status) => {
                 progressBar.style.width = `${percent}%`;
                 progressBar.textContent = `${percent}%`;

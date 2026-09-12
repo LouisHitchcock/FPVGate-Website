@@ -1,6 +1,11 @@
 {
     "versions": [
         {
+            "tag": "v1.8.0-beta-1",
+            "date": "2026-09-12",
+            "notes": "USB networking on the AIO, visual marshal with SD RSSI capture, and a larger filesystem partition. Requires a full wire flash: the partition table changes, so an over-the-air update cannot migrate to it."
+        },
+        {
             "tag": "v1.7.0-Touch",
             "date": "2026-03-20",
             "notes": "Touchscreen LCD pre-release (Waveshare LCD, NovaBlade)"
