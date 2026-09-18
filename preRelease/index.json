@@ -1,6 +1,11 @@
 {
     "versions": [
         {
+            "tag": "v1.8.0-rc-2",
+            "date": "2026-09-18",
+            "notes": "USB networking (gate reachable at 192.168.7.1 over USB-C), over-the-air updates from the device UI, gzipped web assets (about 4x faster page loads), visual marshal and the merged race editor. Upgrading from 1.7.x needs a full wired flash - the partition table changed. Windows and Linux only for USB networking; macOS does not support RNDIS."
+        },
+        {
             "tag": "v1.7.0-Touch",
             "date": "2026-03-20",
             "notes": "Touchscreen LCD pre-release (Waveshare LCD, NovaBlade)"

@@ -95,6 +95,22 @@ const BOARD_CONFIGS = {
             { path: 'filesystem.bin', offset: 0x410000 }
         ]
     },
+    // boards.json offers this in the dropdown, so it needs a config here or
+    // selecting it leaves BOARD_CONFIGS[selectedBoard] undefined. Same XIAO
+    // ESP32S3 module and 8MB layout as the AIO, so the offsets match.
+    fpvgatesolo: {
+        name: 'FPVGate Solo',
+        chipFamily: 'ESP32-S3',
+        firmwareDir: 'FPVGate-Solo',
+        modernFirmwareDir: 'FPVGateSolo',
+        filePrefix: 'FPVGate_Solo',
+        parts: [
+            { path: 'bootloader.bin', offset: 0x0 },
+            { path: 'partitions.bin', offset: 0x8000 },
+            { path: 'firmware.bin', offset: 0x10000 },
+            { path: 'filesystem.bin', offset: 0x410000 }
+        ]
+    },
     wavesharelcd2: {
         name: 'Waveshare ESP32-S3-LCD-2 (16MB Flash)',
         chipFamily: 'ESP32-S3',
@@ -216,17 +232,49 @@ function populateBoards() {
     });
 }
 
+// ---------------------------------------------------------------------------
+// LOCAL TEST MODE - not for production
+//
+// Add ?local=1 to the flasher URL to list builds served from this machine
+// instead of querying the GitHub releases API. Intended for testing the flasher
+// against firmware that has not been released, in particular a board already
+// running USB networking, which is the only way to exercise the re-enumeration
+// path. Off unless the parameter is present.
+// ---------------------------------------------------------------------------
+const LOCAL_TEST_MODE = new URLSearchParams(window.location.search).get('local') === '1';
+
+// Builds staged under firmware/<tag>/<board>/ on this server. Listed newest
+// first; the first entry is auto-selected.
+const LOCAL_TEST_RELEASES = [
+    { tag_name: 'v1.8.0-test', name: 'v1.8.0-test (local build)', prerelease: false,
+      draft: false, assets: [{ name: 'local' }], published_at: new Date().toISOString(),
+      body: 'Local build served from this machine. Not a release.' },
+];
+
 // Load releases from GitHub API
 async function loadReleases() {
     const versionSelect = document.getElementById('version-select');
-    
+
     try {
-        const response = await fetch(GITHUB_API);
-        if (!response.ok) throw new Error('Failed to fetch releases');
-        
-        const data = await response.json();
+        let data;
+        if (LOCAL_TEST_MODE) {
+            console.warn('FLASHER IS IN LOCAL TEST MODE - listing local builds, not GitHub releases');
+            data = LOCAL_TEST_RELEASES;
+            const banner = document.createElement('div');
+            banner.className = 'flasher-reconnect-notice';
+            banner.innerHTML =
+                '<strong>Local test mode.</strong> Firmware is being served from this ' +
+                'machine, not from a published release. Remove <code>?local=1</code> from ' +
+                'the URL to go back to real releases.';
+            versionSelect.parentElement.insertBefore(banner, versionSelect);
+        } else {
+            const response = await fetch(GITHUB_API);
+            if (!response.ok) throw new Error('Failed to fetch releases');
+            data = await response.json();
+        }
+
         releases = data.filter(release => !release.draft && !release.prerelease && release.assets.length > 0);
-        
+
         // Populate version dropdown
         versionSelect.innerHTML = '<option value="">Choose firmware version...</option>';
         releases.forEach(release => {
@@ -385,7 +433,14 @@ function isVersionAtLeast(versionTag, minimumVersionTag) {
 }
 
 function shouldUseModernFirmwareLayout(versionTag, firmwareFolder) {
-    if (firmwareFolder !== 'firmware') return false;
+    // The layout follows the VERSION, not which folder the build is served
+    // from. Pre-releases used to be excluded here, which was harmless only
+    // while every pre-release predated v1.7.3. It stopped being harmless with
+    // v1.8.0-rc-2: the device-side updater in FPVGate's data/script.js already
+    // builds preRelease/<tag>/<board>/firmware.bin for anything at or above
+    // MODERN_FIRMWARE_LAYOUT_VERSION, so excluding pre-releases here made the
+    // flasher and the device ask for two different sets of files. That script
+    // carries the matching note: the two must agree.
     return isVersionAtLeast(versionTag, MODERN_FIRMWARE_LAYOUT_VERSION);
 }
 function generateManifest() {
