@@ -1,6 +1,11 @@
 {
     "versions": [
         {
+            "tag": "v1.8.0-rc-2",
+            "date": "2026-09-18",
+            "notes": "Release candidate. Adds gzipped web assets, which cut a cold page load from about 7 seconds to 2 and fixed the interface failing to load when a browser opened several connections at once. Also carries everything from the betas: USB networking (the gate is reachable at 192.168.7.1 over USB-C), over-the-air updates from the device interface, the visual marshal and the merged race editor.\n\nInstalling this over a cable is still required if you are coming from 1.7.3 or earlier: the partition table changes and an over-the-air update cannot migrate to it.\n\nUSB networking works on Windows and Linux. macOS is not supported, as it has no RNDIS driver."
+        },
+        {
             "tag": "v1.8.0-beta-2",
             "date": "2026-09-12",
             "notes": "Adds over-the-air updates from the device web interface, so future updates no longer need a cable. Also USB networking on the AIO, the visual marshal, and a larger filesystem partition.\n\nInstalling this over a cable is still required if you are coming from 1.7.3 or earlier: the partition table changes and an over-the-air update cannot migrate to it."
