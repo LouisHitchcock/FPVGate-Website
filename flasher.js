@@ -95,6 +95,23 @@ const BOARD_CONFIGS = {
             { path: 'filesystem.bin', offset: 0x410000 }
         ]
     },
+    // boards.json offers this in the dropdown, so it needs an entry here or
+    // selecting it leaves BOARD_CONFIGS[selectedBoard] undefined and no
+    // manifest can be built. Same XIAO ESP32S3 module and 8MB partition layout
+    // as the AIO, so the offsets match it exactly.
+    fpvgatesolo: {
+        name: 'FPVGate Solo',
+        chipFamily: 'ESP32-S3',
+        firmwareDir: 'FPVGate-Solo',
+        modernFirmwareDir: 'FPVGateSolo',
+        filePrefix: 'FPVGate_Solo',
+        parts: [
+            { path: 'bootloader.bin', offset: 0x0 },
+            { path: 'partitions.bin', offset: 0x8000 },
+            { path: 'firmware.bin', offset: 0x10000 },
+            { path: 'filesystem.bin', offset: 0x410000 }
+        ]
+    },
     wavesharelcd2: {
         name: 'Waveshare ESP32-S3-LCD-2 (16MB Flash)',
         chipFamily: 'ESP32-S3',
