@@ -156,6 +156,22 @@ let currentFileType = null;
 
 const MODERN_FIRMWARE_LAYOUT_VERSION = 'v1.7.3';
 
+// Fetch something that changes when a release is published, bypassing the
+// browser's HTTP cache.
+//
+// These lists are small, read once per page load, and stale copies are actively
+// misleading: publishing a release and then being told by your own flasher that
+// it does not exist is indistinguishable from the publish having failed. That
+// happened with v1.8.0-rc-2, which was live and serving correctly while the
+// dropdown kept showing only the betas until a hard reload.
+//
+// 'no-store' rather than a cache-busting query string: the problem is the
+// browser's copy, not the CDN's, and appending noise to the URL would defeat
+// edge caching for everyone to fix one stale client.
+function fetchFresh(url) {
+    return fetch(url, { cache: 'no-store' });
+}
+
 // Board configurations - will be loaded from GitHub
 let ALL_BOARDS = [];
 
@@ -175,7 +191,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Load board configurations from GitHub
 async function loadBoardConfigurations() {
     try {
-        const response = await fetch(BOARDS_CONFIG_URL);
+        const response = await fetchFresh(BOARDS_CONFIG_URL);
         if (!response.ok) {
             console.warn('Failed to fetch board config, using defaults');
             useFallbackBoards();
@@ -238,7 +254,7 @@ async function loadReleases() {
     const versionSelect = document.getElementById('version-select');
     
     try {
-        const response = await fetch(GITHUB_API);
+        const response = await fetchFresh(GITHUB_API);
         if (!response.ok) throw new Error('Failed to fetch releases');
         
         const data = await response.json();
@@ -542,7 +558,7 @@ async function loadPreReleaseVersions() {
     const versionSelect = document.getElementById('version-select');
 
     try {
-        const response = await fetch('preRelease/index.json');
+        const response = await fetchFresh('preRelease/index.json');
         if (!response.ok) throw new Error('Failed to fetch pre-release index');
 
         const data = await response.json();
@@ -818,15 +834,14 @@ function setupPostFlashActions() {
     const openDeviceBtn = document.getElementById('open-device');
     
     openDeviceBtn.addEventListener('click', () => {
-        // Try fpvgate.local first, fallback to IP
         window.open('http://fpvgate.local', '_blank');
-        setTimeout(() => {
-            // Fallback option
-            if (!confirm('If fpvgate.local didn\'t work, click OK to try 192.168.4.1')) {
-                return;
-            }
-            window.open('http://192.168.4.1', '_blank');
-        }, 2000);
+        // Reveal the alternatives rather than firing a confirm() a couple of
+        // seconds later. The old prompt interrupted whatever the user was
+        // doing, offered only one fallback, and knew nothing about USB
+        // networking - which from 1.8.0 is the address most likely to work
+        // right after flashing over a cable.
+        const alternatives = document.getElementById('device-addresses');
+        if (alternatives) alternatives.style.display = 'block';
     });
 }
 

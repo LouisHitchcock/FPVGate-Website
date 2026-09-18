@@ -306,8 +306,29 @@
 
                     <section id="configuration" class="doc-section">
                         <h2>Configuration</h2>
-                        <p>After flashing, connect to the FPVGate WiFi network and access the web interface.</p>
-                        
+                        <p>After flashing, reach the web interface either over the FPVGate WiFi network or,
+                           on firmware 1.8.0 and later, straight down the USB cable.</p>
+
+                        <!-- USB networking, firmware 1.8.0 and later. Kept above the WiFi steps
+                             because on a computer it is the shorter route, and the gate is usually
+                             already plugged in at this point in the process. -->
+                        <div class="config-steps">
+                            <h3>Over USB (firmware 1.8.0 and later)</h3>
+                            <ol>
+                                <li>Connect the gate to your computer with a USB-C cable</li>
+                                <li>Open a browser to: <code>http://192.168.7.1</code></li>
+                            </ol>
+                            <p>The gate presents itself as a network device, so there is nothing to install
+                               and no WiFi network to join. WiFi keeps working at the same time.</p>
+                            <p><strong>Windows and Linux only.</strong> macOS cannot support this, as Apple
+                               removed the RNDIS protocol it relies on &mdash; use WiFi on a Mac.</p>
+                            <p><strong>Nothing appearing?</strong> Unplug the cable and plug it back in.
+                               After a firmware update the board waits in its bootloader and will not start
+                               until power has been removed; pressing reset is not enough. If it is listed
+                               as a device but the address will not load, unplug and replug once more &mdash;
+                               Windows occasionally brings the network adapter back disabled.</p>
+                        </div>
+
                         <div class="config-steps">
                             <h3>First-Time Setup</h3>
                             <ol>

@@ -151,6 +151,24 @@
                 </div>
                 <p class="qs-hint">Works on both mobile and desktop. If <code>fpvgate.local</code> doesn't resolve, use the IP address directly.</p>
 
+                <!-- USB networking, added in firmware 1.8.0. Worth putting in the quickstart
+                     rather than only in the reference docs: on a laptop it is fewer steps than
+                     joining the WiFi network, and it is the route most people will reach for
+                     while the gate is already on the bench plugged in. -->
+                <h3>Or Connect Over the USB Cable</h3>
+                <p>On firmware 1.8.0 and later, a FPVGate plugged into a computer appears as a
+                   network device. No WiFi to join, nothing to install:</p>
+                <div class="qs-url-box">
+                    <code>http://192.168.7.1</code>
+                </div>
+                <p class="qs-hint">
+                    Works on Windows and Linux. <strong>macOS is not supported</strong> &mdash; use
+                    WiFi on a Mac. The WiFi network stays available at the same time, so a phone can
+                    stay connected while you use the cable. If nothing appears, unplug the cable and
+                    plug it back in; after a firmware update the board waits in its bootloader until
+                    power has been removed.
+                </p>
+
                 <!-- Placeholder for web UI landing screenshot -->
                 <!--<div class="qs-image-slot">
                     <img src="images/quickstart/web-ui-home.png" alt="FPVGate web interface">
