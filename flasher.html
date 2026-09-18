@@ -218,11 +218,58 @@
                             </div>
 
                             <div class="post-flash-actions" id="post-flash-actions" style="display: none;">
-                                <h4>Flash Complete!</h4>
-                                <p>Your device is ready. Prepare your SD card using the tool in the sidebar, then connect to your FPVGate.</p>
+                                <h4>Flash Complete</h4>
+
+                                <!-- The device is NOT running the new firmware yet. Flashing over
+                                     USB leaves the ESP32-S3 in its ROM bootloader, and that state
+                                     survives a reset - only removing power clears it. Users who
+                                     skip this see a device that looks dead and assume the flash
+                                     failed, so it leads the screen rather than sitting in a
+                                     footnote. -->
+                                <div class="alert alert-warning" style="text-align: left; margin-bottom: 1rem;">
+                                    <strong>Unplug your FPVGate, then plug it back in.</strong>
+                                    <p style="margin: 0.5rem 0 0;">
+                                        This step is required. After flashing, the board waits in its
+                                        bootloader and will not start the new firmware until power has
+                                        been removed. Pressing reset is not enough &mdash; the cable has
+                                        to come out.
+                                    </p>
+                                </div>
+
+                                <p style="text-align: left;">
+                                    Once it is back, prepare your SD card using the tool in the sidebar,
+                                    then open the interface below.
+                                </p>
+
                                 <button id="open-device" class="btn btn-primary" style="margin-top: 0.5rem;">
                                     Open Device Interface
                                 </button>
+
+                                <!-- Shown once the button is used. fpvgate.local depends on mDNS,
+                                     which plenty of networks do not resolve, so the addresses are
+                                     listed rather than guessed at. 192.168.7.1 is new in 1.8.0 and
+                                     is the one that works over a USB cable. -->
+                                <div id="device-addresses" style="display: none; text-align: left; margin-top: 1rem;">
+                                    <p style="margin-bottom: 0.5rem;">If that did not open, try one of these directly:</p>
+                                    <ul style="margin: 0; padding-left: 1.25rem;">
+                                        <li><a href="http://192.168.7.1" target="_blank">192.168.7.1</a> &mdash; over the USB cable</li>
+                                        <li><a href="http://192.168.4.1" target="_blank">192.168.4.1</a> &mdash; when connected to the FPVGate WiFi network</li>
+                                        <li><a href="http://fpvgate.local" target="_blank">fpvgate.local</a> &mdash; when it has joined your own WiFi</li>
+                                    </ul>
+                                </div>
+
+                                <!-- Windows occasionally brings the USB network adapter back
+                                     disabled after a device re-enumerates. A second power cycle
+                                     clears it. Cheap to mention, and it saves a support message. -->
+                                <div class="alert alert-info" style="text-align: left; margin-top: 1rem;">
+                                    <strong>Not showing up over USB?</strong>
+                                    <p style="margin: 0.5rem 0 0;">
+                                        Unplug and replug it once more. Windows sometimes brings the USB
+                                        network adapter back disabled the first time, and a second power
+                                        cycle clears it. Your FPVGate is also reachable over WiFi in the
+                                        meantime.
+                                    </p>
+                                </div>
                             </div>
                         </div>
 

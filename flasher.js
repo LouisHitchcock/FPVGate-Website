@@ -818,15 +818,14 @@ function setupPostFlashActions() {
     const openDeviceBtn = document.getElementById('open-device');
     
     openDeviceBtn.addEventListener('click', () => {
-        // Try fpvgate.local first, fallback to IP
         window.open('http://fpvgate.local', '_blank');
-        setTimeout(() => {
-            // Fallback option
-            if (!confirm('If fpvgate.local didn\'t work, click OK to try 192.168.4.1')) {
-                return;
-            }
-            window.open('http://192.168.4.1', '_blank');
-        }, 2000);
+        // Reveal the alternatives rather than firing a confirm() a couple of
+        // seconds later. The old prompt interrupted whatever the user was
+        // doing, offered only one fallback, and knew nothing about USB
+        // networking - which from 1.8.0 is the address most likely to work
+        // right after flashing over a cable.
+        const alternatives = document.getElementById('device-addresses');
+        if (alternatives) alternatives.style.display = 'block';
     });
 }
 
