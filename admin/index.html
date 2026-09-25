@@ -391,8 +391,16 @@
 <label>Description <span style="color:#a0aec0;font-weight:normal">(legacy/Stripe)</span></label><input type="text" id="edit-product-desc">
 <label>Image URL</label><input type="text" id="edit-product-image">
 <label>Manufacture Cost (GBP) <span style="color:#a0aec0;font-weight:normal">(cost to produce per unit)</span></label><input type="number" id="edit-product-unit-cost" step="0.01" min="0">
-<label>Stock Quantity</label><input type="number" id="edit-product-stock" min="0">
+<label>Stock Quantity <span style="color:#a0aec0;font-weight:normal">(negative = pre-ordered units still owed)</span></label><input type="number" id="edit-product-stock" oninput="updatePreorderFields()">
 <label>Low Stock Threshold</label><input type="number" id="edit-product-threshold" min="0">
+<div style="border:1px solid #e2e8f0;border-radius:6px;padding:12px 14px;margin-bottom:14px">
+<label style="margin-top:0">Pre-orders</label><div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><input type="checkbox" id="edit-product-preorder" onchange="updatePreorderFields()"><span style="font-size:13px;color:#718096">Keep selling as a pre-order once stock runs out</span></div>
+<div id="edit-preorder-fields">
+<label>Ships From <span style="color:#a0aec0;font-weight:normal">(shown to buyers as "will not be shipped until")</span></label><input type="date" id="edit-product-preorder-date">
+<label>Pre-order Quantity <span style="color:#a0aec0;font-weight:normal">(units that can be pre-ordered before it shows out of stock)</span></label><input type="number" id="edit-product-preorder-limit" min="0" oninput="updatePreorderFields()">
+<div id="edit-preorder-summary" style="font-size:12px;color:#718096"></div>
+</div>
+</div>
 <label>Category</label><select id="edit-product-category" style="width:100%;padding:10px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:14px;background:#fff"><option value="fpvgate">FPVGate Hardware</option><option value="components">Components</option><option value="misc">Misc</option></select>
 <label style="margin-top:8px">Featured</label><div style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="edit-product-featured"><span style="font-size:13px;color:#718096">Feature this product</span></div>
 <div style="margin-bottom:14px">

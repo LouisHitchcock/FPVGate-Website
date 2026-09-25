@@ -110,7 +110,15 @@
 
         if (order) {
             const items = Array.isArray(order.items) ? order.items : [];
+            const preorderDate = items.map(i => i.preorderShipDate).filter(Boolean).sort().pop();
+            const preorderLabel = preorderDate
+                ? new Date(preorderDate + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
+                : '';
             detailsEl.innerHTML = `
+                ${preorderDate ? `<div class="preorder-notice" style="text-align:left;margin-bottom:24px">
+                    <strong>This is a pre-order</strong>
+                    <p>Your order will not be shipped until <strong>${preorderLabel}</strong>. We'll email you when it is on its way.</p>
+                </div>` : ''}
                 <div style="background:var(--card-bg);border-radius:10px;border:1px solid rgba(0,212,255,0.1);padding:24px;text-align:left;margin-bottom:24px">
                     <div style="display:flex;justify-content:space-between;margin-bottom:16px">
                         <span style="color:var(--text-secondary)">Order</span>

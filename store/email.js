@@ -24,6 +24,14 @@ function fmtDate(d) {
     return new Date(d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 }
 
+// Pre-order ship dates are stored as YYYY-MM-DD
+function fmtShipDate(isoDate) {
+    if (!isoDate) return 'the stated date';
+    const d = new Date(isoDate + 'T00:00:00Z');
+    if (isNaN(d)) return isoDate;
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+}
+
 function fmtDateTime(d) {
     if (!d) return '';
     const dt = new Date(d);
@@ -161,7 +169,8 @@ function itemsTable(data) {
                                     <tr>
                                         <td style="padding: 12px 0; border-bottom: 1px solid #e2e8f0;">
                                             <strong style="color: #1a202c;">${esc(item.name)}</strong><br />
-                                            <span style="color: #a0aec0; font-size: 13px;">Qty: ${item.quantity}</span>
+                                            <span style="color: #a0aec0; font-size: 13px;">Qty: ${item.quantity}</span>${item.preorderQuantity ? `<br />
+                                            <span style="color: #8f6314; font-size: 13px; font-weight: 600;">Pre-order: ${item.preorderQuantity} unit${item.preorderQuantity === 1 ? '' : 's'}, ships ${esc(fmtShipDate(item.preorderShipDate))}</span>` : ''}
                                         </td>
                                         <td align="right" style="padding: 12px 0; border-bottom: 1px solid #e2e8f0; white-space: nowrap;">
                                             <strong>${money(item.totalPrice || item.price * item.quantity, cur)}</strong>
@@ -263,13 +272,27 @@ export function orderConfirmationEmail(data) {
                                 <p style="margin: 0; color: #718096;">Thank you for your order! Here's your confirmation.</p>
                             </td>
                         </tr>` +
+        (data.preorderShipDate ? `
+                        <tr>
+                            <td style="padding: 10px 40px 20px;">
+                                <table width="100%" cellpadding="0" cellspacing="0" style="background: #fdf3e1; border: 2px solid #c48a2c; border-radius: 6px;">
+                                    <tr>
+                                        <td style="padding: 16px 20px;">
+                                            <strong style="color: #5c3f0b; font-size: 16px;">This is a pre-order</strong>
+                                            <p style="margin: 6px 0 0; color: #5c3f0b; line-height: 1.5;">Your order will not be shipped until <strong>${esc(fmtShipDate(data.preorderShipDate))}</strong>. The whole order ships together once the pre-order stock arrives, and we'll email you when it is on its way.</p>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>` : '') +
         orderInfoBar(data.invoiceNumber, data.createdAt) +
         itemsTable(data) +
         addressesRow(data) +
         paymentRow(data)
     );
 
-    return { subject: `Order ${data.invoiceNumber} - FPVGate`, html };
+    const subject = data.preorderShipDate ? `Pre-order ${data.invoiceNumber} - FPVGate` : `Order ${data.invoiceNumber} - FPVGate`;
+    return { subject, html };
 }
 
 // ─── Template: Order Shipped ────────────────────────
@@ -492,6 +515,7 @@ export function normalizeOrder(row) {
         trackingNumber: row.tracking_number,
         createdAt: row.created_at,
         shippingAddress: shipping,
-        billingAddress: billing
+        billingAddress: billing,
+        preorderShipDate: items.map(i => i.preorderShipDate).filter(Boolean).sort().pop() || null
     };
 }

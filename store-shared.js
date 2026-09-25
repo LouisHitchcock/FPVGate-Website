@@ -41,6 +41,7 @@ function updateCartUI() {
             <div class="cart-item-info">
                 <div class="cart-item-name">${escHtml(item.name)}</div>
                 <div class="cart-item-price">&pound;${item.price.toFixed(2)}</div>
+                ${cartLinePreorderQty(item) > 0 ? `<div class="cart-item-preorder">Pre-order: ships ${formatShipDate(item.preorderShipDate)}</div>` : ''}
                 <div class="cart-item-qty">
                     <button onclick="changeQty(${idx},-1)">-</button>
                     <span>${item.quantity}</span>
@@ -56,11 +57,16 @@ function updateCartUI() {
 
 function addToCart(product) {
     const cart = getCart();
+    const maxQuantity = Math.min(product.maxQuantity || 5, availableQty(product));
+    if (maxQuantity <= 0) return;
     const existing = cart.find(i => i.id === product.id);
     if (existing) {
-        if (existing.quantity < (product.maxQuantity || 5)) existing.quantity++;
+        existing.maxQuantity = maxQuantity;
+        existing.inStock = product.stock;
+        existing.preorderShipDate = product.preorderShipDate || null;
+        if (existing.quantity < maxQuantity) existing.quantity++;
     } else {
-        cart.push({ id: product.id, name: product.name, price: product.price, quantity: 1, image: product.image || '', maxQuantity: product.maxQuantity || 5 });
+        cart.push({ id: product.id, name: product.name, price: product.price, quantity: 1, image: product.image || '', maxQuantity, inStock: product.stock, preorderShipDate: product.preorderShipDate || null });
     }
     saveCart(cart);
     if (window.fpvgateAnalytics) window.fpvgateAnalytics.track('cart_add', { product_id: product.id, product_name: product.name, price: product.price, category: product.category || '' });
@@ -181,6 +187,43 @@ function hideSearchResults() {
     if (resultsEl) resultsEl.style.display = 'none';
 }
 
+// --- Pre-orders ---
+// When a product sells out and pre-orders are enabled, the API reports
+// stock: 0 with a preorderShipDate, and available counts the pre-order places
+// left. Buyers must see the dispatch date before they commit.
+function availableQty(p) { return p.available !== undefined ? p.available : p.stock; }
+function isPreorder(p) { return p.stock <= 0 && !!p.preorderShipDate && availableQty(p) > 0; }
+function buyButtonLabel(p) { return isPreorder(p) ? 'Pre-order' : availableQty(p) <= 0 ? 'Out of Stock' : 'Add to Cart'; }
+
+function cartLinePreorderQty(item) {
+    if (!item.preorderShipDate) return 0;
+    return Math.max(0, item.quantity - (item.inStock || 0));
+}
+
+function formatShipDate(isoDate) {
+    if (!isoDate) return '';
+    const d = new Date(isoDate + 'T00:00:00Z');
+    if (isNaN(d)) return isoDate;
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+}
+
+function renderStockNotice(p) {
+    if (isPreorder(p)) {
+        return `<div class="preorder-notice">
+            <strong>This is a pre-order</strong>
+            <p>This item is not in stock yet. Orders placed now will not be shipped until <strong>${formatShipDate(p.preorderShipDate)}</strong>.</p>
+        </div>`;
+    }
+    if (availableQty(p) <= 0) return 'Out of Stock';
+    // A cart can spill past the remaining stock into pre-order units
+    if (p.preorderShipDate && p.stock > 0 && p.stock < (p.maxQuantity || 5)) {
+        return `<div class="preorder-notice preorder-notice-quiet">
+            <p>Only ${p.stock} in stock. Any more than that are pre-orders and will not be shipped until <strong>${formatShipDate(p.preorderShipDate)}</strong>.</p>
+        </div>`;
+    }
+    return '';
+}
+
 // --- Product Rendering ---
 function renderProductCard(p, pi) {
     return `<div class="product-card" data-pi="${pi}" style="cursor:pointer">
@@ -209,12 +252,14 @@ function renderProductCard(p, pi) {
         <div class="product-info">
             <h2 class="product-name">${escHtml(p.name)}</h2>
             <p class="product-description">${escHtml(p.shortDescription || p.description)}</p>
-            ${p.stock <= 0 ? '<p style="color:var(--error-color);font-weight:600;margin-top:8px;">Out of Stock</p>' : ''}
+            ${isPreorder(p)
+                ? `<p class="preorder-flag">Pre-order: ships ${formatShipDate(p.preorderShipDate)}</p>`
+                : availableQty(p) <= 0 ? '<p style="color:var(--error-color);font-weight:600;margin-top:8px;">Out of Stock</p>' : ''}
             <div class="product-price-row">
                 <span class="product-price">&pound;${p.price.toFixed(2)}</span>
                 <button class="btn btn-primary" onclick="event.stopPropagation();addToCart(window._products[${pi}])"
-                    ${p.stock <= 0 ? 'disabled' : ''}>
-                    ${p.stock <= 0 ? 'Out of Stock' : 'Add to Cart'}
+                    ${availableQty(p) <= 0 ? 'disabled' : ''}>
+                    ${buyButtonLabel(p)}
                 </button>
             </div>
         </div>
@@ -261,11 +306,11 @@ function openProductModal(pi, sourceArray) {
 
     document.getElementById('modal-name').textContent = p.name;
     document.getElementById('modal-price').innerHTML = '&pound;' + p.price.toFixed(2);
-    document.getElementById('modal-stock').textContent = p.stock <= 0 ? 'Out of Stock' : '';
+    document.getElementById('modal-stock').innerHTML = renderStockNotice(p);
     document.getElementById('modal-actions').innerHTML = `
         <button class="btn btn-primary" onclick="addToCart(${arr}[${pi}])"
-            ${p.stock <= 0 ? 'disabled' : ''}>
-            ${p.stock <= 0 ? 'Out of Stock' : 'Add to Cart'}
+            ${availableQty(p) <= 0 ? 'disabled' : ''}>
+            ${buyButtonLabel(p)}
         </button>`;
 
     const descEl = document.getElementById('modal-description');

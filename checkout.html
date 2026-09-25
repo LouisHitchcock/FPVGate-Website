@@ -60,7 +60,7 @@
         /* Order summary */
         .summary-card { background: var(--surface-1); border-radius: var(--r-lg); border: 1px solid var(--rule); padding: 26px; position: sticky; top: 24px; }
         .summary-card h2 { font-size: 1rem; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--rule); }
-        .summary-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--rule); align-items: center; }
+        .summary-item { display: flex; flex-direction: row; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--rule); align-items: center; }
         .summary-item-info { display: flex; gap: 12px; align-items: center; flex: 1; min-width: 0; }
         .summary-item-img { width: 44px; height: 44px; border-radius: var(--r); background: var(--surface-2); border: 1px solid var(--rule); overflow: hidden; flex-shrink: 0; }
         .summary-item-img img { width: 100%; height: 100%; object-fit: cover; }
@@ -75,6 +75,13 @@
         .btn-pay { width: 100%; padding: 13px; background: var(--accent-fill); color: var(--accent-ink); border: 1px solid var(--accent-fill); border-radius: var(--r); font-family: var(--font-body); font-size: 0.9375rem; font-weight: 500; cursor: pointer; margin-top: 20px; transition: background 0.15s ease; }
         .btn-pay:hover { background: var(--accent-fill-hover); border-color: var(--accent-fill-hover); }
         .btn-pay:disabled { opacity: 0.45; cursor: not-allowed; }
+
+        /* Pre-order acknowledgement. .preorder-notice itself lives in styles.css. */
+        .checkout-preorder { margin-bottom: 20px; padding: 18px 20px; }
+        .checkout-preorder p { font-size: 0.9375rem; }
+        .checkout-preorder .preorder-ack { display: flex; gap: 10px; align-items: flex-start; margin: 14px 0 0; font-size: 0.875rem; font-weight: 600; letter-spacing: 0; color: var(--ink); cursor: pointer; }
+        .checkout-preorder .preorder-ack input { width: 18px; height: 18px; flex-shrink: 0; margin: 1px 0 0; padding: 0; accent-color: var(--accent-fill); cursor: pointer; }
+        .summary-item-preorder { font-size: 0.6875rem; font-weight: 600; color: var(--warn); }
 
         .checkout-error { color: var(--err); font-size: 0.8125rem; margin-top: 8px; }
         .checkout-empty { text-align: center; padding: 60px 20px; color: var(--ink-2); }
@@ -102,6 +109,12 @@
 
     <div class="checkout-body" id="checkout-body">
         <div class="checkout-left">
+            <div class="preorder-notice checkout-preorder" id="preorder-notice" style="display:none">
+                <strong>This order contains a pre-order</strong>
+                <p><span id="preorder-items"></span> not in stock yet. Your order will not be shipped until <strong class="preorder-date"></strong>. Everything in the order ships together once the stock arrives.</p>
+                <label class="preorder-ack"><input type="checkbox" id="preorder-ack" onchange="updatePayButton()"><span>I understand this is a pre-order and will not be shipped until <span class="preorder-date"></span>.</span></label>
+            </div>
+
             <div class="checkout-section">
                 <h2>Shipping Address</h2>
                 <label>Full Name *</label>
@@ -175,8 +188,52 @@
     const STORE_API = 'https://fpvgate-store.fpvgate-analytics.workers.dev';
     let selectedRate = null;
     let cartItems = [];
+    let preorderShipDate = null;
 
     function getCart() { return JSON.parse(localStorage.getItem('fpvgate_cart') || '[]'); }
+
+    function formatShipDate(isoDate) {
+        const d = new Date(isoDate + 'T00:00:00Z');
+        if (isNaN(d)) return isoDate;
+        return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+    }
+
+    // Work out which cart lines go past the stock on hand into pre-order.
+    // Start from what the cart remembered, then replace it with live stock so a
+    // cart built before the item sold out is still flagged.
+    function applyPreorderInfo(liveProducts) {
+        const byId = {};
+        (liveProducts || []).forEach(p => { byId[p.id] = p; });
+        cartItems.forEach(item => {
+            const live = byId[item.id];
+            const inStock = live ? live.stock : (item.inStock || 0);
+            const shipDate = live ? live.preorderShipDate : item.preorderShipDate;
+            item.preorderQty = shipDate ? Math.max(0, item.quantity - inStock) : 0;
+            item.preorderShipDate = item.preorderQty > 0 ? shipDate : null;
+        });
+        preorderShipDate = cartItems.map(i => i.preorderShipDate).filter(Boolean).sort().pop() || null;
+
+        const notice = document.getElementById('preorder-notice');
+        if (preorderShipDate) {
+            const names = cartItems.filter(i => i.preorderQty > 0).map(i => i.name);
+            document.getElementById('preorder-items').textContent = names.join(', ') + (names.length === 1 ? ' is' : ' are');
+            document.querySelectorAll('.preorder-date').forEach(el => { el.textContent = formatShipDate(preorderShipDate); });
+            notice.style.display = 'block';
+        } else {
+            notice.style.display = 'none';
+            document.getElementById('preorder-ack').checked = false;
+        }
+        renderSummary();
+        updatePayButton();
+    }
+
+    async function loadPreorderInfo() {
+        applyPreorderInfo(null);
+        try {
+            const resp = await fetch(STORE_API + '/products');
+            if (resp.ok) applyPreorderInfo(await resp.json());
+        } catch (e) {}
+    }
 
     function init() {
         cartItems = getCart();
@@ -184,13 +241,18 @@
             document.getElementById('checkout-body').innerHTML = '<div class="checkout-empty"><h2>Your cart is empty</h2><p style="margin-top:12px"><a href="shop.html">Continue shopping</a></p></div>';
             return;
         }
+        renderSummary();
+        loadPreorderInfo();
+    }
+
+    function renderSummary() {
         let subtotal = 0;
         document.getElementById('summary-items').innerHTML = cartItems.map(item => {
             subtotal += item.price * item.quantity;
             return `<div class="summary-item">
                 <div class="summary-item-info">
                     <div class="summary-item-img">${item.image ? `<img src="${item.image}">` : ''}</div>
-                    <div><div class="summary-item-name">${item.name}</div><div class="summary-item-qty">Qty: ${item.quantity}</div></div>
+                    <div><div class="summary-item-name">${item.name}</div><div class="summary-item-qty">Qty: ${item.quantity}</div>${item.preorderQty > 0 ? `<div class="summary-item-preorder">Pre-order: ships ${formatShipDate(item.preorderShipDate)}</div>` : ''}</div>
                 </div>
                 <div class="summary-item-price">&pound;${(item.price * item.quantity).toFixed(2)}</div>
             </div>`;
@@ -283,9 +345,21 @@
         document.getElementById('rate-' + idx).classList.add('selected');
         selectedRate = window._shippingRates[idx];
         updateTotal();
+        updatePayButton();
+    }
+
+    function updatePayButton() {
         const btn = document.getElementById('btn-pay');
-        btn.disabled = false;
-        btn.textContent = 'Pay with Stripe';
+        if (!selectedRate) {
+            btn.disabled = true;
+            btn.textContent = 'Select shipping to continue';
+        } else if (preorderShipDate && !document.getElementById('preorder-ack').checked) {
+            btn.disabled = true;
+            btn.textContent = 'Confirm the pre-order notice to continue';
+        } else {
+            btn.disabled = false;
+            btn.textContent = 'Pay with Stripe';
+        }
     }
 
     async function startCheckout() {
@@ -293,6 +367,12 @@
         errEl.textContent = '';
 
         if (!selectedRate) { errEl.textContent = 'Please select a shipping method.'; return; }
+        const preorderAcknowledged = document.getElementById('preorder-ack').checked;
+        if (preorderShipDate && !preorderAcknowledged) {
+            errEl.textContent = 'Please confirm you understand this order is a pre-order.';
+            document.getElementById('preorder-notice').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return;
+        }
 
         const cart = getCart();
         if (!cart.length) return;
@@ -323,6 +403,7 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     items: cart.map(i => ({ id: i.id, quantity: i.quantity })),
+                    preorderAcknowledged,
                     shipping,
                     selectedShippingRate: {
                         amount: selectedRate.amount,
@@ -337,6 +418,8 @@
             if (data.error) {
                 errEl.textContent = data.error;
                 btn.disabled = false; btn.textContent = 'Pay with Stripe';
+                // Stock changed since the page loaded: re-check so the notice shows
+                if (data.preorderRequired) loadPreorderInfo();
                 return;
             }
             if (data.url) window.location.href = data.url;

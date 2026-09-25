@@ -680,10 +680,12 @@ async function handleCheckout(request, env, corsHeaders) {
 
     const lineItems = [];
     const orderItems = [];
+    // [product_id, pre-ordered quantity, ship date] for each line that dips into pre-order stock
+    const preorderLines = [];
 
     for (const item of items) {
         const product = await env.DB.prepare(
-            'SELECT product_id, product_name, price, description, image_url, images, stock_quantity, weight, max_quantity FROM inventory WHERE product_id = ? AND active = 1'
+            'SELECT product_id, product_name, price, description, image_url, images, stock_quantity, weight, max_quantity, preorder_enabled, preorder_ship_date, preorder_limit FROM inventory WHERE product_id = ? AND active = 1'
         ).bind(item.id).first();
 
         if (!product) {
@@ -691,19 +693,29 @@ async function handleCheckout(request, env, corsHeaders) {
         }
 
         const qty = Math.min(item.quantity || 1, product.max_quantity || 5);
-        if (product.stock_quantity < qty) {
+        const availability = getAvailability(product);
+        if (availability.available < qty) {
+            if (availability.available > 0) {
+                return jsonResponse({ error: `Only ${availability.available} of ${product.product_name} left. Please reduce the quantity in your cart.` }, corsHeaders, 400);
+            }
             return jsonResponse({ error: `${product.product_name} is out of stock` }, corsHeaders, 400);
         }
 
+        const preorderQty = Math.max(0, qty - availability.inStock);
+        if (preorderQty > 0) preorderLines.push([product.product_id, preorderQty, availability.preorderShipDate]);
+
         const imgs = JSON.parse(product.images || '[]');
         const imageUrl = resolveStripeProductImageUrl(request.url, imgs, product.image_url);
+        const stripeDescription = preorderQty > 0
+            ? `PRE-ORDER: will not be shipped until ${formatShipDate(availability.preorderShipDate)}.${product.description ? ' ' + product.description : ''}`
+            : product.description || undefined;
 
         lineItems.push({
             price_data: {
                 currency: 'gbp',
                 product_data: {
                     name: product.product_name,
-                    description: product.description || undefined,
+                    description: stripeDescription,
                     images: imageUrl ? [imageUrl] : undefined,
                 },
                 unit_amount: Math.round(product.price * 100),
@@ -719,6 +731,16 @@ async function handleCheckout(request, env, corsHeaders) {
             totalPrice: product.price * qty,
             weight: product.weight || 100
         });
+    }
+
+    // The checkout page makes the buyer tick a box acknowledging the dispatch
+    // date. Enforce it here too so an out-of-date page can't skip it.
+    const preorderShipDate = latestShipDate(preorderLines.map(l => l[2]));
+    if (preorderLines.length > 0 && body.preorderAcknowledged !== true) {
+        return jsonResponse({
+            error: `Your cart contains pre-order items that will not be shipped until ${formatShipDate(preorderShipDate)}. Please confirm you understand this before paying.`,
+            preorderRequired: true
+        }, corsHeaders, 400);
     }
 
     // Use pre-selected rate if provided, otherwise fetch from Shippo
@@ -768,9 +790,20 @@ async function handleCheckout(request, env, corsHeaders) {
         cancel_url: cancelUrl || `${origin}/shop.html`,
         metadata: {
             order_items: JSON.stringify(orderItems),
-            shipping_address: JSON.stringify(shipping)
+            shipping_address: JSON.stringify(shipping),
+            // Kept separate from order_items, which is already close to
+            // Stripe's 500-character metadata value limit.
+            preorder_items: preorderLines.length ? JSON.stringify(preorderLines) : undefined
         }
     };
+
+    if (preorderLines.length > 0) {
+        sessionParams.custom_text = {
+            submit: {
+                message: `This order contains pre-order items. It will not be shipped until ${formatShipDate(preorderShipDate)}.`
+            }
+        };
+    }
 
     const session = await stripeRequest(env.STRIPE_SECRET_KEY, '/checkout/sessions', 'POST', sessionParams);
 
@@ -813,6 +846,17 @@ async function processCompletedCheckout(session, env) {
     const items = tryParseJson(metadata.order_items) || [];
     const shippingAddress = tryParseJson(metadata.shipping_address) || {};
 
+    const preorderLines = tryParseJson(metadata.preorder_items) || [];
+    for (const [productId, quantity, shipDate] of preorderLines) {
+        const item = items.find(i => i.id === productId);
+        if (item) {
+            item.preorderQuantity = quantity;
+            item.preorderShipDate = shipDate;
+        }
+    }
+    const preorderShipDate = latestShipDate(preorderLines.map(l => l[2]));
+    const labels = preorderLines.length ? ['preorder'] : [];
+
     const shippingCost = session.shipping_cost?.amount_total ? session.shipping_cost.amount_total / 100 : 0;
     const shippingMethod = session.shipping_cost?.shipping_rate ? 'Shippo Rate' : 'Standard';
     const subtotal = items.reduce((s, i) => s + (i.totalPrice || i.price * i.quantity), 0);
@@ -827,8 +871,8 @@ async function processCompletedCheckout(session, env) {
         INSERT INTO orders
         (stripe_session_id, stripe_payment_intent, invoice_number, customer_name, customer_email,
          shipping_address, billing_address, items, subtotal, shipping_fees,
-         total, currency, shipping_method, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new')
+         total, currency, shipping_method, status, labels)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new', ?)
     `).bind(
         session.id,
         session.payment_intent || null,
@@ -842,10 +886,11 @@ async function processCompletedCheckout(session, env) {
         shippingCost,
         total,
         session.currency || 'gbp',
-        shippingMethod
+        shippingMethod,
+        JSON.stringify(labels)
     ).run();
 
-    // Auto-decrement inventory
+    // Auto-decrement inventory. Pre-ordered units take stock below zero.
     try {
         for (const item of items) {
             if (item.id) {
@@ -878,7 +923,8 @@ async function processCompletedCheckout(session, env) {
                 currency: session.currency || 'gbp',
                 createdAt: new Date().toISOString(),
                 shippingAddress,
-                billingAddress: session.customer_details || {}
+                billingAddress: session.customer_details || {},
+                preorderShipDate
             };
             const email = orderConfirmationEmail(emailData);
             await sendEmail(env, customerEmail, email.subject, email.html, { type: 'confirmation', invoiceNumber });
@@ -1802,13 +1848,25 @@ async function handleListInventory(env, corsHeaders) {
 
 async function handleUpdateInventory(productId, request, env, corsHeaders) {
     const body = await request.json();
-    const { stock_quantity, low_stock_threshold, reason, product_name, sku, price, description, short_description, long_description, image_url, weight, max_quantity, unit_cost, category, featured } = body;
+    const { stock_quantity, low_stock_threshold, reason, product_name, sku, price, description, short_description, long_description, image_url, weight, max_quantity, unit_cost, category, featured, preorder_enabled, preorder_ship_date, preorder_limit } = body;
 
     const existing = await env.DB.prepare('SELECT * FROM inventory WHERE product_id = ?').bind(productId).first();
     if (!existing) return jsonResponse({ error: 'Product not found' }, corsHeaders, 404);
 
     const updates = [];
     const params = [];
+
+    if (preorder_enabled !== undefined || preorder_ship_date !== undefined || preorder_limit !== undefined) {
+        const enabled = preorder_enabled !== undefined ? !!preorder_enabled : existing.preorder_enabled === 1;
+        const shipDate = preorder_ship_date !== undefined ? (preorder_ship_date || null) : existing.preorder_ship_date;
+        const limit = preorder_limit !== undefined ? parseInt(preorder_limit, 10) || 0 : existing.preorder_limit || 0;
+        if (shipDate && !/^\d{4}-\d{2}-\d{2}$/.test(shipDate)) return jsonResponse({ error: 'Pre-order ship date must be YYYY-MM-DD' }, corsHeaders, 400);
+        if (limit < 0) return jsonResponse({ error: 'Pre-order quantity cannot be negative' }, corsHeaders, 400);
+        if (enabled && !shipDate) return jsonResponse({ error: 'Set a ship date before enabling pre-orders' }, corsHeaders, 400);
+        if (enabled && limit === 0) return jsonResponse({ error: 'Set how many units can be pre-ordered before enabling pre-orders' }, corsHeaders, 400);
+        updates.push('preorder_enabled = ?', 'preorder_ship_date = ?', 'preorder_limit = ?');
+        params.push(enabled ? 1 : 0, shipDate, limit);
+    }
 
     if (stock_quantity !== undefined) {
         updates.push('stock_quantity = ?');
@@ -2105,7 +2163,7 @@ async function handleAnalytics(request, env, corsHeaders) {
 async function sendDiscordNotification(webhookUrl, orderData) {
     const { invoiceNumber, items, total, currency, shippingAddress, customerEmail } = orderData;
     const currencyUpper = (currency || 'GBP').toUpperCase();
-    const itemList = items.map(item => `${item.name} x${item.quantity}`).join(', ');
+    const itemList = items.map(item => `${item.name} x${item.quantity}${item.preorderQuantity ? ` (${item.preorderQuantity} pre-order, ships ${formatShipDate(item.preorderShipDate)})` : ''}`).join(', ');
 
     const address = [
         shippingAddress.address1, shippingAddress.address2,
@@ -2118,7 +2176,7 @@ async function sendDiscordNotification(webhookUrl, orderData) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             embeds: [{
-                title: `New Order #${invoiceNumber}`,
+                title: items.some(i => i.preorderQuantity) ? `New Pre-order #${invoiceNumber}` : `New Order #${invoiceNumber}`,
                 color: 0x48bb78,
                 fields: [
                     { name: 'Customer', value: shippingAddress.name || customerEmail, inline: true },
@@ -2209,13 +2267,14 @@ async function handleProducts(request, env, corsHeaders) {
     else if (sort === 'price_desc') orderBy = 'price DESC';
     else if (sort === 'featured') orderBy = 'featured DESC, updated_at DESC';
 
-    const query = `SELECT product_id, product_name, price, description, short_description, long_description, image_url, images, weight, max_quantity, stock_quantity, low_stock_threshold, active, category, featured FROM inventory WHERE ${conditions.join(' AND ')} ORDER BY ${orderBy}`;
+    const query = `SELECT product_id, product_name, price, description, short_description, long_description, image_url, images, weight, max_quantity, stock_quantity, low_stock_threshold, active, category, featured, preorder_enabled, preorder_ship_date, preorder_limit FROM inventory WHERE ${conditions.join(' AND ')} ORDER BY ${orderBy}`;
 
     const result = await env.DB.prepare(query).bind(...params).all();
 
     const baseUrl = url.origin;
     const products = (result.results || []).map(p => {
         const imgs = JSON.parse(p.images || '[]');
+        const availability = getAvailability(p);
         return {
             id: p.product_id,
             name: p.product_name,
@@ -2226,7 +2285,10 @@ async function handleProducts(request, env, corsHeaders) {
             longDescription: p.long_description || '',
             image: imgs.length > 0 ? `${baseUrl}/images/${imgs[0]}` : (p.image_url || ''),
             images: imgs.map(k => `${baseUrl}/images/${k}`),
-            stock: p.stock_quantity,
+            // In-stock units only; pre-order units are reported separately
+            stock: availability.inStock,
+            available: availability.available,
+            preorderShipDate: availability.preorderRemaining > 0 ? availability.preorderShipDate : null,
             lowStockThreshold: p.low_stock_threshold,
             weight: p.weight || 100,
             maxQuantity: p.max_quantity || 5,
@@ -2245,6 +2307,35 @@ function formatCategoryLabel(slug) {
         'misc': 'Misc'
     };
     return labels[slug] || slug.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
+// --- Pre-orders ---
+// While pre-orders are enabled a product keeps selling after its stock reaches
+// zero, up to preorder_limit extra units. Those sales take stock_quantity below
+// zero, so cancellations and refunds (which add stock back) free up a pre-order
+// place with no extra bookkeeping, and -stock_quantity is the number owed.
+function getAvailability(product) {
+    const stock = Number(product.stock_quantity) || 0;
+    const enabled = product.preorder_enabled === 1 && !!product.preorder_ship_date;
+    const limit = enabled ? Math.max(0, Number(product.preorder_limit) || 0) : 0;
+    return {
+        inStock: Math.max(0, stock),
+        available: Math.max(0, stock + limit),
+        preorderRemaining: Math.max(0, Math.min(limit, stock + limit)),
+        preorderShipDate: enabled ? product.preorder_ship_date : null
+    };
+}
+
+function latestShipDate(dates) {
+    // YYYY-MM-DD strings sort chronologically
+    return dates.filter(Boolean).sort().pop() || null;
+}
+
+function formatShipDate(isoDate) {
+    if (!isoDate) return 'the stated date';
+    const d = new Date(isoDate + 'T00:00:00Z');
+    if (isNaN(d)) return isoDate;
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 }
 
 function jsonResponse(data, corsHeaders, status = 200) {
