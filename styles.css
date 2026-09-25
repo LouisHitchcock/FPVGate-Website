@@ -2612,12 +2612,12 @@ footer .container {
        overflows and the modal clips the Add to Cart button instead. */
     display: grid;
     grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
     transform: translateY(20px) scale(0.97);
     transition: transform 0.3s;
 }
 
 .product-modal-overlay.active .product-modal {
-    grid-template-rows: minmax(0, 1fr);
     transform: translateY(0) scale(1);
 }
 
