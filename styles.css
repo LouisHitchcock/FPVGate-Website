@@ -2607,7 +2607,9 @@ footer .container {
     min-height: min(560px, 80vh);
     max-height: 86vh;
     overflow: hidden;
-    /* Image column and copy column scroll independently */
+    /* Image column and copy column scroll independently. The row must be
+       minmax(0, 1fr): an auto row grows with the copy, so the body never
+       overflows and the modal clips the Add to Cart button instead. */
     display: grid;
     grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
     transform: translateY(20px) scale(0.97);
@@ -2615,6 +2617,7 @@ footer .container {
 }
 
 .product-modal-overlay.active .product-modal {
+    grid-template-rows: minmax(0, 1fr);
     transform: translateY(0) scale(1);
 }
 
@@ -2838,7 +2841,7 @@ footer .container {
 @media (max-width: 768px) {
     .product-modal {
         grid-template-columns: 1fr;
-        grid-template-rows: auto 1fr;
+        grid-template-rows: auto minmax(0, 1fr);
         width: 100%;
         height: 100%;
         height: 100dvh;
