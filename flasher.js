@@ -156,7 +156,8 @@ let currentFileType = null;
 
 const MODERN_FIRMWARE_LAYOUT_VERSION = 'v1.7.3';
 const RELEASE_BOARDS = {
-    'v1.8.3': ['esp32s3', 'fpvgateaio', 'fpvgatesolo', 'seeedxiaos3', 'xiaos3plus']
+    'v1.8.3': ['esp32s3', 'fpvgateaio', 'fpvgatesolo', 'seeedxiaos3', 'xiaos3plus'],
+    'v1.9.0-Multi-Alpha-1': ['esp32s3', 'fpvgateaio', 'fpvgatesolo', 'seeedxiaos3', 'xiaos3plus']
 };
 
 // Fetch something that changes when a release is published, bypassing the
