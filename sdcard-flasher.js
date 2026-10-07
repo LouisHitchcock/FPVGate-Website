@@ -4,6 +4,12 @@
 const SDCARD_GITHUB_API = 'https://api.github.com/repos/LouisHitchcock/FPVGate/releases';
 let sdcardReleases = [];
 
+function getSDCardUrl(version) {
+    // The Multi alpha uses the same SD files as the stable release.
+    const sdVersion = version === 'v1.9.0-Multi-Alpha-1' ? 'v1.8.3' : version;
+    return `${window.location.origin}/firmware/${sdVersion}/SD_Card.zip`;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     setupSDCardSection();
 });
@@ -61,7 +67,7 @@ function updateSDCardSection() {
     
     if (version) {
         sdcardReady.style.display = 'block';
-        sdcardDownload.href = `${window.location.origin}/firmware/${version}/SD_Card.zip`;
+        sdcardDownload.href = getSDCardUrl(version);
     } else {
         sdcardReady.style.display = 'none';
     }
@@ -113,7 +119,7 @@ async function startSDCardSetup() {
         updateProgress(progressBar, 10);
         
         // Download SD_Card.zip
-        const sdCardUrl = `${window.location.origin}/firmware/${version}/SD_Card.zip`;
+        const sdCardUrl = getSDCardUrl(version);
         const response = await fetch(sdCardUrl);
         if (!response.ok) {
             throw new Error(`SD_Card.zip not found for ${version}.`);
