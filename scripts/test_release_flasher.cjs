@@ -85,8 +85,8 @@ test('SD ZIP and refreshed flasher script references are present', () => {
     const zip = fs.readFileSync(path.join(root, 'firmware/v1.8.3/SD_Card.zip'));
     assert.equal(zip.readUInt32LE(0), 0x04034b50);
     assert.ok(zip.includes(Buffer.from('voice_default_en')));
-    assert.match(fs.readFileSync(path.join(root, 'flasher.html'), 'utf8'), /flasher\.js\?v=1\.8\.3/);
-    assert.match(fs.readFileSync(path.join(root, 'flasher.js'), 'utf8'), /import\('\.\/esp-flasher\.js\?v=1\.8\.3'\)/);
+    assert.match(fs.readFileSync(path.join(root, 'flasher.html'), 'utf8'), /flasher\.js\?v=1\.8\.3-reset1/);
+    assert.match(fs.readFileSync(path.join(root, 'flasher.js'), 'utf8'), /import\('\.\/esp-flasher\.js\?v=1\.8\.3-reset1'\)/);
 });
 
 for (const mode of ['existing bootloader', 'previously authorised USB replacement', 'first-time USB replacement']) {
@@ -131,3 +131,65 @@ for (const mode of ['existing bootloader', 'previously authorised USB replacemen
         assert.equal(notices, mode === 'first-time USB replacement' ? 1 : 0);
     });
 }
+
+function resetTestFlasher() {
+    const context = vm.createContext({
+        console: { log() {} }, Uint8Array,
+        fetch: async () => ({ ok: true, arrayBuffer: async () => new ArrayBuffer(4) })
+    });
+    const source = fs.readFileSync(path.join(root, 'esp-flasher.js'), 'utf8')
+        .replace(/^import .*;\r?\n/m, '').replace('export class CustomESPFlasher', 'class CustomESPFlasher');
+    vm.runInContext(source, context);
+    return vm.runInContext('new CustomESPFlasher()', context);
+}
+
+test('successful writes followed by a USB reset error still complete', async () => {
+    const flasher = resetTestFlasher();
+    const logs = [];
+    let completed = 0;
+    let failed = 0;
+    let progress;
+    flasher.setHandlers({
+        onComplete: () => completed++, onError: () => failed++, onLog: message => logs.push(message),
+        onProgress: (percent, status) => { progress = { percent, status }; }
+    });
+    flasher.esploader = {
+        async writeFlash() {},
+        async hardReset() { throw new Error('Failed to set signals: 0x80004005'); }
+    };
+    await flasher.flash({ builds: [{ parts: [{ path: 'firmware.bin', offset: 0x10000 }] }] });
+    assert.equal(completed, 1);
+    assert.equal(failed, 0);
+    assert.equal(progress.percent, 100);
+    assert.match(progress.status, /unplug and reconnect/);
+    assert.ok(logs.some(message => message.includes('All files were written')));
+});
+
+test('write errors still fail without resetting or reporting completion', async () => {
+    const flasher = resetTestFlasher();
+    let completed = 0;
+    let failed = 0;
+    let resets = 0;
+    flasher.setHandlers({ onComplete: () => completed++, onError: () => failed++ });
+    flasher.esploader = {
+        async writeFlash() { throw new Error('Write failed'); },
+        async hardReset() { resets++; }
+    };
+    await assert.rejects(flasher.flash({ builds: [{ parts: [{ path: 'firmware.bin', offset: 0x10000 }] }] }), /Write failed/);
+    assert.equal(completed, 0);
+    assert.equal(failed, 1);
+    assert.equal(resets, 0);
+});
+
+test('cleanup closes the port even when disconnecting a vanished USB device fails', async () => {
+    const flasher = resetTestFlasher();
+    let closes = 0;
+    flasher.transport = { async disconnect() { throw new Error('Device gone'); } };
+    flasher.port = { async close() { closes++; } };
+    flasher.esploader = {};
+    await flasher.disconnect();
+    assert.equal(closes, 1);
+    assert.equal(flasher.port, null);
+    assert.equal(flasher.transport, null);
+    assert.equal(flasher.esploader, null);
+});
