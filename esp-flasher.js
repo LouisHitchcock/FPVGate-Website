@@ -267,11 +267,16 @@ export class CustomESPFlasher {
             this.log('Firmware flashed successfully!');
             this.updateProgress(95, 'Resetting device');
 
-            // Hard reset the device
-            await this.esploader.hardReset();
-
-            this.log('Device reset complete');
-            this.updateProgress(100, 'Complete');
+            // The flash is complete even if USB disconnects during reset.
+            // The completion screen already requires a physical power cycle.
+            try {
+                await this.esploader.hardReset();
+                this.log('Device reset complete');
+            } catch (error) {
+                this.log(`Automatic reset failed: ${error.message}`);
+                this.log('All files were written. Unplug the board and plug it back in to start the firmware.');
+            }
+            this.updateProgress(100, 'Complete - unplug and reconnect your board');
 
             if (this.onComplete) {
                 this.onComplete();
@@ -288,19 +293,8 @@ export class CustomESPFlasher {
 
     // Disconnect from device
     async disconnect() {
-        try {
-            if (this.transport) {
-                await this.transport.disconnect();
-            }
-            if (this.port) {
-                await this.port.close();
-            }
-            this.port = null;
-            this.transport = null;
-            this.esploader = null;
-            this.log('Disconnected');
-        } catch (error) {
-            console.error('Disconnect error:', error);
-        }
+        await this.releaseTransport();
+        this.port = null;
+        this.log('Disconnected');
     }
 }

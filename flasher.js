@@ -733,12 +733,13 @@ async function startFlashing() {
     progressBar.textContent = '';
     progressLog.innerHTML = '';
     
+    let flasher;
     try {
         const manifest = generateManifest();
         
         // Import and create flasher
-        const { CustomESPFlasher } = await import('./esp-flasher.js?v=1.8.3');
-        const flasher = new CustomESPFlasher();
+        const { CustomESPFlasher } = await import('./esp-flasher.js?v=1.8.3-reset1');
+        flasher = new CustomESPFlasher();
         
         // Setup event handlers
         flasher.setHandlers({
@@ -768,22 +769,6 @@ async function startFlashing() {
                 logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
                 progressLog.appendChild(logEntry);
                 progressLog.scrollTop = progressLog.scrollHeight;
-            },
-            onError: (error) => {
-                progressTitle.textContent = 'Flash Failed';
-                progressTitle.style.color = 'var(--error-color)';
-                showError(error.message);
-                connectButton.style.display = 'block';
-                
-                // Track flash failure
-                if (window.fpvgateAnalytics) {
-                    window.fpvgateAnalytics.track('flash_failed', {
-                        board: selectedBoard,
-                        version: selectedVersion.tag_name,
-                        expert_mode: betaMode,
-                        error_message: error.message
-                    });
-                }
             },
             onComplete: () => {
                 progressTitle.textContent = 'Flash Complete!';
@@ -820,9 +805,6 @@ async function startFlashing() {
         progressTitle.textContent = 'Flashing Firmware...';
         await flasher.flash(manifest, flashOptions.eraseFlash);
         
-        // Disconnect
-        await flasher.disconnect();
-        
     } catch (error) {
         console.error('Flash error:', error);
         progressTitle.textContent = 'Flash Failed';
@@ -839,6 +821,8 @@ async function startFlashing() {
                 error_message: error.message || 'Unknown error'
             });
         }
+    } finally {
+        if (flasher) await flasher.disconnect();
     }
 }
 
