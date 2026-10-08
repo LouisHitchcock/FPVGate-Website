@@ -1,0 +1,82 @@
+{
+    "parts": [
+        {
+            "id": "xiao-rx5808-outer-body",
+            "name": "Outer body",
+            "build": "Seeed XIAO ESP32S3 + RX5808",
+            "file": "xiao-s3-rx5808/xiao-rx5808-outer-body.stl"
+        },
+        {
+            "id": "xiao-rx5808-electronics-frame",
+            "name": "Electronics frame",
+            "build": "Seeed XIAO ESP32S3 + RX5808",
+            "file": "xiao-s3-rx5808/xiao-rx5808-electronics-frame.stl"
+        },
+        {
+            "id": "xiao-rx5808-end-cap",
+            "name": "End cap",
+            "build": "Seeed XIAO ESP32S3 + RX5808",
+            "file": "xiao-s3-rx5808/xiao-rx5808-end-cap.stl"
+        },
+        {
+            "id": "xiao-rx5808-led-cover",
+            "name": "LED cover",
+            "build": "Seeed XIAO ESP32S3 + RX5808",
+            "file": "xiao-s3-rx5808/xiao-rx5808-led-cover.stl"
+        },
+        {
+            "id": "xiao-novacore-outer-body",
+            "name": "Outer body",
+            "build": "Seeed XIAO ESP32S3 + Novacore",
+            "file": "xiao-s3-novacore/xiao-novacore-outer-body.stl"
+        },
+        {
+            "id": "xiao-novacore-electronics-frame",
+            "name": "Electronics frame",
+            "build": "Seeed XIAO ESP32S3 + Novacore",
+            "file": "xiao-s3-novacore/xiao-novacore-electronics-frame.stl"
+        },
+        {
+            "id": "xiao-novacore-end-cap",
+            "name": "End cap",
+            "build": "Seeed XIAO ESP32S3 + Novacore",
+            "file": "xiao-s3-novacore/xiao-novacore-end-cap.stl"
+        },
+        {
+            "id": "xiao-novacore-led-cover",
+            "name": "LED cover",
+            "build": "Seeed XIAO ESP32S3 + Novacore",
+            "file": "xiao-s3-novacore/xiao-novacore-led-cover.stl"
+        },
+        {
+            "id": "devkitc1-rx5808-body-lower",
+            "name": "Lower body",
+            "build": "ESP32-S3 DevKitC-1 + RX5808",
+            "file": "devkitc1-rx5808/devkitc1-rx5808-body-lower.stl"
+        },
+        {
+            "id": "devkitc1-rx5808-electronics-frame",
+            "name": "Electronics frame",
+            "build": "ESP32-S3 DevKitC-1 + RX5808",
+            "file": "devkitc1-rx5808/devkitc1-rx5808-electronics-frame.stl"
+        },
+        {
+            "id": "devkitc1-rx5808-cover",
+            "name": "Cover",
+            "build": "ESP32-S3 DevKitC-1 + RX5808",
+            "file": "devkitc1-rx5808/devkitc1-rx5808-cover.stl"
+        },
+        {
+            "id": "devkitc1-rx5808-led-lower",
+            "name": "LED lower",
+            "build": "ESP32-S3 DevKitC-1 + RX5808",
+            "file": "devkitc1-rx5808/devkitc1-rx5808-led-lower.stl"
+        },
+        {
+            "id": "devkitc1-rx5808-led-upper",
+            "name": "LED upper",
+            "build": "ESP32-S3 DevKitC-1 + RX5808",
+            "file": "devkitc1-rx5808/devkitc1-rx5808-led-upper.stl"
+        }
+    ]
+}
