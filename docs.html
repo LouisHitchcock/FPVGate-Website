@@ -34,6 +34,7 @@
     document.documentElement.classList.add('js');})();
     </script>
     <link rel="stylesheet" href="styles.css?v=20260925c">
+    <link rel="stylesheet" href="print-files.css?v=20260925a">
 
     <script type="application/ld+json">
     {
@@ -44,7 +45,7 @@
           "headline": "FPVGate Documentation | FPV Lap Timer Setup & Calibration Guide",
           "description": "Hardware wiring, flashing firmware, configuration, calibration, racing workflow, and troubleshooting for the FPVGate RSSI lap timer.",
           "proficiencyLevel": "Intermediate",
-          "articleSection": ["Getting Started", "Hardware Setup", "Flashing Firmware", "Configuration", "Calibration", "Racing", "Troubleshooting"],
+          "articleSection": ["Getting Started", "Hardware Setup", "3D Printed Parts", "Flashing Firmware", "Configuration", "Calibration", "Racing", "Troubleshooting"],
           "url": "https://fpvgate.xyz/docs.html",
           "mainEntityOfPage": "https://fpvgate.xyz/docs.html",
           "publisher": {
@@ -176,6 +177,7 @@
                         <h3>Quick Links</h3>
                         <a href="#getting-started">Getting Started</a>
                         <a href="#hardware">Hardware Setup</a>
+                        <a href="#print-files">3D Printed Parts</a>
                         <a href="#flashing">Flashing Firmware</a>
                         <a href="#sdcard">SD Card Setup</a>
                         <a href="#configuration">Configuration</a>
@@ -207,6 +209,7 @@
                                 <li><strong>5V Power Supply</strong> (USB power or any 5V source)</li>
                                 <li><strong>WS2812 RGB LEDs</strong> (optional)</li>
                                 <li><strong>Active Buzzer</strong> (optional)</li>
+                                <li><strong>3D printed enclosure</strong> (optional, see <a href="#print-files">3D Printed Parts</a>)</li>
                             </ul>
                         </div>
                     </section>
@@ -233,6 +236,17 @@
                             <p>The RX5808 module must be SPI modded to work with FPVGate. See the <a href="https://sheaivey.github.io/rx5808-pro-diversity/docs/rx5808-spi-mod.html" target="_blank">SPI mod guide</a>.</p>
                         </div>
 
+                    </section>
+
+                    <section id="print-files" class="doc-section">
+                        <h2>3D Printed Parts</h2>
+                        <p>If you are building your own timer, these parts are free to download and print. Each one can be previewed in 3D on the <a href="print-files.html">3D print files page</a>, along with its recommended print settings.</p>
+
+                        <div id="print-files-list">
+                            <p>Loading parts…</p>
+                        </div>
+
+                        <a href="print-files.html" class="btn btn-secondary">Browse 3D Print Files</a>
                     </section>
 
                     <section id="flashing" class="doc-section">
@@ -650,6 +664,7 @@
                 <a href="https://github.com/LouisHitchcock/FPVGate" target="_blank">GitHub</a>
                 <a href="https://discord.gg/XwammuWCCj" target="_blank">Discord</a>
                 <a href="docs.html">Documentation</a>
+                <a href="print-files.html">3D Print Files</a>
                 <a href="https://ko-fi.com/louishitchcock" target="_blank" class="kofi-link">Support on Ko-fi</a>
             </div>
         </div>
@@ -657,6 +672,7 @@
 
     <script src="animations.js"></script>
     <script src="wiring-loader.js"></script>
+    <script src="print-files-list.js"></script>
     <script src="theme.js"></script>
 </body>
 </html>
