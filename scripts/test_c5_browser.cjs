@@ -13,6 +13,9 @@ const os = require('node:os');
     await page.route('**/fpvgate-analytics.workers.dev/**', route => route.abort());
     await page.goto('http://127.0.0.1:8000/flasher.html');
     await page.waitForSelector('#c5-mode', { state: 'attached' });
+    // The timer populates boards asynchronously before it loads versions.
+    // Select only after that initialization, so network timing cannot reset the test selection.
+    await page.waitForFunction(() => !document.getElementById('version-select').textContent.includes('Loading'));
     const setToggle = async (id, checked) => {
         if (await page.locator(`#${id}`).isChecked() !== checked) await page.locator(`label.toggle-switch:has(#${id})`).click();
     };
