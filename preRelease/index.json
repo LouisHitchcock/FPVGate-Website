@@ -1,6 +1,11 @@
 {
     "versions": [
         {
+            "tag": "v1.9.0-Multi-Alpha-2",
+            "date": "2026-10-09",
+            "notes": "Second Multi-Pilot alpha. USB networking now stays up under sustained load: two bugs in the USB driver Arduino ships, one that stalled sending and one that made the gate drop its USB address, are fixed, and the gate ran 30 minutes at full load and 20 RotorHazard races over USB without a failure. Also fixes a web server hang when a page load and the LED animation drew the LEDs together. Adds firmware support for RotorHazard plugin 2 (every pilot, live RSSI, frequencies set from RotorHazard; the plugin itself follows separately) and a new Waveshare ESP32-S3-ETH build with wired Ethernet. The Waveshare build is UNTESTED: it has never been run on the board and may not boot or connect, so only flash it if you are happy to test it. Tested for this release: a Seeed XIAO ESP32S3 with an ESP32-C5 over USB; the other board builds share the same code but were not run on hardware. Everything from Multi-Alpha-1 is included. Devices on Multi-Alpha-1, 1.8.3 or the 1.8 release candidates can update over the air; the Waveshare board needs a USB flash the first time."
+        },
+        {
             "tag": "v1.9.0-Multi-Alpha-1",
             "date": "2026-10-07",
             "notes": "First Multi-Pilot alpha for testing with an ESP32-C5 receiver running FPVGate C5MK firmware version 2 or later. Supports up to eight pilots, individual calibration, race results, SD RSSI recording and per-pilot Visual Marshal editing. Keep the web race page open for race completion and browser announcements. Physical eight-pilot testing is still outstanding. Builds are provided for the AIO, Solo, Seeed XIAO ESP32S3, ESP32-S3 DevKitC-1 and XIAO ESP32S3 Plus. The C5 receiver needs separate firmware. Upgrading from 1.7.x requires a full USB flash; existing 1.7.3 SD cards need no changes."

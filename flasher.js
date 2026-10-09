@@ -124,6 +124,21 @@ const BOARD_CONFIGS = {
             { path: 'filesystem.bin', offset: 0x410000 }
         ]
     },
+    // Firmware v1.9.0-Multi-Alpha-2 and later. Same 16MB partition layout as
+    // the XIAO ESP32S3 Plus, so the filesystem sits at 0x610000.
+    waveshares3eth: {
+        name: 'Waveshare ESP32-S3-ETH (16MB, Ethernet) - UNTESTED',
+        chipFamily: 'ESP32-S3',
+        firmwareDir: 'Waveshare-ESP32-S3-ETH',
+        modernFirmwareDir: 'WaveshareS3ETH',
+        filePrefix: 'Waveshare_S3_ETH',
+        parts: [
+            { path: 'bootloader.bin', offset: 0x0 },
+            { path: 'partitions.bin', offset: 0x8000 },
+            { path: 'firmware.bin', offset: 0x10000 },
+            { path: 'filesystem.bin', offset: 0x610000 }
+        ]
+    },
     novablade: {
         name: 'NovaBlade (16MB Flash)',
         chipFamily: 'ESP32-S3',
@@ -157,7 +172,8 @@ let currentFileType = null;
 const MODERN_FIRMWARE_LAYOUT_VERSION = 'v1.7.3';
 const RELEASE_BOARDS = {
     'v1.8.3': ['esp32s3', 'fpvgateaio', 'fpvgatesolo', 'seeedxiaos3', 'xiaos3plus'],
-    'v1.9.0-Multi-Alpha-1': ['esp32s3', 'fpvgateaio', 'fpvgatesolo', 'seeedxiaos3', 'xiaos3plus']
+    'v1.9.0-Multi-Alpha-1': ['esp32s3', 'fpvgateaio', 'fpvgatesolo', 'seeedxiaos3', 'xiaos3plus'],
+    'v1.9.0-Multi-Alpha-2': ['fpvgateaio', 'fpvgatesolo', 'seeedxiaos3', 'waveshares3eth']
 };
 
 // Fetch something that changes when a release is published, bypassing the
@@ -208,6 +224,11 @@ async function loadBoardConfigurations() {
         if (config.boards) {
             ALL_BOARDS = config.boards;
         }
+        // boards.json comes from FPVGate's main branch, which lags boards that
+        // only pre-releases build so far. Offer those from the local list too.
+        for (const board of EXTRA_BOARDS) {
+            if (!ALL_BOARDS.some(b => b.value === board.value)) ALL_BOARDS.push(board);
+        }
         
         // Populate standard boards (expert_mode: 0) in dropdown
         populateBoards();
@@ -217,6 +238,11 @@ async function loadBoardConfigurations() {
         useFallbackBoards();
     }
 }
+
+// Boards not yet in FPVGate main's boards.json (pre-release builds only).
+const EXTRA_BOARDS = [
+    { value: 'waveshares3eth', label: 'Waveshare ESP32-S3-ETH (16MB, Ethernet) - UNTESTED', expert_mode: 1 }
+];
 
 // Fallback board configurations if GitHub fetch fails
 function useFallbackBoards() {
@@ -229,6 +255,7 @@ function useFallbackBoards() {
         { value: 'esp32c3', label: 'ESP32-C3', expert_mode: 1 },
         { value: 'lilygo', label: 'LilyGO T-Energy S3', expert_mode: 1 },
         { value: 'xiaos3plus', label: 'XIAO ESP32S3 Plus (16MB Flash)', expert_mode: 1 },
+        { value: 'waveshares3eth', label: 'Waveshare ESP32-S3-ETH (16MB, Ethernet) - UNTESTED', expert_mode: 1 },
         { value: 'wavesharelcd2', label: 'Waveshare ESP32-S3-LCD-2 (16MB Flash)', expert_mode: 1 },
         { value: 'novablade', label: 'NovaBlade (16MB Flash)', expert_mode: 1 }
     ];

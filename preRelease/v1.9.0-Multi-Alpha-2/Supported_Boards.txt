@@ -1,0 +1,14 @@
+FPVGate v1.9.0-Multi-Alpha-2 web flasher builds
+
+SeeedXIAOESP32S3 - Seeed Studio XIAO ESP32S3 (8MB)
+FPVGateSolo - FPVGate Solo (8MB)
+FPVGateAIO - FPVGate AIO (8MB)
+WaveshareS3ETH - Waveshare ESP32-S3-ETH (16MB, Ethernet) - UNTESTED
+
+Enable Pre-Release Mode at https://fpvgate.xyz/flasher.html.
+For Waveshare ESP32-S3-ETH, also enable Expert Mode.
+Each board directory contains bootloader.bin, partitions.bin, firmware.bin
+and littlefs.bin. The flasher selects the matching partition offsets.
+
+The Waveshare build has not been tested on hardware.
+SD card contents are unchanged from v1.8.3.
