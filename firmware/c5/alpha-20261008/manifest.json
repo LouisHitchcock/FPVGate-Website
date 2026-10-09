@@ -1,0 +1,128 @@
+{
+  "builds": {
+    "rx-xiao": {
+      "project": "FPVGateC5RX",
+      "commit": "572a82b3c2e2a4549c5210ca5aadfb78cdb093f1",
+      "environment": "xiaoc5",
+      "board": "xiao",
+      "mode": "spi",
+      "version": "Alpha \u00b7 2026-10-08",
+      "parts": [
+        {
+          "path": "firmware/c5/alpha-20261008/rx-xiao/bootloader.bin",
+          "offset": 8192,
+          "size": 20800,
+          "sha256": "0ac849cc33824e5653a98d23c3813d9fee7b87edc57610dcfb004d5e4cdf35a7"
+        },
+        {
+          "path": "firmware/c5/alpha-20261008/rx-xiao/partitions.bin",
+          "offset": 32768,
+          "size": 3072,
+          "sha256": "148b959cbff1c38aa8e1d5c0ba9d612c54997b945e56a63f41223eef650653a1"
+        },
+        {
+          "path": "firmware/c5/alpha-20261008/rx-xiao/boot_app0.bin",
+          "offset": 57344,
+          "size": 8192,
+          "sha256": "f94c5d786a7a8fab06ac5d10e33bf37711a6697636dc037559ea19cc410a17f0"
+        },
+        {
+          "path": "firmware/c5/alpha-20261008/rx-xiao/firmware.bin",
+          "offset": 65536,
+          "size": 1010288,
+          "sha256": "7fe5f0447d98266411c33141b5e39e4cccd8cb5b5342b80a5d4cba6637049f58"
+        }
+      ]
+    },
+    "rx-zero": {
+      "project": "FPVGateC5RX",
+      "commit": "572a82b3c2e2a4549c5210ca5aadfb78cdb093f1",
+      "environment": "waveshare_c5_zero",
+      "board": "zero",
+      "mode": "spi",
+      "version": "Alpha \u00b7 2026-10-08",
+      "parts": [
+        {
+          "path": "firmware/c5/alpha-20261008/rx-zero/bootloader.bin",
+          "offset": 8192,
+          "size": 20800,
+          "sha256": "0ac849cc33824e5653a98d23c3813d9fee7b87edc57610dcfb004d5e4cdf35a7"
+        },
+        {
+          "path": "firmware/c5/alpha-20261008/rx-zero/partitions.bin",
+          "offset": 32768,
+          "size": 3072,
+          "sha256": "148b959cbff1c38aa8e1d5c0ba9d612c54997b945e56a63f41223eef650653a1"
+        },
+        {
+          "path": "firmware/c5/alpha-20261008/rx-zero/boot_app0.bin",
+          "offset": 57344,
+          "size": 8192,
+          "sha256": "f94c5d786a7a8fab06ac5d10e33bf37711a6697636dc037559ea19cc410a17f0"
+        },
+        {
+          "path": "firmware/c5/alpha-20261008/rx-zero/firmware.bin",
+          "offset": 65536,
+          "size": 1010288,
+          "sha256": "ad3e8f3cd11897ce9d70eb178ceeea88714edee44be895474dfb93ee5464e3eb"
+        }
+      ]
+    },
+    "mk-xiao": {
+      "project": "FPVGateC5MK",
+      "commit": "c8a02c70beb14e7f417cb99d82da0f0b9aaa2803",
+      "environment": "xiaoc5",
+      "board": "xiao",
+      "mode": "uart",
+      "version": "Alpha \u00b7 2026-10-08",
+      "parts": [
+        {
+          "path": "firmware/c5/alpha-20261008/mk-xiao/bootloader.bin",
+          "offset": 8192,
+          "size": 22256,
+          "sha256": "8cdb193c54cd44e6af34fe0cf384306a87eaba001988c94fe472411921bec559"
+        },
+        {
+          "path": "firmware/c5/alpha-20261008/mk-xiao/partitions.bin",
+          "offset": 32768,
+          "size": 3072,
+          "sha256": "7f00b6c042a89b15b0cac534f82ed988caf29278ff5700b0c511eb1b5bb7c820"
+        },
+        {
+          "path": "firmware/c5/alpha-20261008/mk-xiao/firmware.bin",
+          "offset": 65536,
+          "size": 794448,
+          "sha256": "299c65b4f3d94bfadffbc84e6e06d123011919d5b2dbba0701290450f0ff654a"
+        }
+      ]
+    },
+    "mk-zero": {
+      "project": "FPVGateC5MK",
+      "commit": "c8a02c70beb14e7f417cb99d82da0f0b9aaa2803",
+      "environment": "c5zero",
+      "board": "zero",
+      "mode": "uart",
+      "version": "Alpha \u00b7 2026-10-08",
+      "parts": [
+        {
+          "path": "firmware/c5/alpha-20261008/mk-zero/bootloader.bin",
+          "offset": 8192,
+          "size": 22256,
+          "sha256": "e26d1de16429861680b0e6cc42d8ea65472545a185eb3cb757140bdf99bd2ad0"
+        },
+        {
+          "path": "firmware/c5/alpha-20261008/mk-zero/partitions.bin",
+          "offset": 32768,
+          "size": 3072,
+          "sha256": "7f00b6c042a89b15b0cac534f82ed988caf29278ff5700b0c511eb1b5bb7c820"
+        },
+        {
+          "path": "firmware/c5/alpha-20261008/mk-zero/firmware.bin",
+          "offset": 65536,
+          "size": 794448,
+          "sha256": "3505741636d6bfe00b2dbef2f2dc96c468391345772ce1e368d10d5650f4cd6a"
+        }
+      ]
+    }
+  }
+}

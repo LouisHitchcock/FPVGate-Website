@@ -1,0 +1,26 @@
+/* C5-only components; the standard flasher keeps its existing styles. */
+#c5-panel[hidden], #standard-flasher[hidden], #c5-panel [hidden] { display: none !important; }
+.toggle-row { flex-wrap: wrap; }
+.toggle-row .beta-mode-toggle { min-width: 220px; }
+.c5-heading { display: flex; align-items: center; gap: 1rem; margin-bottom: .75rem; }
+.c5-heading h2 { margin: 0; }
+.c5-badge { font: .7rem var(--font-mono); color: var(--warn); border: 1px solid var(--warn); padding: .2rem .45rem; border-radius: var(--r-sm); }
+.c5-intro, .c5-status { color: var(--ink-2); margin-bottom: 1.5rem; }
+.c5-release { padding: 1rem; margin-bottom: 1.5rem; background: var(--surface-inset); border-left: 2px solid var(--accent); }
+.c5-release small { display: block; margin-top: .4rem; color: var(--ink-2); }
+#c5-panel a { color: var(--accent); }
+#c5-flash, #c5-progress { width: 100%; }
+#c5-progress { accent-color: var(--accent-fill); height: .65rem; margin-bottom: 1rem; }
+.c5-status { margin: 1rem 0; }
+.c5-wiring { margin-top: 1.5rem; }
+.c5-table-wrap { overflow-x: auto; }
+.c5-wiring table { width: 100%; border-collapse: collapse; font-size: .9rem; margin: 1rem 0; }
+.c5-wiring th, .c5-wiring td { padding: .75rem; text-align: left; border-bottom: 1px solid var(--rule); }
+.c5-wiring th { color: var(--ink-2); font-weight: 500; }
+.c5-wiring p, #c5-panel .info-card p { margin-bottom: 1rem; }
+.c5-wiring pre, #c5-log { background: var(--surface-inset); padding: 1rem; overflow-x: auto; font: .8rem/1.7 var(--font-mono); border-radius: var(--r); }
+#c5-log { max-height: 240px; white-space: pre-wrap; overflow-wrap: anywhere; }
+#c5-log-panel summary { cursor: pointer; margin: 1rem 0; }
+.c5-wiring h4 { margin: 1.5rem 0 .75rem; }
+.toggle-switch input:focus-visible + .slider { outline: 2px solid var(--accent); outline-offset: 4px; }
+@media (max-width: 600px) { #c5-panel .flasher-config { padding: 1.25rem; } .c5-wiring th, .c5-wiring td { padding: .5rem; } }

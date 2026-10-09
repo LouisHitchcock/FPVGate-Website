@@ -34,6 +34,7 @@
     document.documentElement.classList.add('js');})();
     </script>
     <link rel="stylesheet" href="styles.css?v=20260925c">
+    <link rel="stylesheet" href="c5-radio.css?v=20261008">
 
     <style>
       /* Shown when a board re-enumerates into bootloader mode part way through
@@ -125,9 +126,65 @@
                     </label>
                     <span class="toggle-label">Pre-Release Firmware</span>
                 </div>
+                <div class="beta-mode-toggle">
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="c5-mode" aria-label="C5 Radio" aria-controls="c5-panel">
+                        <span class="slider"></span>
+                    </label>
+                    <label class="toggle-label" for="c5-mode">C5 Radio</label>
+                </div>
             </div>
 
-            <div class="flasher-container">
+            <section id="c5-panel" class="flasher-container" aria-label="C5 Radio firmware" hidden>
+                <div class="flasher-main">
+                    <div class="flasher-config">
+                        <div class="c5-heading"><h2>C5 Radio</h2><span class="c5-badge">ALPHA</span></div>
+                        <p class="c5-intro">Turn your ESP32-C5 into an FPVGate radio receiver. Choose single-pilot SPI or multi-pilot UART firmware.</p>
+                        <div class="form-group">
+                            <label for="c5-board">1. Select Your C5 Board &amp; Mode</label>
+                            <select id="c5-board" class="form-control">
+                                <option value="">Choose your C5 radio...</option>
+                                <optgroup label="Single Pilot · SPI · FPVGateC5RX">
+                                    <option value="rx-xiao">XIAO C5 Single Pilot (SPI mode)</option>
+                                    <option value="rx-zero">Waveshare-C5-Zero (SPI mode)</option>
+                                </optgroup>
+                                <optgroup label="Multi Pilot · UART · FPVGateC5MK">
+                                    <option value="mk-xiao">XIAO C5 Multi Pilot (UART mode)</option>
+                                    <option value="mk-zero">Waveshare-C5-Zero (UART mode)</option>
+                                </optgroup>
+                            </select>
+                        </div>
+                        <div id="c5-release" class="c5-release" hidden aria-live="polite"></div>
+                        <div class="form-group">
+                            <label for="c5-erase">2. Flash Options</label>
+                            <div class="flash-option-item">
+                                <div class="option-info"><span class="option-title">Full Chip Erase</span><small>Clears saved radio calibration and settings. Recommended when changing modes.</small></div>
+                                <label class="toggle-switch"><input type="checkbox" id="c5-erase" checked aria-label="C5 full chip erase"><span class="slider"></span></label>
+                            </div>
+                            <small>Firmware integrity and flash contents are verified automatically.</small>
+                        </div>
+                        <button id="c5-flash" class="btn btn-primary" type="button" disabled>Connect &amp; Flash C5 Radio</button>
+                        <p id="c5-status" class="c5-status" role="status">Select your board to see firmware and wiring.</p>
+                        <progress id="c5-progress" max="100" value="0" aria-label="C5 flashing progress" hidden></progress>
+                        <div id="c5-error" class="alert alert-error" role="alert" hidden></div>
+                        <div id="c5-complete" class="alert alert-info" hidden>Flashing verified. Disconnect USB and power, then reconnect to start your C5 radio. Follow the wiring and setup instructions below.</div>
+                        <details id="c5-log-panel" hidden><summary>Flashing log</summary><pre id="c5-log"></pre></details>
+                    </div>
+                    <section id="c5-wiring" class="info-card c5-wiring" aria-label="C5 wiring instructions" hidden></section>
+                </div>
+                <aside class="flasher-sidebar">
+                    <div class="info-card"><h3>Before You Flash</h3><ul>
+                        <li>Connect the <strong>C5 radio board</strong> to USB.</li>
+                        <li>Use Chrome or Edge with a USB data cable.</li>
+                        <li>Hold BOOT, press and release RESET, then release BOOT before connecting.</li>
+                        <li>Close serial monitors using this USB port.</li>
+                    </ul></div>
+                    <div class="info-card"><h3>Choose Your Mode</h3><p><strong>Single Pilot · SPI</strong><br>FPVGateC5RX replaces an RX5808. A resistor/capacitor filter provides analog RSSI to your timer.</p><p><strong>Multi Pilot · UART</strong><br>FPVGateC5MK measures up to eight pilots over a two-wire UART link. Requires C5 multi-pilot support on your FPVGate timer.</p></div>
+                    <div class="info-card"><h3>Alpha Firmware</h3><p>Early firmware for testing. Validate reception and lap detection with your hardware before racing.</p><p><a href="https://github.com/LouisHitchcock/FPVGateC5RX" target="_blank" rel="noopener">FPVGateC5RX source ↗</a><br><a href="https://github.com/LouisHitchcock/FPVGateC5MK" target="_blank" rel="noopener">FPVGateC5MK source ↗</a></p></div>
+                </aside>
+            </section>
+
+            <div class="flasher-container" id="standard-flasher">
                 <div class="flasher-main">
                     <div class="flasher-config">
                         <div class="form-group">
@@ -371,6 +428,7 @@
     <script src="analytics-tracker.js"></script>
     <script src="flasher.js"></script>
     <script src="sdcard-flasher.js"></script>
+    <script type="module" src="c5-radio.js?v=20261008b"></script>
     <script src="theme.js"></script>
 </body>
 </html>
