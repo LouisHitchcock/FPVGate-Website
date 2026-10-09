@@ -155,6 +155,10 @@ let customFirmware = {
 let currentFileType = null;
 
 const MODERN_FIRMWARE_LAYOUT_VERSION = 'v1.7.3';
+const RELEASE_BOARDS = {
+    'v1.8.3': ['esp32s3', 'fpvgateaio', 'fpvgatesolo', 'seeedxiaos3', 'xiaos3plus'],
+    'v1.9.0-Multi-Alpha-1': ['esp32s3', 'fpvgateaio', 'fpvgatesolo', 'seeedxiaos3', 'xiaos3plus']
+};
 
 // Fetch something that changes when a release is published, bypassing the
 // browser's HTTP cache.
@@ -218,6 +222,7 @@ async function loadBoardConfigurations() {
 function useFallbackBoards() {
     ALL_BOARDS = [
         { value: 'fpvgateaio', label: 'FPVGate AIO - Recommended', expert_mode: 0 },
+        { value: 'fpvgatesolo', label: 'FPVGate Solo', expert_mode: 0 },
         { value: 'seeedxiaos3', label: 'Seeed Studio XIAO ESP32S3 (8MB)', expert_mode: 0 },
         { value: 'esp32s3', label: 'ESP32-S3 DevKitC-1 (8MB Flash)', expert_mode: 0 },
         { value: 'esp32s3supermini', label: 'ESP32-S3 Super Mini (4MB Flash)', expert_mode: 1 },
@@ -367,8 +372,17 @@ function updateFlashInfo() {
         return false;
     }
 
+    const supportedBoards = RELEASE_BOARDS[selectedVersion.tag_name];
+    if (supportedBoards && !supportedBoards.includes(selectedBoard)) {
+        showError(`${selectedVersion.tag_name} has no build for ${boardConfig.name}. Choose an earlier release or a supported board.`);
+        document.getElementById('flash-section').style.display = 'none';
+        return false;
+    }
+
     document.getElementById('selected-board').textContent = boardConfig.name;
     document.getElementById('selected-version').textContent = selectedVersion.tag_name;
+    document.getElementById('wired-upgrade-notice').style.display =
+        isVersionAtLeast(selectedVersion.tag_name, 'v1.8.0') ? 'block' : 'none';
     return true;
 }
 
@@ -720,12 +734,13 @@ async function startFlashing() {
     progressBar.textContent = '';
     progressLog.innerHTML = '';
     
+    let flasher;
     try {
         const manifest = generateManifest();
         
         // Import and create flasher
-        const { CustomESPFlasher } = await import('./esp-flasher.js');
-        const flasher = new CustomESPFlasher();
+        const { CustomESPFlasher } = await import('./esp-flasher.js?v=1.8.3-reset1');
+        flasher = new CustomESPFlasher();
         
         // Setup event handlers
         flasher.setHandlers({
@@ -755,22 +770,6 @@ async function startFlashing() {
                 logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
                 progressLog.appendChild(logEntry);
                 progressLog.scrollTop = progressLog.scrollHeight;
-            },
-            onError: (error) => {
-                progressTitle.textContent = 'Flash Failed';
-                progressTitle.style.color = 'var(--error-color)';
-                showError(error.message);
-                connectButton.style.display = 'block';
-                
-                // Track flash failure
-                if (window.fpvgateAnalytics) {
-                    window.fpvgateAnalytics.track('flash_failed', {
-                        board: selectedBoard,
-                        version: selectedVersion.tag_name,
-                        expert_mode: betaMode,
-                        error_message: error.message
-                    });
-                }
             },
             onComplete: () => {
                 progressTitle.textContent = 'Flash Complete!';
@@ -807,9 +806,6 @@ async function startFlashing() {
         progressTitle.textContent = 'Flashing Firmware...';
         await flasher.flash(manifest, flashOptions.eraseFlash);
         
-        // Disconnect
-        await flasher.disconnect();
-        
     } catch (error) {
         console.error('Flash error:', error);
         progressTitle.textContent = 'Flash Failed';
@@ -826,6 +822,8 @@ async function startFlashing() {
                 error_message: error.message || 'Unknown error'
             });
         }
+    } finally {
+        if (flasher) await flasher.disconnect();
     }
 }
 

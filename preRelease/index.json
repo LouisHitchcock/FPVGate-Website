@@ -1,6 +1,16 @@
 {
     "versions": [
         {
+            "tag": "v1.9.0-Multi-Alpha-1",
+            "date": "2026-10-07",
+            "notes": "First Multi-Pilot alpha for testing with an ESP32-C5 receiver running FPVGate C5MK firmware version 2 or later. Supports up to eight pilots, individual calibration, race results, SD RSSI recording and per-pilot Visual Marshal editing. Keep the web race page open for race completion and browser announcements. Physical eight-pilot testing is still outstanding. Builds are provided for the AIO, Solo, Seeed XIAO ESP32S3, ESP32-S3 DevKitC-1 and XIAO ESP32S3 Plus. The C5 receiver needs separate firmware. Upgrading from 1.7.x requires a full USB flash; existing 1.7.3 SD cards need no changes."
+        },
+        {
+            "tag": "v1.8.0-rc-3",
+            "date": "2026-09-28",
+            "notes": "Release candidate for the FPVGate AIO and Seeed XIAO ESP32S3 only. Other boards should stay on rc-2.\n\nFixes battery monitoring on the Seeed XIAO ESP32S3, which was reading a pin with no ADC and reporting a meaningless voltage. It now reads D0, which needs an external 100K/100K divider from the battery, as the XIAO has none onboard.\n\nInstalling this over a cable is still required if you are coming from 1.7.3 or earlier: the partition table changes and an over-the-air update cannot migrate to it."
+        },
+        {
             "tag": "v1.8.0-rc-2",
             "date": "2026-09-18",
             "notes": "Release candidate. Adds gzipped web assets, which cut a cold page load from about 7 seconds to 2 and fixed the interface failing to load when a browser opened several connections at once. Also carries everything from the betas: USB networking (the gate is reachable at 192.168.7.1 over USB-C), over-the-air updates from the device interface, the visual marshal and the merged race editor.\n\nInstalling this over a cable is still required if you are coming from 1.7.3 or earlier: the partition table changes and an over-the-air update cannot migrate to it.\n\nUSB networking works on Windows and Linux. macOS is not supported, as it has no RNDIS driver."

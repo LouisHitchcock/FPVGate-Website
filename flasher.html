@@ -257,6 +257,12 @@
                                         <span id="selected-version" class="summary-value"></span>
                                     </div>
                                 </div>
+                                <div id="wired-upgrade-notice" class="alert alert-warning" style="display: none; text-align: left;">
+                                    <strong>Upgrading from 1.7.x?</strong>
+                                    Use this USB flasher once to install the new partition layout.
+                                    After that, you can update from the gate's settings screen.
+                                    Existing SD cards need no changes when upgrading from 1.7.3.
+                                </div>
                                 <button id="connect-button" class="btn btn-large btn-primary btn-flash">
                                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style="margin-right: 8px;">
                                         <path d="M11 3L3 11h6l-1 7 8-8h-6l1-7z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -426,8 +432,8 @@
     <!-- JSZip for SD card extraction -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="analytics-tracker.js"></script>
-    <script src="flasher.js"></script>
-    <script src="sdcard-flasher.js"></script>
+    <script src="flasher.js?v=1.9.0-Multi-Alpha-1"></script>
+    <script src="sdcard-flasher.js?v=1.9.0-Multi-Alpha-1"></script>
     <script type="module" src="c5-radio.js?v=20261008b"></script>
     <script src="theme.js"></script>
 </body>
