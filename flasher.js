@@ -124,10 +124,11 @@ const BOARD_CONFIGS = {
             { path: 'filesystem.bin', offset: 0x410000 }
         ]
     },
-    // Firmware v1.9.0-Multi-Alpha-2 and later. Same 16MB partition layout as
-    // the XIAO ESP32S3 Plus, so the filesystem sits at 0x610000.
+    // Firmware v1.9.0-Multi-Alpha-2 and later, tested on hardware from
+    // Alpha-3. Same 16MB partition layout as the XIAO ESP32S3 Plus, so the
+    // filesystem sits at 0x610000.
     waveshares3eth: {
-        name: 'Waveshare ESP32-S3-ETH (16MB, Ethernet) - UNTESTED',
+        name: 'Waveshare ESP32-S3-ETH (16MB, Ethernet)',
         chipFamily: 'ESP32-S3',
         firmwareDir: 'Waveshare-ESP32-S3-ETH',
         modernFirmwareDir: 'WaveshareS3ETH',
@@ -173,7 +174,8 @@ const MODERN_FIRMWARE_LAYOUT_VERSION = 'v1.7.3';
 const RELEASE_BOARDS = {
     'v1.8.3': ['esp32s3', 'fpvgateaio', 'fpvgatesolo', 'seeedxiaos3', 'xiaos3plus'],
     'v1.9.0-Multi-Alpha-1': ['esp32s3', 'fpvgateaio', 'fpvgatesolo', 'seeedxiaos3', 'xiaos3plus'],
-    'v1.9.0-Multi-Alpha-2': ['fpvgateaio', 'fpvgatesolo', 'seeedxiaos3', 'waveshares3eth']
+    'v1.9.0-Multi-Alpha-2': ['fpvgateaio', 'fpvgatesolo', 'seeedxiaos3', 'waveshares3eth'],
+    'v1.9.0-Multi-Alpha-3': ['seeedxiaos3', 'waveshares3eth']
 };
 
 // Fetch something that changes when a release is published, bypassing the
@@ -241,7 +243,7 @@ async function loadBoardConfigurations() {
 
 // Boards not yet in FPVGate main's boards.json (pre-release builds only).
 const EXTRA_BOARDS = [
-    { value: 'waveshares3eth', label: 'Waveshare ESP32-S3-ETH (16MB, Ethernet) - UNTESTED', expert_mode: 1 }
+    { value: 'waveshares3eth', label: 'Waveshare ESP32-S3-ETH (16MB, Ethernet)', expert_mode: 0 }
 ];
 
 // Fallback board configurations if GitHub fetch fails
@@ -255,7 +257,7 @@ function useFallbackBoards() {
         { value: 'esp32c3', label: 'ESP32-C3', expert_mode: 1 },
         { value: 'lilygo', label: 'LilyGO T-Energy S3', expert_mode: 1 },
         { value: 'xiaos3plus', label: 'XIAO ESP32S3 Plus (16MB Flash)', expert_mode: 1 },
-        { value: 'waveshares3eth', label: 'Waveshare ESP32-S3-ETH (16MB, Ethernet) - UNTESTED', expert_mode: 1 },
+        { value: 'waveshares3eth', label: 'Waveshare ESP32-S3-ETH (16MB, Ethernet)', expert_mode: 0 },
         { value: 'wavesharelcd2', label: 'Waveshare ESP32-S3-LCD-2 (16MB Flash)', expert_mode: 1 },
         { value: 'novablade', label: 'NovaBlade (16MB Flash)', expert_mode: 1 }
     ];

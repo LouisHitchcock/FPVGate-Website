@@ -93,11 +93,9 @@ test('Multi Alpha index and manifests expose only the five packaged boards', () 
     }
 });
 
-test('Alpha-2 offers four boards with complete images and correct partition offsets', () => {
-    const tag = 'v1.9.0-Multi-Alpha-2';
-    const packaged = { seeedxiaos3: 'SeeedXIAOESP32S3', fpvgatesolo: 'FPVGateSolo', fpvgateaio: 'FPVGateAIO', waveshares3eth: 'WaveshareS3ETH' };
+function checkMultiAlphaRelease(tag, stage, packaged, unpackaged) {
     const index = JSON.parse(fs.readFileSync(path.join(root, 'preRelease/index.json'), 'utf8'));
-    assert.equal(index.versions[0].tag, tag);
+    assert.ok(index.versions.some(v => v.tag === tag));
     const context = flasherContext();
     for (const [id, directory] of Object.entries(packaged)) {
         vm.runInContext(`selectedBoard = '${id}'; selectedVersion = { tag_name: '${tag}', isLocalPreRelease: true };`, context);
@@ -122,13 +120,32 @@ test('Alpha-2 offers four boards with complete images and correct partition offs
         assert.equal(fs.statSync(path.join(base, 'littlefs.bin')).size, filesystem.size);
         const firmware = fs.readFileSync(path.join(base, 'firmware.bin'));
         assert.ok(firmware.includes(Buffer.from('1.9.0\0')));
-        assert.ok(firmware.includes(Buffer.from('Multi-Alpha-2\0')));
+        assert.ok(firmware.includes(Buffer.from(`${stage}\0`)));
     }
-    for (const id of ['esp32s3', 'xiaos3plus', 'esp32s3supermini', 'esp32c3', 'lilygo', 'wavesharelcd2', 'novablade']) {
+    for (const id of unpackaged) {
         vm.runInContext(`selectedBoard = '${id}'; selectedVersion = { tag_name: '${tag}', isLocalPreRelease: true }; updateFlashSection();`, context);
         assert.equal(context.document.getElementById('flash-section').style.display, 'none');
     }
-    assert.match(vm.runInContext('BOARD_CONFIGS.waveshares3eth.name', context), /UNTESTED/);
+}
+
+test('Alpha-2 offers four boards with complete images and correct partition offsets', () => {
+    checkMultiAlphaRelease('v1.9.0-Multi-Alpha-2', 'Multi-Alpha-2',
+        { seeedxiaos3: 'SeeedXIAOESP32S3', fpvgatesolo: 'FPVGateSolo', fpvgateaio: 'FPVGateAIO', waveshares3eth: 'WaveshareS3ETH' },
+        ['esp32s3', 'xiaos3plus', 'esp32s3supermini', 'esp32c3', 'lilygo', 'wavesharelcd2', 'novablade']);
+});
+
+test('Alpha-3 is the newest pre-release and offers the XIAO S3 and S3-ETH only', () => {
+    const index = JSON.parse(fs.readFileSync(path.join(root, 'preRelease/index.json'), 'utf8'));
+    assert.equal(index.versions[0].tag, 'v1.9.0-Multi-Alpha-3');
+    checkMultiAlphaRelease('v1.9.0-Multi-Alpha-3', 'Multi-Alpha-3',
+        { seeedxiaos3: 'SeeedXIAOESP32S3', waveshares3eth: 'WaveshareS3ETH' },
+        ['fpvgateaio', 'fpvgatesolo', 'esp32s3', 'xiaos3plus', 'esp32s3supermini', 'esp32c3', 'lilygo', 'wavesharelcd2', 'novablade']);
+});
+
+test('the S3-ETH is tested and offered without expert mode', () => {
+    const context = flasherContext();
+    assert.doesNotMatch(vm.runInContext('BOARD_CONFIGS.waveshares3eth.name', context), /UNTESTED/);
+    assert.equal(vm.runInContext("EXTRA_BOARDS.find(b => b.value === 'waveshares3eth').expert_mode", context), 0);
 });
 
 test('Multi Alpha SD setup reuses the stable SD archive', () => {
@@ -139,6 +156,7 @@ test('Multi Alpha SD setup reuses the stable SD archive', () => {
     vm.runInContext(fs.readFileSync(path.join(root, 'sdcard-flasher.js'), 'utf8'), context);
     assert.equal(vm.runInContext("getSDCardUrl('v1.9.0-Multi-Alpha-1')", context), 'https://fpvgate.xyz/firmware/v1.8.3/SD_Card.zip');
     assert.equal(vm.runInContext("getSDCardUrl('v1.9.0-Multi-Alpha-2')", context), 'https://fpvgate.xyz/firmware/v1.8.3/SD_Card.zip');
+    assert.equal(vm.runInContext("getSDCardUrl('v1.9.0-Multi-Alpha-3')", context), 'https://fpvgate.xyz/firmware/v1.8.3/SD_Card.zip');
     assert.equal(vm.runInContext("getSDCardUrl('v1.8.3')", context), 'https://fpvgate.xyz/firmware/v1.8.3/SD_Card.zip');
     assert.equal(vm.runInContext("getSDCardUrl('v1.7.2')", context), 'https://fpvgate.xyz/firmware/v1.7.2/SD_Card.zip');
 });
@@ -160,7 +178,7 @@ test('SD ZIP and refreshed flasher script references are present', () => {
     const zip = fs.readFileSync(path.join(root, 'firmware/v1.8.3/SD_Card.zip'));
     assert.equal(zip.readUInt32LE(0), 0x04034b50);
     assert.ok(zip.includes(Buffer.from('voice_default_en')));
-    assert.match(fs.readFileSync(path.join(root, 'flasher.html'), 'utf8'), /flasher\.js\?v=1\.9\.0-Multi-Alpha-2/);
+    assert.match(fs.readFileSync(path.join(root, 'flasher.html'), 'utf8'), /flasher\.js\?v=1\.9\.0-Multi-Alpha-3/);
     assert.match(fs.readFileSync(path.join(root, 'flasher.js'), 'utf8'), /import\('\.\/esp-flasher\.js\?v=1\.8\.3-reset1'\)/);
 });
 
