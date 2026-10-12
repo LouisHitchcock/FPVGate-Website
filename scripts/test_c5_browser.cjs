@@ -34,6 +34,7 @@ const os = require('node:os');
         await page.locator('#c5-board').selectOption(id);
         await page.waitForFunction(() => !document.getElementById('c5-flash').disabled);
         assert.match(await page.locator('#c5-release').innerText(), new RegExp(project));
+        if (id.startsWith('mk')) assert.match(await page.locator('#c5-release').innerText(), /Release v1\.1\.0/);
         assert.ok((await page.locator('#c5-wiring').innerText()).includes(expectedPin));
         assert.equal(await page.locator('#c5-wiring pre').count(), id.startsWith('rx') ? 1 : 0);
         console.log(`PASS browser selection and wiring: ${id}`);
@@ -46,7 +47,7 @@ const os = require('node:os');
     assert.deepEqual(vendor, ['function', 'function', '900150983cd24fb0d6963f7d28e17f72']);
     assert.equal(await page.evaluate(async () => {
         const { loadC5Firmware } = await import('/c5-flasher.js');
-        const manifest = await (await fetch('/firmware/c5/alpha-20261008/manifest.json')).json();
+        const manifest = await (await fetch('/firmware/c5/manifest.json')).json();
         for (const build of Object.values(manifest.builds)) await loadC5Firmware(build);
         return true;
     }), true);

@@ -25,7 +25,7 @@ new MutationObserver(updateLock).observe(standard, { subtree: true, attributes: 
 
 async function loadCatalog() {
     if (catalog) return catalog;
-    if (!loading) loading = fetch('firmware/c5/alpha-20261008/manifest.json', { cache: 'no-cache' })
+    if (!loading) loading = fetch('firmware/c5/manifest.json',{ cache: 'no-cache' })
         .then(response => {
             if (!response.ok) throw new Error('C5 firmware could not be loaded. Check your connection and reselect your board to retry.');
             return response.json();
@@ -57,7 +57,7 @@ function showWiring(build) {
                            ├──[10 kΩ]── GND
                            └──[100 nF]─ GND</pre><p>The two resistors divide the voltage; the capacitor smooths the output. Add 330 Ω in series with DATA and 100 nF decoupling across C5 3V3 and GND.</p>
         ${xiao ? '<p><strong>XIAO alpha pin map:</strong> this build uses CLK 23, DATA 24, SEL 1 and RSSI 10. These differ from the Waveshare defaults in the upstream guide. This XIAO SPI build still needs a hardware test.</p>' : ''}
-        <h4>After flashing</h4><p>Attach a suitable 5.8 GHz antenna, power cycle, use the RX5808 receiver setting on your timer, then tune and calibrate RSSI. The C5 replaces the radio; your S3 remains the timer.</p>` : `<h4>After flashing</h4><p>Attach a suitable 5 GHz antenna and power cycle. Install FPVGate firmware with C5 multi-pilot support on your S3, then choose <strong>Settings → Configuration → Receiver Module → ESP32-C5</strong>. Configure pilot channels and calibrate each pilot.</p><p>UART is <strong>921600 baud, 8N1</strong>, with no flow control. No analog RSSI filter is needed. USB on the C5 is for flashing and its console.</p>`}
+        <h4>After flashing</h4><p>Attach a suitable 5.8 GHz antenna, power cycle, use the RX5808 receiver setting on your timer, then tune and calibrate RSSI. The C5 replaces the radio; your S3 remains the timer.</p>` : `<h4>After flashing</h4><p>Attach a suitable 5 GHz antenna and power cycle. Install FPVGate firmware with C5 multi-pilot support on your S3, then choose <strong>Settings → Configuration → Receiver Module → ESP32-C5</strong>. Configure pilot channels and calibrate each pilot.</p><p>Later C5 updates go through the gate, with no USB cable: FPVGate 1.9.0-Multi-Alpha-3 or later, <strong>Settings → System → C5 Receiver Firmware</strong>.</p><p>UART is <strong>921600 baud, 8N1</strong>, with no flow control. No analog RSSI filter is needed. USB on the C5 is for flashing and its console.</p>`}
         <p><a href="${source}" target="_blank" rel="noopener">${spi ? 'Hardware guide' : 'Integration guide'} ↗</a> · <a href="https://github.com/LouisHitchcock/${build.project}/blob/${build.commit}/README.md" target="_blank" rel="noopener">Firmware documentation ↗</a></p>`;
     byId('c5-wiring').hidden = false;
 }
@@ -73,7 +73,7 @@ async function selectBoard() {
         if (board.value !== selected) return;
         const build = data.builds[selected];
         if (!build) throw new Error('Firmware is not available for this board yet.');
-        byId('c5-release').innerHTML = `<strong>${escape(build.project)} · ${escape(build.version)}</strong><small>${escape(build.mode.toUpperCase())} mode · ESP32-C5 · <a href="https://github.com/LouisHitchcock/${build.project}/commit/${build.commit}" target="_blank" rel="noopener">Source ${escape(build.commit.slice(0, 7))}</a></small><small>Pinned alpha build · ${escape(build.environment)}${selected === 'rx-xiao' ? ' · XIAO pin adaptation, hardware validation pending' : ''}</small>`;
+        byId('c5-release').innerHTML = `<strong>${escape(build.project)} · ${escape(build.version)}</strong><small>${escape(build.mode.toUpperCase())} mode · ESP32-C5 · <a href="https://github.com/LouisHitchcock/${build.project}/commit/${build.commit}" target="_blank" rel="noopener">Source ${escape(build.commit.slice(0, 7))}</a></small><small>${build.tag ? `Release <a href="https://github.com/LouisHitchcock/${build.project}/releases/tag/${escape(build.tag)}" target="_blank" rel="noopener">${escape(build.tag)}</a>` : 'Pinned alpha build'} · ${escape(build.environment)}${selected === 'rx-xiao' ? ' · XIAO pin adaptation, hardware validation pending' : ''}</small>`;
         byId('c5-release').hidden = false;
         showWiring(build);
         const supported = 'serial' in navigator && window.isSecureContext;

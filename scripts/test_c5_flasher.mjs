@@ -12,20 +12,30 @@ const md5Input = new Uint8Array([0, 97, 98, 99, 255]);
 assert.equal(calculateC5MD5(md5Input.subarray(1, 4)), '900150983cd24fb0d6963f7d28e17f72');
 
 globalThis.location = new URL('http://localhost:8000/flasher.html');
-const manifest = JSON.parse(await readFile(new URL('../firmware/c5/alpha-20261008/manifest.json', import.meta.url)));
+const manifest = JSON.parse(await readFile(new URL('../firmware/c5/manifest.json', import.meta.url)));
 const fetchFile = async url => new Response(await readFile(new URL(`..${url.pathname}`, import.meta.url)));
 for (const [key, build] of Object.entries(manifest.builds)) {
     const files = await loadC5Firmware(build, fetchFile);
     for (const file of files) assert.ok(file.data instanceof Uint8Array);
-    assert.equal(files.length, build.mode === 'spi' ? 4 : 3);
-    assert.deepEqual(files.map(f => f.address), build.mode === 'spi' ? [8192, 32768, 57344, 65536] : [8192, 32768, 65536]);
+    assert.equal(files.length, 4);
+    // MK 1.1.0 and later: OTA data at 0xf000 and two app slots, so FPVGate can update it.
+    assert.deepEqual(files.map(f => f.address), build.mode === 'spi' ? [8192, 32768, 57344, 65536] : [8192, 32768, 61440, 131072]);
     for (let i = 0; i < files.length - 1; i++) assert.ok(files[i].address + files[i].data.length <= files[i + 1].address, 'Flash images must not overlap');
     const partitions = Buffer.from(files[1].data, 'binary');
-    let appPartition;
+    const app = files.at(-1);
+    let appPartition, otaSlots = 0, otaData;
     for (let offset = 0; offset < partitions.length && partitions.readUInt16LE(offset) === 0x50aa; offset += 32) {
-        if (partitions[offset + 2] === 0 && partitions.readUInt32LE(offset + 4) === 0x10000) appPartition = partitions.readUInt32LE(offset + 8);
+        if (partitions[offset + 2] === 0 && partitions.readUInt32LE(offset + 4) === app.address) appPartition = partitions.readUInt32LE(offset + 8);
+        if (partitions[offset + 2] === 0 && partitions[offset + 3] >= 0x10 && partitions[offset + 3] < 0x20) otaSlots++;
+        if (partitions[offset + 2] === 1 && partitions[offset + 3] === 0) otaData = partitions.readUInt32LE(offset + 4);
     }
-    assert.ok(appPartition && files.at(-1).data.length <= appPartition, 'Application must fit its partition at 0x10000');
+    assert.ok(appPartition && app.data.length <= appPartition, `Application must fit its partition at 0x${app.address.toString(16)}`);
+    if (build.mode === 'uart') {
+        assert.equal(otaSlots, 2, 'MK needs two app slots for updates through FPVGate');
+        assert.equal(otaData, files[2].address, 'OTA data must be written where the partition table puts it');
+        const version = Buffer.from(app.data.subarray(48, 80)).toString('latin1').split('\0')[0];
+        assert.equal(version, `${build.version}+${build.environment}`, 'Image must be for this board');
+    }
     console.log(`PASS ${key}: binary sizes, SHA-256 and offsets`);
 }
 const build = manifest.builds['mk-xiao'];

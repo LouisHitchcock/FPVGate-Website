@@ -1,23 +1,36 @@
-# C5 radio alpha — staged 2026-10-08
+# C5 radio firmware
 
-These are locally compiled, pinned alpha snapshots, **not published upstream releases**.
-Neither upstream repository had GitHub release assets when this feature was prepared.
-No board was physically flashed during website validation.
+All four builds are listed in `manifest.json`, which `c5-radio.js` loads.
+
+The single-pilot SPI builds (FPVGateC5RX) are locally compiled, pinned alpha
+snapshots staged on 2026-10-08, **not published upstream releases**. They are in
+`alpha-20261008/`.
+
+The multi-pilot UART builds (FPVGateC5MK) are the published
+[v1.1.0 release](https://github.com/LouisHitchcock/FPVGateC5MK/releases/tag/v1.1.0),
+copied unchanged from that tag's `release/<board>/` folders into `c5mk-v1.1.0/`.
+From 1.1.0 the C5 has two app slots, and FPVGate 1.9.0-Multi-Alpha-3 and later can
+update it over the UART link. A C5 flashed with the earlier 2026-10-08 MK alpha
+must be reflashed here once before the gate can update it.
 
 | Selection | Source | Environment | Pins on C5 |
 |---|---|---|---|
 | XIAO Single Pilot / SPI | FPVGateC5RX `572a82b3c2e2a4549c5210ca5aadfb78cdb093f1` | `xiaoc5` (adaptation below) | CLK 23 / D4, DATA 24 / D5, SEL 1 / D0, RSSI 10 / D10 |
 | Waveshare Single Pilot / SPI | same RX commit | `waveshare_c5_zero` | CLK 4, DATA 5, SEL 6, RSSI 10 |
-| XIAO Multi Pilot / UART | FPVGateC5MK `c8a02c70beb14e7f417cb99d82da0f0b9aaa2803` | `xiaoc5` | RX 23 / D4, TX 24 / D5 |
-| Waveshare Multi Pilot / UART | same MK commit | `c5zero` | RX 4, TX 5 |
+| XIAO Multi Pilot / UART | FPVGateC5MK `v1.1.0` (`e580201`) | `xiaoc5` | RX 23 / D4, TX 24 / D5 |
+| Waveshare Multi Pilot / UART | same MK release | `c5zero` | RX 4, TX 5 |
+
+To package a later MK release, check out its tag, set `MK_TAG` in
+`scripts/package_c5_alpha.py`, and run it with `--mk MK_CHECKOUT` only. The
+script checks the checkout is at the tag and each image's version and board.
 
 ## Sources and build changes
 
 - [FPVGateC5RX source](https://github.com/LouisHitchcock/FPVGateC5RX/tree/572a82b3c2e2a4549c5210ca5aadfb78cdb093f1)
-- [FPVGateC5MK source](https://github.com/LouisHitchcock/FPVGateC5MK/tree/c8a02c70beb14e7f417cb99d82da0f0b9aaa2803)
+- [FPVGateC5MK v1.1.0 release](https://github.com/LouisHitchcock/FPVGateC5MK/releases/tag/v1.1.0)
 - [Seeed pin definitions](https://github.com/espressif/arduino-esp32/blob/master/variants/XIAO_ESP32C5/pins_arduino.h)
 
-Both were built in detached worktrees. Existing development checkouts were not edited.
+The RX builds were made in detached worktrees. Existing development checkouts were not edited.
 No firmware C++ was changed. RX has no upstream XIAO target; the website build adds
 this target to `firmware/platformio.ini`:
 
@@ -35,41 +48,42 @@ Use the website's wiring table for this build, not the upstream Waveshare pin ta
 Build environment: pioarduino Espressif32 **55.3.35**, PlatformIO **6.1.18**,
 RISC-V toolchain **14.2.0+20251107**, esptool **5.1.0**.
 RX: Arduino **3.3.5**, Arduino libraries **5.5.0+sha.9bb7aa84fe**.
-MK: ESP-IDF **5.5.1**. Both MK SRAM boundary checks passed.
 The local toolchain required `platform_packages = toolchain-riscv32-esp @ symlink://...`
-pointing at the installed 14.2.0 toolchain, as documented in the existing MK checkout's
-machine-local configuration. This changes tool discovery, not firmware code.
+pointing at the installed 14.2.0 toolchain. This changes tool discovery, not
+firmware code.
 
-For rebuilding, use the above platform version rather than allowing the upstream
-`stable` URL to resolve to a newer toolchain. Build both targets:
+For rebuilding RX, use the above platform version rather than allowing the
+upstream `stable` URL to resolve to a newer toolchain:
 
 ```text
 pio run -d RX_CHECKOUT/firmware -e waveshare_c5_zero -e xiaoc5
-pio run -d MK_CHECKOUT/multipilot -e c5zero -e xiaoc5
 ```
 
 Copy Arduino 3.3.5's `tools/partitions/boot_app0.bin` into
 `RX_CHECKOUT/firmware/boot_app0.bin`, then run:
 
 ```text
-python scripts/package_c5_alpha.py RX_CHECKOUT MK_CHECKOUT
+python scripts/package_c5_alpha.py --rx RX_CHECKOUT
 node scripts/test_c5_flasher.mjs
 ```
 
-The packager checks source commits, ESP32-C5 image headers and MK-generated flash
-arguments. The manifest records the size and SHA-256 of every binary.
+The packager checks source commits and ESP32-C5 image headers, and for MK the
+release tag and each image's version and board. The manifest records the size and
+SHA-256 of every binary. The flasher test also checks that each MK partition table
+has two app slots and its OTA data where the flasher writes it.
 
 ## Flash layout
 
-| Image | Offset | SPI / RX | UART / MK |
-|---|---|---|---|
-| Bootloader | `0x2000` | yes | yes |
-| Partitions | `0x8000` | yes | yes |
-| OTA boot selector | `0xe000` | yes | no |
-| Application | `0x10000` | yes | yes |
+| Image | SPI / RX | UART / MK 1.1.0 |
+|---|---|---|
+| Bootloader | `0x2000` | `0x2000` |
+| Partitions | `0x8000` | `0x8000` |
+| OTA boot selector / OTA data | `0xe000` | `0xf000` |
+| Application | `0x10000` | `0x20000` (first of two slots) |
 
 RX offsets come from Arduino 3.3.5's `tools/pioarduino-build.py` and the PlatformIO
-board defaults. MK offsets come from each build's `flasher_args.json`. The C5
+board defaults. MK offsets come from its partition table and the release's
+`release/README.md`. The C5
 bootloader is at **0x2000**, unlike the S3 flasher's 0x0. Flash header mode/frequency/
 size are kept as compiled. No filesystem image is required.
 
