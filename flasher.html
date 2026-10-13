@@ -138,8 +138,8 @@
             <section id="c5-panel" class="flasher-container" aria-label="C5 Radio firmware" hidden>
                 <div class="flasher-main">
                     <div class="flasher-config">
-                        <div class="c5-heading"><h2>C5 Radio</h2><span class="c5-badge">ALPHA</span></div>
-                        <p class="c5-intro">Turn your ESP32-C5 into an FPVGate radio receiver. Choose single-pilot SPI or multi-pilot UART firmware.</p>
+                        <div class="c5-heading"><h2>C5 Radio</h2><span class="c5-badge">RADIO</span></div>
+                        <p class="c5-intro">Choose single-pilot SPI or multi-pilot UART/USB firmware. C5MK also connects directly to RotorHazard without an S3.</p>
                         <div class="form-group">
                             <label for="c5-board">1. Select Your C5 Board &amp; Mode</label>
                             <select id="c5-board" class="form-control">
@@ -148,9 +148,9 @@
                                     <option value="rx-xiao">XIAO C5 Single Pilot (SPI mode)</option>
                                     <option value="rx-zero">Waveshare-C5-Zero (SPI mode)</option>
                                 </optgroup>
-                                <optgroup label="Multi Pilot · UART · FPVGateC5MK">
-                                    <option value="mk-xiao">XIAO C5 Multi Pilot (UART mode)</option>
-                                    <option value="mk-zero">Waveshare-C5-Zero (UART mode)</option>
+                                <optgroup label="Multi Pilot · UART / USB · FPVGateC5MK">
+                                    <option value="mk-xiao">XIAO C5 Multi Pilot (UART / USB)</option>
+                                    <option value="mk-zero">Waveshare-C5-Zero (UART / USB)</option>
                                 </optgroup>
                             </select>
                         </div>
@@ -179,8 +179,8 @@
                         <li>Hold BOOT, press and release RESET, then release BOOT before connecting.</li>
                         <li>Close serial monitors using this USB port.</li>
                     </ul></div>
-                    <div class="info-card"><h3>Choose Your Mode</h3><p><strong>Single Pilot · SPI</strong><br>FPVGateC5RX replaces an RX5808. A resistor/capacitor filter provides analog RSSI to your timer.</p><p><strong>Multi Pilot · UART</strong><br>FPVGateC5MK measures up to eight pilots over a two-wire UART link. Requires C5 multi-pilot support on your FPVGate timer.</p></div>
-                    <div class="info-card"><h3>Alpha Firmware</h3><p>Early firmware for testing. Validate reception and lap detection with your hardware before racing.</p><p><a href="https://github.com/LouisHitchcock/FPVGateC5RX" target="_blank" rel="noopener">FPVGateC5RX source ↗</a><br><a href="https://github.com/LouisHitchcock/FPVGateC5MK" target="_blank" rel="noopener">FPVGateC5MK source ↗</a></p></div>
+                    <div class="info-card"><h3>Choose Your Mode</h3><p><strong>Single Pilot · SPI</strong><br>FPVGateC5RX replaces an RX5808. A resistor/capacitor filter provides analog RSSI to your timer.</p><p><strong>Multi Pilot · UART / USB</strong><br>C5MK connects to an FPVGate S3 over UART, or directly to RotorHazard over USB. The same board-specific firmware supports both.</p></div>
+                    <div class="info-card"><h3>Firmware Status</h3><p>C5RX SPI builds remain alpha. C5MK uses the published v1.2.0 release; physical XIAO USB testing is pending. Validate reception and lap detection before racing.</p><p><a href="https://github.com/LouisHitchcock/FPVGateC5RX" target="_blank" rel="noopener">FPVGateC5RX source ↗</a><br><a href="https://github.com/LouisHitchcock/FPVGateC5MK" target="_blank" rel="noopener">FPVGateC5MK source ↗</a></p></div>
                 </aside>
             </section>
 
@@ -434,7 +434,7 @@
     <script src="analytics-tracker.js"></script>
     <script src="flasher.js?v=1.9.0-Multi-Alpha-3"></script>
     <script src="sdcard-flasher.js?v=1.9.0-Multi-Alpha-3"></script>
-    <script type="module" src="c5-radio.js?v=20261012"></script>
+    <script type="module" src="c5-radio.js?v=20261013-c5mk120"></script>
     <script src="theme.js"></script>
 </body>
 </html>

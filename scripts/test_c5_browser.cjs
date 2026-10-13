@@ -4,6 +4,7 @@ const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const os = require('node:os');
+const base = process.env.TEST_BASE_URL || 'http://127.0.0.1:8000';
 
 (async () => {
     const browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_PATH });
@@ -11,7 +12,7 @@ const os = require('node:os');
     const errors = [];
     page.on('pageerror', e => errors.push(e.message));
     await page.route('**/fpvgate-analytics.workers.dev/**', route => route.abort());
-    await page.goto('http://127.0.0.1:8000/flasher.html');
+    await page.goto(base + '/flasher.html');
     await page.waitForSelector('#c5-mode', { state: 'attached' });
     // The timer populates boards asynchronously before it loads versions.
     // Select only after that initialization, so network timing cannot reset the test selection.
@@ -34,7 +35,13 @@ const os = require('node:os');
         await page.locator('#c5-board').selectOption(id);
         await page.waitForFunction(() => !document.getElementById('c5-flash').disabled);
         assert.match(await page.locator('#c5-release').innerText(), new RegExp(project));
-        if (id.startsWith('mk')) assert.match(await page.locator('#c5-release').innerText(), /Release v1\.1\.0/);
+        if (id.startsWith('mk')) {
+            assert.match(await page.locator('#c5-release').innerText(), /Release v1\.2\.0/);
+            assert.match(await page.locator('#c5-release').innerText(), /UART \/ USB/);
+            assert.match(await page.locator('#c5-wiring').innerText(), /Direct USB to RotorHazard/);
+            assert.match(await page.locator('#c5-wiring').innerText(), /no S3 or FPVGate plugin required/);
+            if (id === 'mk-xiao') assert.match(await page.locator('#c5-wiring').innerText(), /XIAO USB validation is pending/);
+        }
         assert.ok((await page.locator('#c5-wiring').innerText()).includes(expectedPin));
         assert.equal(await page.locator('#c5-wiring pre').count(), id.startsWith('rx') ? 1 : 0);
         console.log(`PASS browser selection and wiring: ${id}`);
@@ -74,6 +81,8 @@ const os = require('node:os');
         document.getElementById('error-section').style.display = 'none';
     });
     await page.waitForFunction(() => document.getElementById('c5-mode').disabled);
+    // The C5 deep link initializes the panel without relying on restored checkbox state.
+    await page.goto(base + '/flasher.html#c5-radio');
     await page.reload();
     await setToggle('c5-mode', true);
     await page.locator('#c5-board').selectOption('rx-xiao');
@@ -86,16 +95,18 @@ const os = require('node:os');
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
     await page.screenshot({ path: path.join(os.tmpdir(), 'fpvgate-c5-mobile.png'), fullPage: true });
     // A failed catalog can be retried by reselecting a board.
-    await page.route('**/firmware/c5/**/manifest.json', route => route.fulfill({ status: 503, body: 'Unavailable' }));
+    await page.route('**/firmware/c5/manifest.json*', route => route.fulfill({ status: 503, body: 'Unavailable' }));
     await page.reload();
     await setToggle('c5-mode', true);
     await page.locator('#c5-board').selectOption('mk-zero');
     await page.waitForSelector('#c5-error:not([hidden])');
     assert.equal(await page.locator('#c5-flash').isDisabled(), true);
-    await page.unroute('**/firmware/c5/**/manifest.json');
+    await page.unroute('**/firmware/c5/manifest.json*');
     await page.locator('#c5-board').selectOption('mk-xiao');
     await page.waitForFunction(() => !document.getElementById('c5-flash').disabled);
-    await page.goto('http://127.0.0.1:8000/print-files.html');
+    assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true);
+    await page.screenshot({ path: path.join(os.tmpdir(), 'fpvgate-c5mk-usb-mobile.png'), fullPage: true });
+    await page.goto(base + '/print-files.html');
     await page.waitForSelector('canvas');
     await page.screenshot({ path: path.join(os.tmpdir(), 'fpvgate-print-files.png'), fullPage: true });
     assert.deepEqual(errors, []);

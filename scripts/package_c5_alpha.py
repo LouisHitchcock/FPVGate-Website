@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / 'firmware/c5/manifest.json'
 RX_DEST = ROOT / 'firmware/c5/alpha-20261008'
 RX_SHA = '572a82b3c2e2a4549c5210ca5aadfb78cdb093f1'
-MK_TAG = 'v1.1.0'
+MK_TAG = 'v1.2.0'
 MK_DEST = ROOT / f'firmware/c5/c5mk-{MK_TAG}'
 
 
@@ -70,7 +70,7 @@ def package_mk(mk):
         image_version = parts[3][1].read_bytes()[48:80].split(b'\0')[0].decode()
         assert image_version == f'{MK_TAG[1:]}+{environment}', f'{release}: image is {image_version}'
         entry = dict(project='FPVGateC5MK', commit=commit, tag=MK_TAG, environment=environment,
-                     board=board, mode='uart', version=MK_TAG[1:], parts=[])
+                     board=board, mode='uart', usb_timing=True, version=MK_TAG[1:], parts=[])
         builds[key] = add_parts(entry, parts, MK_DEST / key)
     return builds
 

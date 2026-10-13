@@ -6,19 +6,24 @@ The single-pilot SPI builds (FPVGateC5RX) are locally compiled, pinned alpha
 snapshots staged on 2026-10-08, **not published upstream releases**. They are in
 `alpha-20261008/`.
 
-The multi-pilot UART builds (FPVGateC5MK) are the published
-[v1.1.0 release](https://github.com/LouisHitchcock/FPVGateC5MK/releases/tag/v1.1.0),
-copied unchanged from that tag's `release/<board>/` folders into `c5mk-v1.1.0/`.
+The multi-pilot UART/USB builds (FPVGateC5MK) are the published
+[v1.2.0 release](https://github.com/LouisHitchcock/FPVGateC5MK/releases/tag/v1.2.0),
+copied unchanged from that tag's `release/<board>/` folders into `c5mk-v1.2.0/`.
 From 1.1.0 the C5 has two app slots, and FPVGate 1.9.0-Multi-Alpha-3 and later can
 update it over the UART link. A C5 flashed with the earlier 2026-10-08 MK alpha
 must be reflashed here once before the gate can update it.
+
+The same MK images also expose eight native RH serial receivers over USB,
+without an S3 or plugin. Configure the serial port in RH once and restart it.
+Waveshare USB is tested; physical XIAO USB validation is pending. See the
+[USB setup guide](https://github.com/LouisHitchcock/FPVGateC5MK/blob/v1.2.0/docs/USB_ROTORHAZARD.md).
 
 | Selection | Source | Environment | Pins on C5 |
 |---|---|---|---|
 | XIAO Single Pilot / SPI | FPVGateC5RX `572a82b3c2e2a4549c5210ca5aadfb78cdb093f1` | `xiaoc5` (adaptation below) | CLK 23 / D4, DATA 24 / D5, SEL 1 / D0, RSSI 10 / D10 |
 | Waveshare Single Pilot / SPI | same RX commit | `waveshare_c5_zero` | CLK 4, DATA 5, SEL 6, RSSI 10 |
-| XIAO Multi Pilot / UART | FPVGateC5MK `v1.1.0` (`e580201`) | `xiaoc5` | RX 23 / D4, TX 24 / D5 |
-| Waveshare Multi Pilot / UART | same MK release | `c5zero` | RX 4, TX 5 |
+| XIAO Multi Pilot / UART or USB | FPVGateC5MK `v1.2.0` (`bbfe66b`) | `xiaoc5` | RX 23 / D4, TX 24 / D5 (UART only) |
+| Waveshare Multi Pilot / UART or USB | same MK release | `c5zero` | RX 4, TX 5 (UART only) |
 
 To package a later MK release, check out its tag, set `MK_TAG` in
 `scripts/package_c5_alpha.py`, and run it with `--mk MK_CHECKOUT` only. The
@@ -27,7 +32,7 @@ script checks the checkout is at the tag and each image's version and board.
 ## Sources and build changes
 
 - [FPVGateC5RX source](https://github.com/LouisHitchcock/FPVGateC5RX/tree/572a82b3c2e2a4549c5210ca5aadfb78cdb093f1)
-- [FPVGateC5MK v1.1.0 release](https://github.com/LouisHitchcock/FPVGateC5MK/releases/tag/v1.1.0)
+- [FPVGateC5MK v1.2.0 release](https://github.com/LouisHitchcock/FPVGateC5MK/releases/tag/v1.2.0)
 - [Seeed pin definitions](https://github.com/espressif/arduino-esp32/blob/master/variants/XIAO_ESP32C5/pins_arduino.h)
 
 The RX builds were made in detached worktrees. Existing development checkouts were not edited.
@@ -74,7 +79,7 @@ has two app slots and its OTA data where the flasher writes it.
 
 ## Flash layout
 
-| Image | SPI / RX | UART / MK 1.1.0 |
+| Image | SPI / RX | UART / MK 1.1.0 and later |
 |---|---|---|
 | Bootloader | `0x2000` | `0x2000` |
 | Partitions | `0x8000` | `0x8000` |

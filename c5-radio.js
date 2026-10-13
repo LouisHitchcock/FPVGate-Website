@@ -25,7 +25,7 @@ new MutationObserver(updateLock).observe(standard, { subtree: true, attributes: 
 
 async function loadCatalog() {
     if (catalog) return catalog;
-    if (!loading) loading = fetch('firmware/c5/manifest.json',{ cache: 'no-cache' })
+    if (!loading) loading = fetch('firmware/c5/manifest.json?v=c5mk-1.2.0', { cache: 'no-cache' })
         .then(response => {
             if (!response.ok) throw new Error('C5 firmware could not be loaded. Check your connection and reselect your board to retry.');
             return response.json();
@@ -36,6 +36,7 @@ async function loadCatalog() {
 function showWiring(build) {
     const xiao = build.board === 'xiao';
     const spi = build.mode === 'spi';
+    const usb = build.usb_timing === true;
     const radio = xiao ? 'XIAO ESP32-C5' : 'Waveshare ESP32-C5-Zero';
     const rows = spi ? [
         ['CLK', 'D3 / GPIO4', xiao ? 'D4 / GPIO23' : 'GPIO4'],
@@ -49,7 +50,8 @@ function showWiring(build) {
     rows.push(['Power', '5V / VUSB', '5V / VUSB'], ['Ground', 'GND', 'GND']);
     const source = `https://github.com/LouisHitchcock/${build.project}/blob/${build.commit}/docs/${spi ? 'HARDWARE.md' : 'INTEGRATION_GUIDE.md'}`;
     byId('c5-wiring').innerHTML = `
-        <h3>${spi ? 'SPI' : 'UART'} Wiring · ${escape(radio)}</h3>
+        <h3>${spi ? 'SPI Wiring' : usb ? 'USB / UART Setup' : 'UART Wiring'} · ${escape(radio)}</h3>
+        ${usb ? `<h4>Direct USB to RotorHazard</h4><p>The same firmware supports eight native RH receivers over USB, with no S3 or FPVGate plugin required. Close RH and any serial monitors before flashing, then power cycle and connect the C5 directly to the RH computer.</p><p>Add its port under <strong>Advanced Settings → Hardware → Serial Ports</strong>, restart RH, select pilot channels and calibrate in Sensor Tuning. RH selects USB timing automatically; no separate USB image is needed. Do not let an S3 and USB RH control the same receiver simultaneously.</p><p><a href="https://github.com/LouisHitchcock/${build.project}/blob/${build.commit}/docs/USB_ROTORHAZARD.md" target="_blank" rel="noopener">USB setup guide ↗</a>${xiao ? ' · Physical XIAO USB validation is pending.' : ''}</p><h4>Optional S3/UART connection</h4>` : ''}
         <p>For an FPVGate timer built on a <strong>XIAO ESP32-S3</strong>. Disconnect power before wiring. Other timer boards use their configured receiver pins.</p>
         <div class="c5-table-wrap"><table><thead><tr><th>Signal</th><th>FPVGate · XIAO S3</th><th>${escape(radio)}</th></tr></thead><tbody>${rows.map(row => `<tr>${row.map(cell => `<td>${escape(cell)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
         <p><strong>3.3 V logic only.</strong> Supply the C5 through its 5V input so it uses its own regulator; the S3's 3V3 supply may not handle radio startup. Use one power source, or separate USB supplies with a shared ground and the 5V link disconnected. Never apply 5 V to a signal pin.</p>
@@ -57,7 +59,7 @@ function showWiring(build) {
                            ├──[10 kΩ]── GND
                            └──[100 nF]─ GND</pre><p>The two resistors divide the voltage; the capacitor smooths the output. Add 330 Ω in series with DATA and 100 nF decoupling across C5 3V3 and GND.</p>
         ${xiao ? '<p><strong>XIAO alpha pin map:</strong> this build uses CLK 23, DATA 24, SEL 1 and RSSI 10. These differ from the Waveshare defaults in the upstream guide. This XIAO SPI build still needs a hardware test.</p>' : ''}
-        <h4>After flashing</h4><p>Attach a suitable 5.8 GHz antenna, power cycle, use the RX5808 receiver setting on your timer, then tune and calibrate RSSI. The C5 replaces the radio; your S3 remains the timer.</p>` : `<h4>After flashing</h4><p>Attach a suitable 5 GHz antenna and power cycle. Install FPVGate firmware with C5 multi-pilot support on your S3, then choose <strong>Settings → Configuration → Receiver Module → ESP32-C5</strong>. Configure pilot channels and calibrate each pilot.</p><p>Later C5 updates go through the gate, with no USB cable: FPVGate 1.9.0-Multi-Alpha-3 or later, <strong>Settings → System → C5 Receiver Firmware</strong>.</p><p>UART is <strong>921600 baud, 8N1</strong>, with no flow control. No analog RSSI filter is needed. USB on the C5 is for flashing and its console.</p>`}
+        <h4>After flashing</h4><p>Attach a suitable 5.8 GHz antenna, power cycle, use the RX5808 receiver setting on your timer, then tune and calibrate RSSI. The C5 replaces the radio; your S3 remains the timer.</p>` : `<h4>S3/UART setup</h4><p>Attach a suitable 5 GHz antenna and power cycle. Install FPVGate firmware with C5 multi-pilot support on your S3, then choose <strong>Settings → Configuration → Receiver Module → ESP32-C5</strong>. Configure pilot channels and calibrate each pilot.</p><p>Later C5 updates go through the gate, with no USB cable: FPVGate 1.9.0-Multi-Alpha-3 or later, <strong>Settings → System → C5 Receiver Firmware</strong>.</p><p>UART is <strong>921600 baud, 8N1</strong>, with no flow control. No analog RSSI filter is needed.${usb ? ' Direct USB timing uses the same firmware.' : ' USB on the C5 is for flashing and its console.'}</p>`}
         <p><a href="${source}" target="_blank" rel="noopener">${spi ? 'Hardware guide' : 'Integration guide'} ↗</a> · <a href="https://github.com/LouisHitchcock/${build.project}/blob/${build.commit}/README.md" target="_blank" rel="noopener">Firmware documentation ↗</a></p>`;
     byId('c5-wiring').hidden = false;
 }
@@ -73,7 +75,7 @@ async function selectBoard() {
         if (board.value !== selected) return;
         const build = data.builds[selected];
         if (!build) throw new Error('Firmware is not available for this board yet.');
-        byId('c5-release').innerHTML = `<strong>${escape(build.project)} · ${escape(build.version)}</strong><small>${escape(build.mode.toUpperCase())} mode · ESP32-C5 · <a href="https://github.com/LouisHitchcock/${build.project}/commit/${build.commit}" target="_blank" rel="noopener">Source ${escape(build.commit.slice(0, 7))}</a></small><small>${build.tag ? `Release <a href="https://github.com/LouisHitchcock/${build.project}/releases/tag/${escape(build.tag)}" target="_blank" rel="noopener">${escape(build.tag)}</a>` : 'Pinned alpha build'} · ${escape(build.environment)}${selected === 'rx-xiao' ? ' · XIAO pin adaptation, hardware validation pending' : ''}</small>`;
+        byId('c5-release').innerHTML = `<strong>${escape(build.project)} · ${escape(build.version)}</strong><small>${build.usb_timing ? 'UART / USB' : escape(build.mode.toUpperCase())} mode · ESP32-C5 · <a href="https://github.com/LouisHitchcock/${build.project}/commit/${build.commit}" target="_blank" rel="noopener">Source ${escape(build.commit.slice(0, 7))}</a></small><small>${build.tag ? `Release <a href="https://github.com/LouisHitchcock/${build.project}/releases/tag/${escape(build.tag)}" target="_blank" rel="noopener">${escape(build.tag)}</a>` : 'Pinned alpha build'} · ${escape(build.environment)}${selected === 'rx-xiao' ? ' · XIAO pin adaptation, hardware validation pending' : ''}</small>`;
         byId('c5-release').hidden = false;
         showWiring(build);
         const supported = 'serial' in navigator && window.isSecureContext;
