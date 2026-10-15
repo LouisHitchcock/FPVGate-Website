@@ -1,14 +1,15 @@
 # C5 radio firmware
 
-All four builds are listed in `manifest.json`, which `c5-radio.js` loads.
+All eight selections are listed in `manifest.json`, which `c5-radio.js` loads.
 
 The single-pilot SPI builds (FPVGateC5RX) are locally compiled, pinned alpha
-snapshots staged on 2026-10-08, **not published upstream releases**. They are in
-`alpha-20261008/`.
+snapshots of the same commit, **not published upstream releases**. They are in
+`alpha-20261008/`; the Mini build was added on 2026-10-15.
 
 The multi-pilot UART/USB builds (FPVGateC5MK) are the published
-[v1.2.0 release](https://github.com/LouisHitchcock/FPVGateC5MK/releases/tag/v1.2.0),
-copied unchanged from that tag's `release/<board>/` folders into `c5mk-v1.2.0/`.
+[v1.2.1 release](https://github.com/LouisHitchcock/FPVGateC5MK/releases/tag/v1.2.1),
+copied unchanged from that tag's `release/<board>/` folders into `c5mk-v1.2.1/`.
+(`c5mk-v1.1.0/` and `c5mk-v1.2.0/` are earlier releases, no longer listed.)
 From 1.1.0 the C5 has two app slots, and FPVGate 1.9.0-Multi-Alpha-3 and later can
 update it over the UART link. A C5 flashed with the earlier 2026-10-08 MK alpha
 must be reflashed here once before the gate can update it.
@@ -16,14 +17,28 @@ must be reflashed here once before the gate can update it.
 The same MK images also expose eight native RH serial receivers over USB,
 without an S3 or plugin. Configure the serial port in RH once and restart it.
 Waveshare USB is tested; physical XIAO USB validation is pending. See the
-[USB setup guide](https://github.com/LouisHitchcock/FPVGateC5MK/blob/v1.2.0/docs/USB_ROTORHAZARD.md).
+[USB setup guide](https://github.com/LouisHitchcock/FPVGateC5MK/blob/v1.2.1/docs/USB_ROTORHAZARD.md).
 
 | Selection | Source | Environment | Pins on C5 |
 |---|---|---|---|
 | XIAO Single Pilot / SPI | FPVGateC5RX `572a82b3c2e2a4549c5210ca5aadfb78cdb093f1` | `xiaoc5` (adaptation below) | CLK 23 / D4, DATA 24 / D5, SEL 1 / D0, RSSI 10 / D10 |
-| Waveshare Single Pilot / SPI | same RX commit | `waveshare_c5_zero` | CLK 4, DATA 5, SEL 6, RSSI 10 |
-| XIAO Multi Pilot / UART or USB | FPVGateC5MK `v1.2.0` (`bbfe66b`) | `xiaoc5` | RX 23 / D4, TX 24 / D5 (UART only) |
-| Waveshare Multi Pilot / UART or USB | same MK release | `c5zero` | RX 4, TX 5 (UART only) |
+| Waveshare C5-Zero Single Pilot / SPI | same RX commit | `waveshare_c5_zero` | CLK 4, DATA 5, SEL 6, RSSI 10 |
+| Waveshare C5-WIFI6-KIT / C5-DevKitC-1 Single Pilot / SPI | the C5-Zero image | `waveshare_c5_zero` | CLK 4, DATA 5, SEL 6, RSSI 10 |
+| Waveshare C5-MINI-KIT Single Pilot / SPI | same RX commit | `waveshare_c5_mini` (adaptation below) | CLK 4, DATA 5, SEL 1, RSSI 10 |
+| XIAO Multi Pilot / UART or USB | FPVGateC5MK `v1.2.1` (`8a9245a`) | `xiaoc5` | RX 23 / D4, TX 24 / D5 (UART only) |
+| Waveshare C5-Zero Multi Pilot / UART or USB | same MK release | `c5zero` | RX 4, TX 5 (UART only) |
+| Waveshare C5-WIFI6-KIT / C5-DevKitC-1 Multi Pilot | the C5-Zero image | `c5zero` | RX 4, TX 5 (UART only) |
+| Waveshare C5-MINI-KIT Multi Pilot | the C5-Zero image | `c5zero` | RX 4, TX 5 (UART only) |
+
+The WIFI6-KIT and MINI-KIT selections reuse the C5-Zero images (`ALIASES` in the
+packager): the ESP32-C5-DevKitC-1 layout, which Waveshare's C5-WIFI6-KIT follows,
+has GPIO4, 5, 6 and 10 on its headers, and the C5-MINI-KIT has GPIO4, 5 and 10.
+Neither firmware drives any other board pin. These boards report themselves as the
+C5-Zero, so FPVGate updates them with the C5-Zero image. The MINI-KIT has no GPIO6
+on its headers, so its SPI build moves SEL to GPIO1. None of the three has been
+tested on hardware yet. Some MINI-KITs carry ESP32-C5 revision v1.2, which esptool
+5.1.0's flasher stub mishandled on the bench; if web flashing fails, flash those
+with `esptool --no-stub`.
 
 To package a later MK release, check out its tag, set `MK_TAG` in
 `scripts/package_c5_alpha.py`, and run it with `--mk MK_CHECKOUT` only. The
@@ -32,8 +47,10 @@ script checks the checkout is at the tag and each image's version and board.
 ## Sources and build changes
 
 - [FPVGateC5RX source](https://github.com/LouisHitchcock/FPVGateC5RX/tree/572a82b3c2e2a4549c5210ca5aadfb78cdb093f1)
-- [FPVGateC5MK v1.2.0 release](https://github.com/LouisHitchcock/FPVGateC5MK/releases/tag/v1.2.0)
+- [FPVGateC5MK v1.2.1 release](https://github.com/LouisHitchcock/FPVGateC5MK/releases/tag/v1.2.1)
 - [Seeed pin definitions](https://github.com/espressif/arduino-esp32/blob/master/variants/XIAO_ESP32C5/pins_arduino.h)
+- [Espressif ESP32-C5-DevKitC-1 header pins](https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32c5/esp32-c5-devkitc-1/user_guide.html)
+- [Waveshare ESP32-C5-WIFI6-KIT](https://docs.waveshare.com/ESP32-C5-WIFI6-KIT) and [ESP32-C5-MINI-KIT](https://docs.waveshare.com/ESP32-C5-MINI-KIT) pinouts
 
 The RX builds were made in detached worktrees. Existing development checkouts were not edited.
 No firmware C++ was changed. RX has no upstream XIAO target; the website build adds
@@ -49,6 +66,19 @@ build_flags =
 This is an untested-on-hardware XIAO SPI pin adaptation, explicitly labelled in the UI.
 The selected GPIOs are exposed on XIAO headers and avoid strapping, USB and console pins.
 Use the website's wiring table for this build, not the upstream Waveshare pin table.
+
+For the Waveshare C5-MINI-KIT, built on 2026-10-15 from the same commit, it adds:
+
+```ini
+[env:waveshare_c5_mini]
+build_flags =
+    ${env.build_flags}
+    -DPIN_RX5808_CLK=4 -DPIN_RX5808_DATA=5 -DPIN_RX5808_SEL=1 -DPIN_RSSI_SDM=10
+```
+
+GPIO1 is on the Mini's headers and isn't a strapping, USB or console pin. That
+build pinned the platform URL to 55.03.35 and took `boot_app0.bin` from the
+installed Arduino framework, byte-identical to the one already published.
 
 Build environment: pioarduino Espressif32 **55.3.35**, PlatformIO **6.1.18**,
 RISC-V toolchain **14.2.0+20251107**, esptool **5.1.0**.

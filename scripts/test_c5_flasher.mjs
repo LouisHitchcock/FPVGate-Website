@@ -31,8 +31,8 @@ for (const [key, build] of Object.entries(manifest.builds)) {
     }
     assert.ok(appPartition && app.data.length <= appPartition, `Application must fit its partition at 0x${app.address.toString(16)}`);
     if (build.mode === 'uart') {
-        assert.equal(build.version, '1.2.0');
-        assert.equal(build.tag, 'v1.2.0');
+        assert.equal(build.version, '1.2.1');
+        assert.equal(build.tag, 'v1.2.1');
         assert.equal(build.usb_timing, true);
         assert.equal(otaSlots, 2, 'MK needs two app slots for updates through FPVGate');
         assert.equal(otaData, files[2].address, 'OTA data must be written where the partition table puts it');
