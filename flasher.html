@@ -141,26 +141,26 @@
                         <div class="c5-heading"><h2>C5 Radio</h2><span class="c5-badge">RADIO</span></div>
                         <p class="c5-intro">Choose single-pilot SPI or multi-pilot UART/USB firmware. C5MK also connects directly to RotorHazard without an S3.</p>
                         <div class="form-group">
-                            <label for="c5-board">1. Select Your C5 Board &amp; Mode</label>
+                            <label for="c5-board">1. Select Your C5 Board</label>
                             <select id="c5-board" class="form-control">
-                                <option value="">Choose your C5 radio...</option>
-                                <optgroup label="Single Pilot · SPI · FPVGateC5RX">
-                                    <option value="rx-xiao">XIAO C5 Single Pilot (SPI mode)</option>
-                                    <option value="rx-zero">Waveshare-C5-Zero (SPI mode)</option>
-                                    <option value="rx-devkit">Waveshare C5-WIFI6-KIT / C5-DevKitC-1 (SPI mode)</option>
-                                    <option value="rx-mini">Waveshare C5-MINI-KIT (SPI mode)</option>
-                                </optgroup>
-                                <optgroup label="Multi Pilot · UART / USB · FPVGateC5MK">
-                                    <option value="mk-xiao">XIAO C5 Multi Pilot (UART / USB)</option>
-                                    <option value="mk-zero">Waveshare-C5-Zero (UART / USB)</option>
-                                    <option value="mk-devkit">Waveshare C5-WIFI6-KIT / C5-DevKitC-1 (UART / USB)</option>
-                                    <option value="mk-mini">Waveshare C5-MINI-KIT (UART / USB)</option>
-                                </optgroup>
+                                <option value="">Choose your C5 board...</option>
+                                <option value="xiao">Seeed XIAO ESP32-C5</option>
+                                <option value="zero">Waveshare ESP32-C5-Zero</option>
+                                <option value="devkit">Waveshare ESP32-C5-WIFI6-KIT / ESP32-C5-DevKitC-1</option>
+                                <option value="mini">Waveshare ESP32-C5-MINI-KIT</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="c5-firmware">2. Select Firmware</label>
+                            <select id="c5-firmware" class="form-control" disabled>
+                                <option value="">Choose a board first...</option>
+                                <option value="rx">Single Pilot · SPI · FPVGateC5RX</option>
+                                <option value="mk">Multi Pilot · UART / USB · FPVGateC5MK</option>
                             </select>
                         </div>
                         <div id="c5-release" class="c5-release" hidden aria-live="polite"></div>
                         <div class="form-group">
-                            <label for="c5-erase">2. Flash Options</label>
+                            <label for="c5-erase">3. Flash Options</label>
                             <div class="flash-option-item">
                                 <div class="option-info"><span class="option-title">Full Chip Erase</span><small>Clears saved radio calibration and settings. Recommended when changing modes.</small></div>
                                 <label class="toggle-switch"><input type="checkbox" id="c5-erase" checked aria-label="C5 full chip erase"><span class="slider"></span></label>
@@ -438,7 +438,7 @@
     <script src="analytics-tracker.js"></script>
     <script src="flasher.js?v=1.9.0-Multi-Alpha-3"></script>
     <script src="sdcard-flasher.js?v=1.9.0-Multi-Alpha-3"></script>
-    <script type="module" src="c5-radio.js?v=20261015-boards"></script>
+    <script type="module" src="c5-radio.js?v=20261015-twostep"></script>
     <script src="theme.js"></script>
 </body>
 </html>

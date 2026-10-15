@@ -5,6 +5,7 @@ const toggle = byId('c5-mode');
 const panel = byId('c5-panel');
 const standard = byId('standard-flasher');
 const board = byId('c5-board');
+const firmware = byId('c5-firmware');
 const button = byId('c5-flash');
 const status = byId('c5-status');
 let catalog;
@@ -107,15 +108,23 @@ function showWiring(build) {
     byId('c5-wiring').hidden = false;
 }
 
-async function selectBoard() {
-    const selected = board.value;
+// The manifest key for the chosen board and firmware, e.g. 'mk-zero'; '' until both are chosen.
+function selectedKey() {
+    return board.value && firmware.value ? `${firmware.value}-${board.value}` : '';
+}
+
+async function selectBuild() {
+    const selected = selectedKey();
     button.disabled = true;
+    firmware.disabled = busy || !board.value;
+    firmware.options[0].textContent = board.value ? 'Choose firmware...' : 'Choose a board first...';
     for (const id of ['c5-release', 'c5-wiring', 'c5-error', 'c5-complete', 'c5-progress', 'c5-log-panel']) byId(id).hidden = true;
-    if (!selected) { status.textContent = 'Select your board to see firmware and wiring.'; return; }
+    if (!board.value) { status.textContent = 'Select your board, then the firmware, to see wiring.'; return; }
+    if (!firmware.value) { status.textContent = 'Now select the firmware: single pilot (SPI) or multi pilot (UART / USB).'; return; }
     status.textContent = 'Loading C5 firmware…';
     try {
         const data = await loadCatalog();
-        if (board.value !== selected) return;
+        if (selectedKey() !== selected) return;
         const build = data.builds[selected];
         if (!build) throw new Error('Firmware is not available for this board yet.');
         byId('c5-release').innerHTML = `<strong>${escape(build.project)} · ${escape(build.version)}</strong><small>${build.usb_timing ? 'UART / USB' : escape(build.mode.toUpperCase())} mode · ESP32-C5 · <a href="https://github.com/LouisHitchcock/${build.project}/commit/${build.commit}" target="_blank" rel="noopener">Source ${escape(build.commit.slice(0, 7))}</a></small><small>${build.tag ? `Release <a href="https://github.com/LouisHitchcock/${build.project}/releases/tag/${escape(build.tag)}" target="_blank" rel="noopener">${escape(build.tag)}</a>` : 'Pinned alpha build'} · ${escape(build.environment)}${pendingNote(build)}</small>`;
@@ -125,7 +134,7 @@ async function selectBoard() {
         button.disabled = !supported;
         status.textContent = supported ? 'Ready. Put your C5 in BOOT mode, then connect and flash.' : 'Use Chrome or Edge on HTTPS or localhost for USB flashing.';
     } catch (error) {
-        if (board.value !== selected) return;
+        if (selectedKey() !== selected) return;
         byId('c5-error').textContent = error.message;
         byId('c5-error').hidden = false;
         status.textContent = 'Firmware unavailable.';
@@ -138,16 +147,17 @@ toggle.addEventListener('change', () => {
     panel.hidden = !toggle.checked;
     byId('beta-mode').disabled = toggle.checked;
     byId('prerelease-mode').disabled = toggle.checked;
-    if (toggle.checked) selectBoard();
+    if (toggle.checked) selectBuild();
 });
-board.addEventListener('change', selectBoard);
+board.addEventListener('change', selectBuild);
+firmware.addEventListener('change', selectBuild);
 
 button.addEventListener('click', async () => {
-    if (busy || !catalog?.builds[board.value]) return;
-    const build = catalog.builds[board.value];
+    if (busy || !catalog?.builds[selectedKey()]) return;
+    const build = catalog.builds[selectedKey()];
     busy = true;
     updateLock();
-    button.disabled = board.disabled = byId('c5-erase').disabled = true;
+    button.disabled = board.disabled = firmware.disabled = byId('c5-erase').disabled = true;
     byId('c5-error').hidden = byId('c5-complete').hidden = true;
     byId('c5-log').textContent = '';
     byId('c5-progress').value = 0;
@@ -174,7 +184,7 @@ button.addEventListener('click', async () => {
     } finally {
         window.removeEventListener('beforeunload', preventLeave);
         busy = false;
-        button.disabled = board.disabled = byId('c5-erase').disabled = false;
+        button.disabled = board.disabled = firmware.disabled = byId('c5-erase').disabled = false;
         updateLock();
     }
 });
