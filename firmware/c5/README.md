@@ -1,6 +1,6 @@
 # C5 radio firmware
 
-All eight selections are listed in `manifest.json`, which `c5-radio.js` loads.
+All twelve selections are listed in `manifest.json`, which `c5-radio.js` loads.
 
 The single-pilot SPI builds (FPVGateC5RX) are locally compiled, pinned alpha
 snapshots of the same commit, **not published upstream releases**. They are in
@@ -10,6 +10,10 @@ The multi-pilot UART/USB builds (FPVGateC5MK) are the published
 [v1.2.1 release](https://github.com/LouisHitchcock/FPVGateC5MK/releases/tag/v1.2.1),
 copied unchanged from that tag's `release/<board>/` folders into `c5mk-v1.2.1/`.
 (`c5mk-v1.1.0/` and `c5mk-v1.2.0/` are earlier releases, no longer listed.)
+The [v1.2.2-rc.1 release candidate](https://github.com/LouisHitchcock/FPVGateC5MK/releases/tag/v1.2.2-rc.1)
+(`4541938`) is offered beside it as its own firmware choice for every board
+(`mkrc-*` keys), copied the same way into `c5mk-v1.2.2-rc.1/`. It changes only
+direct USB timing with RotorHazard; the UART link is as in 1.2.1.
 From 1.1.0 the C5 has two app slots, and FPVGate 1.9.0-Multi-Alpha-3 and later can
 update it over the UART link. A C5 flashed with the earlier 2026-10-08 MK alpha
 must be reflashed here once before the gate can update it.
@@ -41,8 +45,9 @@ tested on hardware yet. Some MINI-KITs carry ESP32-C5 revision v1.2, which espto
 with `esptool --no-stub`.
 
 To package a later MK release, check out its tag, set `MK_TAG` in
-`scripts/package_c5_alpha.py`, and run it with `--mk MK_CHECKOUT` only. The
-script checks the checkout is at the tag and each image's version and board.
+`scripts/package_c5_alpha.py`, and run it with `--mk MK_CHECKOUT` only. For a
+release candidate, set `MK_RC_TAG` and use `--mk-rc MK_CHECKOUT`. The script
+checks the checkout is at the tag and each image's version and board.
 
 ## Sources and build changes
 
