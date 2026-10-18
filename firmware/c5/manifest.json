@@ -138,289 +138,145 @@
     },
     "mk-xiao": {
       "project": "FPVGateC5MK",
-      "commit": "8a9245af44b2ce64617dc3f3cc4f9a85deb1102f",
-      "tag": "v1.2.1",
+      "commit": "579a5f83251adb5b709cbd9d9475a66a3f2a283f",
+      "tag": "v1.2.2",
       "environment": "xiaoc5",
       "board": "xiao",
       "mode": "uart",
       "usb_timing": true,
-      "version": "1.2.1",
+      "version": "1.2.2",
       "parts": [
         {
-          "path": "firmware/c5/c5mk-v1.2.1/mk-xiao/bootloader.bin",
+          "path": "firmware/c5/c5mk-v1.2.2/mk-xiao/bootloader.bin",
           "offset": 8192,
-          "size": 22400,
-          "sha256": "26d2d0fa8053b655db16384c9777cac41c24943e0cfe52e216cb3185930af8c2"
+          "size": 19904,
+          "sha256": "01075d0c54c01d7e34a6bf950b741ae231c50b3ee94f08241de768a048abee6d"
         },
         {
-          "path": "firmware/c5/c5mk-v1.2.1/mk-xiao/partitions.bin",
+          "path": "firmware/c5/c5mk-v1.2.2/mk-xiao/partitions.bin",
           "offset": 32768,
           "size": 3072,
           "sha256": "1b86379629900670bd43147c3a873a424695a67765fd1bdb28b1bffc21be137a"
         },
         {
-          "path": "firmware/c5/c5mk-v1.2.1/mk-xiao/ota_data_initial.bin",
+          "path": "firmware/c5/c5mk-v1.2.2/mk-xiao/ota_data_initial.bin",
           "offset": 61440,
           "size": 8192,
           "sha256": "7d2c7ac4888bfd75cd5f56e8d61f69595121183afc81556c876732fd3782c62f"
         },
         {
-          "path": "firmware/c5/c5mk-v1.2.1/mk-xiao/firmware.bin",
+          "path": "firmware/c5/c5mk-v1.2.2/mk-xiao/firmware.bin",
           "offset": 131072,
-          "size": 811664,
-          "sha256": "cafc9c02b8e18231d93e18a5a57d0cf77c3dca96472ee864830ef1f97b837bb2"
+          "size": 814000,
+          "sha256": "d74fd5e05331752b13541f7cbb72e0082a49cf0345b78c36ef4fed4c6055b41a"
         }
       ]
     },
     "mk-zero": {
       "project": "FPVGateC5MK",
-      "commit": "8a9245af44b2ce64617dc3f3cc4f9a85deb1102f",
-      "tag": "v1.2.1",
+      "commit": "579a5f83251adb5b709cbd9d9475a66a3f2a283f",
+      "tag": "v1.2.2",
       "environment": "c5zero",
       "board": "zero",
       "mode": "uart",
       "usb_timing": true,
-      "version": "1.2.1",
+      "version": "1.2.2",
       "parts": [
         {
-          "path": "firmware/c5/c5mk-v1.2.1/mk-zero/bootloader.bin",
+          "path": "firmware/c5/c5mk-v1.2.2/mk-zero/bootloader.bin",
           "offset": 8192,
-          "size": 22400,
-          "sha256": "635464c45eeab404d39f77ac83902fc2bc7c603db7a20b711d115b561b7740e2"
+          "size": 19904,
+          "sha256": "d02bd95f1a6f40ae2bdc061e8ff89a2b0a840d7e01ca08efaf8237a5bc4ae7fc"
         },
         {
-          "path": "firmware/c5/c5mk-v1.2.1/mk-zero/partitions.bin",
+          "path": "firmware/c5/c5mk-v1.2.2/mk-zero/partitions.bin",
           "offset": 32768,
           "size": 3072,
           "sha256": "1b86379629900670bd43147c3a873a424695a67765fd1bdb28b1bffc21be137a"
         },
         {
-          "path": "firmware/c5/c5mk-v1.2.1/mk-zero/ota_data_initial.bin",
+          "path": "firmware/c5/c5mk-v1.2.2/mk-zero/ota_data_initial.bin",
           "offset": 61440,
           "size": 8192,
           "sha256": "7d2c7ac4888bfd75cd5f56e8d61f69595121183afc81556c876732fd3782c62f"
         },
         {
-          "path": "firmware/c5/c5mk-v1.2.1/mk-zero/firmware.bin",
+          "path": "firmware/c5/c5mk-v1.2.2/mk-zero/firmware.bin",
           "offset": 131072,
-          "size": 811664,
-          "sha256": "88766ed3fe7717d8cb139ea5a86487768985a61e6c888ea9bc057b4d527c943e"
+          "size": 814000,
+          "sha256": "4729cbd6ba25686ec9c0f04ff7422623a71ac1ef43e1ea54e0d782aa250d1bac"
         }
       ]
     },
     "mk-devkit": {
       "project": "FPVGateC5MK",
-      "commit": "8a9245af44b2ce64617dc3f3cc4f9a85deb1102f",
-      "tag": "v1.2.1",
+      "commit": "579a5f83251adb5b709cbd9d9475a66a3f2a283f",
+      "tag": "v1.2.2",
       "environment": "c5zero",
       "board": "devkit",
       "mode": "uart",
       "usb_timing": true,
-      "version": "1.2.1",
+      "version": "1.2.2",
       "parts": [
         {
-          "path": "firmware/c5/c5mk-v1.2.1/mk-zero/bootloader.bin",
+          "path": "firmware/c5/c5mk-v1.2.2/mk-zero/bootloader.bin",
           "offset": 8192,
-          "size": 22400,
-          "sha256": "635464c45eeab404d39f77ac83902fc2bc7c603db7a20b711d115b561b7740e2"
+          "size": 19904,
+          "sha256": "d02bd95f1a6f40ae2bdc061e8ff89a2b0a840d7e01ca08efaf8237a5bc4ae7fc"
         },
         {
-          "path": "firmware/c5/c5mk-v1.2.1/mk-zero/partitions.bin",
+          "path": "firmware/c5/c5mk-v1.2.2/mk-zero/partitions.bin",
           "offset": 32768,
           "size": 3072,
           "sha256": "1b86379629900670bd43147c3a873a424695a67765fd1bdb28b1bffc21be137a"
         },
         {
-          "path": "firmware/c5/c5mk-v1.2.1/mk-zero/ota_data_initial.bin",
+          "path": "firmware/c5/c5mk-v1.2.2/mk-zero/ota_data_initial.bin",
           "offset": 61440,
           "size": 8192,
           "sha256": "7d2c7ac4888bfd75cd5f56e8d61f69595121183afc81556c876732fd3782c62f"
         },
         {
-          "path": "firmware/c5/c5mk-v1.2.1/mk-zero/firmware.bin",
+          "path": "firmware/c5/c5mk-v1.2.2/mk-zero/firmware.bin",
           "offset": 131072,
-          "size": 811664,
-          "sha256": "88766ed3fe7717d8cb139ea5a86487768985a61e6c888ea9bc057b4d527c943e"
+          "size": 814000,
+          "sha256": "4729cbd6ba25686ec9c0f04ff7422623a71ac1ef43e1ea54e0d782aa250d1bac"
         }
       ]
     },
     "mk-mini": {
       "project": "FPVGateC5MK",
-      "commit": "8a9245af44b2ce64617dc3f3cc4f9a85deb1102f",
-      "tag": "v1.2.1",
+      "commit": "579a5f83251adb5b709cbd9d9475a66a3f2a283f",
+      "tag": "v1.2.2",
       "environment": "c5zero",
       "board": "mini",
       "mode": "uart",
       "usb_timing": true,
-      "version": "1.2.1",
+      "version": "1.2.2",
       "parts": [
         {
-          "path": "firmware/c5/c5mk-v1.2.1/mk-zero/bootloader.bin",
+          "path": "firmware/c5/c5mk-v1.2.2/mk-zero/bootloader.bin",
           "offset": 8192,
-          "size": 22400,
-          "sha256": "635464c45eeab404d39f77ac83902fc2bc7c603db7a20b711d115b561b7740e2"
+          "size": 19904,
+          "sha256": "d02bd95f1a6f40ae2bdc061e8ff89a2b0a840d7e01ca08efaf8237a5bc4ae7fc"
         },
         {
-          "path": "firmware/c5/c5mk-v1.2.1/mk-zero/partitions.bin",
+          "path": "firmware/c5/c5mk-v1.2.2/mk-zero/partitions.bin",
           "offset": 32768,
           "size": 3072,
           "sha256": "1b86379629900670bd43147c3a873a424695a67765fd1bdb28b1bffc21be137a"
         },
         {
-          "path": "firmware/c5/c5mk-v1.2.1/mk-zero/ota_data_initial.bin",
+          "path": "firmware/c5/c5mk-v1.2.2/mk-zero/ota_data_initial.bin",
           "offset": 61440,
           "size": 8192,
           "sha256": "7d2c7ac4888bfd75cd5f56e8d61f69595121183afc81556c876732fd3782c62f"
         },
         {
-          "path": "firmware/c5/c5mk-v1.2.1/mk-zero/firmware.bin",
+          "path": "firmware/c5/c5mk-v1.2.2/mk-zero/firmware.bin",
           "offset": 131072,
-          "size": 811664,
-          "sha256": "88766ed3fe7717d8cb139ea5a86487768985a61e6c888ea9bc057b4d527c943e"
-        }
-      ]
-    },
-    "mkrc-xiao": {
-      "project": "FPVGateC5MK",
-      "commit": "7afa3fcb24620416f7f1a1f4ad466630e34d3cac",
-      "tag": "v1.2.2-rc.3",
-      "environment": "xiaoc5",
-      "board": "xiao",
-      "mode": "uart",
-      "usb_timing": true,
-      "version": "1.2.2-rc.3",
-      "parts": [
-        {
-          "path": "firmware/c5/c5mk-v1.2.2-rc.3/mkrc-xiao/bootloader.bin",
-          "offset": 8192,
-          "size": 22400,
-          "sha256": "561a6725cc4e0286aea87f344e494a2fc4b2bbde441955b66fa426ca281add5a"
-        },
-        {
-          "path": "firmware/c5/c5mk-v1.2.2-rc.3/mkrc-xiao/partitions.bin",
-          "offset": 32768,
-          "size": 3072,
-          "sha256": "1b86379629900670bd43147c3a873a424695a67765fd1bdb28b1bffc21be137a"
-        },
-        {
-          "path": "firmware/c5/c5mk-v1.2.2-rc.3/mkrc-xiao/ota_data_initial.bin",
-          "offset": 61440,
-          "size": 8192,
-          "sha256": "7d2c7ac4888bfd75cd5f56e8d61f69595121183afc81556c876732fd3782c62f"
-        },
-        {
-          "path": "firmware/c5/c5mk-v1.2.2-rc.3/mkrc-xiao/firmware.bin",
-          "offset": 131072,
-          "size": 813888,
-          "sha256": "d2e2ee332cd329edb4342296fe812f70b8da8c6711dbdb27949fae1950a0c8f3"
-        }
-      ]
-    },
-    "mkrc-zero": {
-      "project": "FPVGateC5MK",
-      "commit": "7afa3fcb24620416f7f1a1f4ad466630e34d3cac",
-      "tag": "v1.2.2-rc.3",
-      "environment": "c5zero",
-      "board": "zero",
-      "mode": "uart",
-      "usb_timing": true,
-      "version": "1.2.2-rc.3",
-      "parts": [
-        {
-          "path": "firmware/c5/c5mk-v1.2.2-rc.3/mkrc-zero/bootloader.bin",
-          "offset": 8192,
-          "size": 22400,
-          "sha256": "bd14ef17a789118c27117fa01c5ce04f2462f35c21b835203bad711b6f4980ef"
-        },
-        {
-          "path": "firmware/c5/c5mk-v1.2.2-rc.3/mkrc-zero/partitions.bin",
-          "offset": 32768,
-          "size": 3072,
-          "sha256": "1b86379629900670bd43147c3a873a424695a67765fd1bdb28b1bffc21be137a"
-        },
-        {
-          "path": "firmware/c5/c5mk-v1.2.2-rc.3/mkrc-zero/ota_data_initial.bin",
-          "offset": 61440,
-          "size": 8192,
-          "sha256": "7d2c7ac4888bfd75cd5f56e8d61f69595121183afc81556c876732fd3782c62f"
-        },
-        {
-          "path": "firmware/c5/c5mk-v1.2.2-rc.3/mkrc-zero/firmware.bin",
-          "offset": 131072,
-          "size": 813888,
-          "sha256": "40c742573b7a79ef89237622264c918336e92ac6ce536b1c5d5d5fa3e5d49c7c"
-        }
-      ]
-    },
-    "mkrc-devkit": {
-      "project": "FPVGateC5MK",
-      "commit": "7afa3fcb24620416f7f1a1f4ad466630e34d3cac",
-      "tag": "v1.2.2-rc.3",
-      "environment": "c5zero",
-      "board": "devkit",
-      "mode": "uart",
-      "usb_timing": true,
-      "version": "1.2.2-rc.3",
-      "parts": [
-        {
-          "path": "firmware/c5/c5mk-v1.2.2-rc.3/mkrc-zero/bootloader.bin",
-          "offset": 8192,
-          "size": 22400,
-          "sha256": "bd14ef17a789118c27117fa01c5ce04f2462f35c21b835203bad711b6f4980ef"
-        },
-        {
-          "path": "firmware/c5/c5mk-v1.2.2-rc.3/mkrc-zero/partitions.bin",
-          "offset": 32768,
-          "size": 3072,
-          "sha256": "1b86379629900670bd43147c3a873a424695a67765fd1bdb28b1bffc21be137a"
-        },
-        {
-          "path": "firmware/c5/c5mk-v1.2.2-rc.3/mkrc-zero/ota_data_initial.bin",
-          "offset": 61440,
-          "size": 8192,
-          "sha256": "7d2c7ac4888bfd75cd5f56e8d61f69595121183afc81556c876732fd3782c62f"
-        },
-        {
-          "path": "firmware/c5/c5mk-v1.2.2-rc.3/mkrc-zero/firmware.bin",
-          "offset": 131072,
-          "size": 813888,
-          "sha256": "40c742573b7a79ef89237622264c918336e92ac6ce536b1c5d5d5fa3e5d49c7c"
-        }
-      ]
-    },
-    "mkrc-mini": {
-      "project": "FPVGateC5MK",
-      "commit": "7afa3fcb24620416f7f1a1f4ad466630e34d3cac",
-      "tag": "v1.2.2-rc.3",
-      "environment": "c5zero",
-      "board": "mini",
-      "mode": "uart",
-      "usb_timing": true,
-      "version": "1.2.2-rc.3",
-      "parts": [
-        {
-          "path": "firmware/c5/c5mk-v1.2.2-rc.3/mkrc-zero/bootloader.bin",
-          "offset": 8192,
-          "size": 22400,
-          "sha256": "bd14ef17a789118c27117fa01c5ce04f2462f35c21b835203bad711b6f4980ef"
-        },
-        {
-          "path": "firmware/c5/c5mk-v1.2.2-rc.3/mkrc-zero/partitions.bin",
-          "offset": 32768,
-          "size": 3072,
-          "sha256": "1b86379629900670bd43147c3a873a424695a67765fd1bdb28b1bffc21be137a"
-        },
-        {
-          "path": "firmware/c5/c5mk-v1.2.2-rc.3/mkrc-zero/ota_data_initial.bin",
-          "offset": 61440,
-          "size": 8192,
-          "sha256": "7d2c7ac4888bfd75cd5f56e8d61f69595121183afc81556c876732fd3782c62f"
-        },
-        {
-          "path": "firmware/c5/c5mk-v1.2.2-rc.3/mkrc-zero/firmware.bin",
-          "offset": 131072,
-          "size": 813888,
-          "sha256": "40c742573b7a79ef89237622264c918336e92ac6ce536b1c5d5d5fa3e5d49c7c"
+          "size": 814000,
+          "sha256": "4729cbd6ba25686ec9c0f04ff7422623a71ac1ef43e1ea54e0d782aa250d1bac"
         }
       ]
     }
