@@ -65,9 +65,10 @@ function convertMarkdownToHTML(markdown) {
     let html = markdown;
 
     // Headers
-    html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
-    html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
-    html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+    // Board instructions sit inside the Hardware Setup section, below its H2.
+    html = html.replace(/^### (.*$)/gim, '<h5>$1</h5>');
+    html = html.replace(/^## (.*$)/gim, '<h4>$1</h4>');
+    html = html.replace(/^# (.*$)/gim, '<h3>$1</h3>');
 
     // Bold
     html = html.replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>');

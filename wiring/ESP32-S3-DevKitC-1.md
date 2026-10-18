@@ -77,4 +77,4 @@ The ESP32-S3 DevKitC-1 requires a stable 5V power supply:
 ## References
 
 - [ESP32-S3 DevKitC-1 Documentation](https://docs.keyestudio.com/projects/ESP32-S3/en/latest/1.Introduction.html)
-- [Complete Hardware Guide](../HARDWARE_GUIDE.md)
+- [Complete Hardware Guide](../docs.html#hardware)

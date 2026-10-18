@@ -3,22 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FPVGate Web Flasher | Flash ESP32-S3 Firmware from Your Browser</title>
-    <meta name="description" content="Flash FPVGate firmware to ESP32-S3 in minutes with the browser-based Web Serial flasher. Select board, pick version, erase/verify, and connect. No CLI needed. Formerly PhobosLT.">
-    <meta name="keywords" content="FPVGate flasher, PhobosLT firmware, ESP32-S3 firmware flash, FPV lap timer firmware, web serial flasher, ESP32 FPV flash tool, drone timer firmware, RSSI timer flash">
+    <title>FPVGate Web Flasher | ESP32-S3 Timer Firmware</title>
+    <meta name="description" content="Flash FPVGate ESP32-S3 timer firmware for SPI receivers or C5 multi-pilot builds. Select your board and version, then install from your browser over USB.">
+    <meta name="keywords" content="FPVGate web flasher, ESP32-S3 firmware, ESP32-C5 flash, FPVGateC5MK, FPVGateC5RX, multi-pilot firmware, SPI receiver firmware">
     <link rel="canonical" href="https://fpvgate.xyz/flasher.html">
 
     <!-- Open Graph -->
     <meta property="og:type" content="website">
-    <meta property="og:title" content="FPVGate Web Flasher | Flash ESP32-S3 Firmware from Your Browser">
-    <meta property="og:description" content="One-click FPVGate firmware flashing for ESP32-S3 boards using Web Serial. Board picker, version selector, full erase, and verification built-in.">
+    <meta property="og:title" content="FPVGate Web Flasher | ESP32-S3 Timer Firmware">
+    <meta property="og:description" content="Install S3 timer firmware for traditional SPI receivers or C5 multi-pilot setups. The dedicated C5 Radio page handles C5 receiver flashing.">
     <meta property="og:url" content="https://fpvgate.xyz/flasher.html">
     <meta property="og:image" content="https://fpvgate.xyz/logo-black.png">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="FPVGate Web Flasher | ESP32-S3 Browser Flashing">
-    <meta name="twitter:description" content="Flash FPVGate firmware via Web Serial—choose board and version, click connect, done.">
+    <meta name="twitter:title" content="FPVGate Web Flasher | S3 Timer Firmware">
+    <meta name="twitter:description" content="Choose your S3 timer board and flash compatible FPVGate firmware through USB in your browser.">
     <meta name="twitter:image" content="https://fpvgate.xyz/logo-black.png">
 
     <link rel="icon" type="image/png" href="logo-black.png">
@@ -33,8 +33,15 @@
     document.documentElement.setAttribute('data-theme','dark');}
     document.documentElement.classList.add('js');})();
     </script>
-    <link rel="stylesheet" href="styles.css?v=20260925c">
-    <link rel="stylesheet" href="c5-radio.css?v=20261008">
+    <link rel="stylesheet" href="styles.css?v=20261018seo">
+    <script>
+    // Preserve bookmarks to the former C5 toggle, including hash navigation.
+    function openC5RadioPage() {
+        if (location.hash === '#c5-radio') location.replace('c5.html#flasher');
+    }
+    openC5RadioPage();
+    window.addEventListener('hashchange', openC5RadioPage);
+    </script>
 
     <style>
       /* Shown when a board re-enumerates into bootloader mode part way through
@@ -59,7 +66,7 @@
       "applicationCategory": "DeveloperApplication",
       "operatingSystem": "Web",
       "browserRequirements": "Requires Chrome, Edge, or Opera with Web Serial API support",
-      "description": "Browser-based firmware flasher for FPVGate on ESP32-S3 with board/version picker, full chip erase, and verification.",
+      "description": "Browser firmware flasher for FPVGate ESP32-S3 timers with SPI receivers or C5 multi-pilot support, including board and version selection and verification.",
       "image": "https://fpvgate.xyz/logo-black.png",
       "offers": {
         "@type": "Offer",
@@ -80,13 +87,14 @@
         <div class="container">
             <a class="nav-brand" href="index.html">
                 <img src="images/LogoAnimated.svg" alt="" class="nav-logo">
-                <h1>FPVGate</h1>
+                <span class="brand-name">FPVGate</span>
             </a>
             <div class="nav-links">
                 <a href="index.html">Home</a>
                 <a href="shop.html">Shop</a>
                 <a href="docs.html">Documentation</a>
                 <a href="https://github.com/LouisHitchcock/FPVGate" target="_blank" rel="noopener">GitHub</a>
+                <a href="c5.html">C5 Radio</a>
                 <a href="flasher.html" class="btn-primary">Flash Firmware</a>
             </div>
             <div class="nav-actions">
@@ -105,6 +113,7 @@
         <div class="container">
             <h1>FPVGate Web Flasher</h1>
             <p class="subtitle">Flash FPVGate firmware directly from your browser - no command line required!</p>
+            <p>Flash your <strong>ESP32-S3 timer</strong> here. To flash C5MK or C5RX onto a C5 receiver, use the <a href="c5.html#flasher">C5 Radio page and flasher</a>.</p>
 
             <div class="alert alert-info" id="browser-warning" style="display: none;">
                 <strong>Browser Not Supported!</strong> Please use Chrome, Edge, or Opera browser.
@@ -126,68 +135,7 @@
                     </label>
                     <span class="toggle-label">Pre-Release Firmware</span>
                 </div>
-                <div class="beta-mode-toggle">
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="c5-mode" aria-label="C5 Radio" aria-controls="c5-panel">
-                        <span class="slider"></span>
-                    </label>
-                    <label class="toggle-label" for="c5-mode">C5 Radio</label>
-                </div>
             </div>
-
-            <section id="c5-panel" class="flasher-container" aria-label="C5 Radio firmware" hidden>
-                <div class="flasher-main">
-                    <div class="flasher-config">
-                        <div class="c5-heading"><h2>C5 Radio</h2><span class="c5-badge">RADIO</span></div>
-                        <p class="c5-intro">Choose single-pilot SPI or multi-pilot UART/USB firmware. C5MK also connects directly to RotorHazard without an S3.</p>
-                        <div class="form-group">
-                            <label for="c5-board">1. Select Your C5 Board</label>
-                            <select id="c5-board" class="form-control">
-                                <option value="">Choose your C5 board...</option>
-                                <option value="xiao">Seeed XIAO ESP32-C5</option>
-                                <option value="zero">Waveshare ESP32-C5-Zero</option>
-                                <option value="devkit">Waveshare ESP32-C5-WIFI6-KIT / ESP32-C5-DevKitC-1</option>
-                                <option value="mini">Waveshare ESP32-C5-MINI-KIT</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="c5-firmware">2. Select Firmware</label>
-                            <select id="c5-firmware" class="form-control" disabled>
-                                <option value="">Choose a board first...</option>
-                                <option value="rx">Single Pilot · SPI · FPVGateC5RX</option>
-                                <option value="mk">Multi Pilot · UART / USB · FPVGateC5MK</option>
-                                <option value="mkrc">Multi Pilot · UART / USB · FPVGateC5MK 1.2.2 release candidate</option>
-                            </select>
-                        </div>
-                        <div id="c5-release" class="c5-release" hidden aria-live="polite"></div>
-                        <div class="form-group">
-                            <label for="c5-erase">3. Flash Options</label>
-                            <div class="flash-option-item">
-                                <div class="option-info"><span class="option-title">Full Chip Erase</span><small>Clears saved radio calibration and settings. Recommended when changing modes.</small></div>
-                                <label class="toggle-switch"><input type="checkbox" id="c5-erase" checked aria-label="C5 full chip erase"><span class="slider"></span></label>
-                            </div>
-                            <small>Firmware integrity and flash contents are verified automatically.</small>
-                        </div>
-                        <button id="c5-flash" class="btn btn-primary" type="button" disabled>Connect &amp; Flash C5 Radio</button>
-                        <p id="c5-status" class="c5-status" role="status">Select your board to see firmware and wiring.</p>
-                        <progress id="c5-progress" max="100" value="0" aria-label="C5 flashing progress" hidden></progress>
-                        <div id="c5-error" class="alert alert-error" role="alert" hidden></div>
-                        <div id="c5-complete" class="alert alert-info" hidden>Flashing verified. Disconnect USB and power, then reconnect to start your C5 radio. Follow the wiring and setup instructions below.</div>
-                        <details id="c5-log-panel" hidden><summary>Flashing log</summary><pre id="c5-log"></pre></details>
-                    </div>
-                    <section id="c5-wiring" class="info-card c5-wiring" aria-label="C5 wiring instructions" hidden></section>
-                </div>
-                <aside class="flasher-sidebar">
-                    <div class="info-card"><h3>Before You Flash</h3><ul>
-                        <li>Connect the <strong>C5 radio board</strong> to USB.</li>
-                        <li>Use Chrome or Edge with a USB data cable.</li>
-                        <li>Hold BOOT, press and release RESET, then release BOOT before connecting.</li>
-                        <li>Close serial monitors using this USB port.</li>
-                    </ul></div>
-                    <div class="info-card"><h3>Choose Your Mode</h3><p><strong>Single Pilot · SPI</strong><br>FPVGateC5RX replaces an RX5808. A resistor/capacitor filter provides analog RSSI to your timer.</p><p><strong>Multi Pilot · UART / USB</strong><br>C5MK connects to an FPVGate S3 over UART, or directly to RotorHazard over USB. The same board-specific firmware supports both.</p></div>
-                    <div class="info-card"><h3>Firmware Status</h3><p>C5RX SPI builds remain alpha. C5MK uses the published v1.2.1 release; the v1.2.2-rc.1 release candidate fixes and quietens direct USB timing with RotorHazard. The Waveshare C5-WIFI6-KIT and C5-MINI-KIT builds and physical XIAO USB are not yet hardware-tested. Validate reception and lap detection before racing.</p><p><a href="https://github.com/LouisHitchcock/FPVGateC5RX" target="_blank" rel="noopener">FPVGateC5RX source ↗</a><br><a href="https://github.com/LouisHitchcock/FPVGateC5MK" target="_blank" rel="noopener">FPVGateC5MK source ↗</a></p></div>
-                </aside>
-            </section>
 
             <div class="flasher-container" id="standard-flasher">
                 <div class="flasher-main">
@@ -439,7 +387,6 @@
     <script src="analytics-tracker.js"></script>
     <script src="flasher.js?v=1.9.0-Multi-Alpha-3"></script>
     <script src="sdcard-flasher.js?v=1.9.0-Multi-Alpha-3"></script>
-    <script type="module" src="c5-radio.js?v=20261015-twostep"></script>
     <script src="theme.js"></script>
 </body>
 </html>

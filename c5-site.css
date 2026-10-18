@@ -1,0 +1,55 @@
+/* Receiver documentation uses the site's existing theme and layout. */
+/* Sticky sidebars must not be inside the legacy overflow-hidden wrappers. */
+.docs-content, .docs-layout { overflow: visible; }
+@media (min-width: 769px) {
+    .docs-sidebar {
+        align-self: start;
+        top: 88px;
+        max-height: calc(100vh - 112px);
+        max-height: calc(100dvh - 112px);
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        scrollbar-width: thin;
+    }
+}
+.c5-flash-section { padding: 3rem 0; border-bottom: 1px solid var(--rule); scroll-margin-top: 88px; }
+.c5-flash-section > .container > h2 { margin-bottom: 1rem; font-size: 2rem; }
+.c5-guide .docs-hero .subtitle { max-width: 65ch; }
+.c5-guide .docs-hero h1 { font-size: clamp(2rem, 4.5vw, 3rem); line-height: 1.15; }
+.c5-guide .docs-layout { grid-template-columns: 210px minmax(0, 1fr); gap: 2rem; }
+.c5-guide .docs-main { padding: 2.5rem; }
+.c5-guide .doc-section { scroll-margin-top: 100px; }
+.c5-guide .doc-section:last-child { margin-bottom: 0; }
+.c5-guide .doc-section h2 { font-size: 1.8rem; line-height: 1.25; letter-spacing: -.025em; }
+.c5-guide .doc-section p { margin-bottom: 1rem; }
+.c5-guide .doc-section ol, .c5-guide .doc-section ul { padding-left: 1.5rem; margin: 1rem 0; }
+.c5-guide .doc-section li { margin-bottom: .6rem; }
+.c5-table-scroll { overflow-x: auto; margin: 1.5rem 0; }
+.c5-table { width: 100%; border-collapse: collapse; font-size: .875rem; }
+.c5-guide .c5-table { min-width: 520px; }
+.c5-table caption { text-align: left; color: var(--ink-2); padding-bottom: .75rem; }
+.c5-table th, .c5-table td { text-align: left; padding: .8rem; border-bottom: 1px solid var(--rule); vertical-align: top; }
+.c5-table th { color: var(--ink); font-weight: 600; }
+.c5-table td { color: var(--ink-2); }
+.c5-path { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem; background: var(--surface-inset); padding: 1rem; margin: 1rem 0 1.5rem; font: .8rem/1.5 var(--font-mono); border: 1px solid var(--rule); border-radius: var(--r); }
+.c5-path span { color: var(--accent); }
+.c5-guide pre { overflow-x: auto; padding: 1rem; background: var(--surface-inset); border: 1px solid var(--rule); font: .8rem/1.8 var(--font-mono); border-radius: var(--r); margin: 1.25rem 0; }
+.c5-guide details { border-bottom: 1px solid var(--rule); padding: 1rem 0; }
+.c5-guide summary { cursor: pointer; font-weight: 600; }
+.c5-guide details p { margin-top: 1rem; }
+.c5-callout { padding: 1.25rem; border-left: 3px solid var(--accent); background: rgb(var(--accent-rgb) / .06); margin: 1.5rem 0; }
+.c5-callout p:last-child { margin-bottom: 0; }
+.c5-doc-entry { display: flex; flex-wrap: wrap; gap: .75rem; margin: 1rem 0; }
+.c5-breadcrumb { color: var(--ink-2); font-size: .875rem; margin-bottom: 1rem; }
+.c5-nav-heading { color: var(--ink); font-size: 1.1rem; margin-bottom: 1rem; }
+@media (min-width: 769px) and (max-width: 1000px) {
+    .c5-guide .docs-layout { grid-template-columns: 180px minmax(0, 1fr); gap: 1.5rem; }
+    .c5-guide .docs-main { padding: 1.5rem; }
+}
+@media (max-width: 768px) {
+    .c5-guide .c5-table-scroll::before { content: 'Scroll table horizontally to see all columns →'; display: block; margin-bottom: .75rem; color: var(--ink-2); font-size: .75rem; }
+    .c5-guide .docs-layout { grid-template-columns: 1fr; }
+    .c5-guide .docs-main { padding: 1.25rem; }
+    .c5-guide .docs-sidebar { position: static; }
+    .c5-table th, .c5-table td { padding: .6rem; }
+}

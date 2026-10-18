@@ -102,5 +102,5 @@ The LilyGO T-Energy S3 is marked as **Expert Mode** because:
 ## References
 
 - [LilyGO T-Energy S3 Documentation](https://github.com/Xinyuan-LilyGO/T-Energy)
-- [Complete Hardware Guide](../HARDWARE_GUIDE.md)
+- [Complete Hardware Guide](../docs.html#hardware)
 - [LilyGO T-Energy S3 Verification](../LILYGO_TENERGY_S3_VERIFICATION.md)

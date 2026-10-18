@@ -1,9 +1,6 @@
 import { flashC5 } from './c5-flasher.js?v=20261008b';
 
 const byId = id => document.getElementById(id);
-const toggle = byId('c5-mode');
-const panel = byId('c5-panel');
-const standard = byId('standard-flasher');
 const board = byId('c5-board');
 const firmware = byId('c5-firmware');
 const button = byId('c5-flash');
@@ -13,16 +10,6 @@ let loading;
 let busy = false;
 
 const escape = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
-
-function standardBusy() {
-    return byId('flash-progress').style.display === 'block' &&
-        byId('connect-button').style.display === 'none' &&
-        byId('post-flash-actions').style.display !== 'block' &&
-        byId('error-section').style.display !== 'block';
-}
-
-function updateLock() { toggle.disabled = busy || standardBusy(); }
-new MutationObserver(updateLock).observe(standard, { subtree: true, attributes: true, attributeFilter: ['style'] });
 
 async function loadCatalog() {
     if (catalog) return catalog;
@@ -141,14 +128,6 @@ async function selectBuild() {
     }
 }
 
-toggle.addEventListener('change', () => {
-    if (busy || standardBusy()) { toggle.checked = !toggle.checked; return; }
-    standard.hidden = toggle.checked;
-    panel.hidden = !toggle.checked;
-    byId('beta-mode').disabled = toggle.checked;
-    byId('prerelease-mode').disabled = toggle.checked;
-    if (toggle.checked) selectBuild();
-});
 board.addEventListener('change', selectBuild);
 firmware.addEventListener('change', selectBuild);
 
@@ -156,7 +135,6 @@ button.addEventListener('click', async () => {
     if (busy || !catalog?.builds[selectedKey()]) return;
     const build = catalog.builds[selectedKey()];
     busy = true;
-    updateLock();
     button.disabled = board.disabled = firmware.disabled = byId('c5-erase').disabled = true;
     byId('c5-error').hidden = byId('c5-complete').hidden = true;
     byId('c5-log').textContent = '';
@@ -185,8 +163,8 @@ button.addEventListener('click', async () => {
         window.removeEventListener('beforeunload', preventLeave);
         busy = false;
         button.disabled = board.disabled = firmware.disabled = byId('c5-erase').disabled = false;
-        updateLock();
     }
 });
 
-if (location.hash === '#c5-radio') { toggle.checked = true; toggle.dispatchEvent(new Event('change')); }
+// Restore a valid selection when the browser restores form values on navigation.
+selectBuild();

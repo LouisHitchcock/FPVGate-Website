@@ -33,20 +33,66 @@
     document.documentElement.setAttribute('data-theme','dark');}
     document.documentElement.classList.add('js');})();
     </script>
-    <link rel="stylesheet" href="styles.css?v=20260925c">
+    <link rel="stylesheet" href="styles.css?v=20261018seo">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "TechArticle",
+          "name": "FPVGate AIO Quick Start",
+          "description": "Get an FPVGate AIO ready for its first race: power, network connection, channel selection, calibration and race controls.",
+          "url": "https://fpvgate.xyz/quickstart.html",
+          "headline": "FPVGate AIO Quick Start",
+          "dateModified": "2026-10-18",
+          "mainEntityOfPage": "https://fpvgate.xyz/quickstart.html",
+          "image": "https://fpvgate.xyz/logo-black.png",
+          "publisher": {
+            "@type": "Organization",
+            "name": "FPVGate",
+            "url": "https://fpvgate.xyz/"
+          }
+        },
+        {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "FPVGate",
+              "item": "https://fpvgate.xyz/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Documentation",
+              "item": "https://fpvgate.xyz/docs.html"
+            },
+            {
+              "@type": "ListItem",
+              "position": 3,
+              "name": "FPVGate AIO Quick Start",
+              "item": "https://fpvgate.xyz/quickstart.html"
+            }
+          ]
+        }
+      ]
+    }
+    </script>
 </head>
 <body>
     <nav class="navbar">
         <div class="container">
             <a class="nav-brand" href="index.html">
                 <img src="images/LogoAnimated.svg" alt="" class="nav-logo">
-                <h1>FPVGate</h1>
+                <span class="brand-name">FPVGate</span>
             </a>
             <div class="nav-links">
                 <a href="index.html">Home</a>
                 <a href="shop.html">Shop</a>
                 <a href="docs.html">Documentation</a>
                 <a href="https://github.com/LouisHitchcock/FPVGate" target="_blank" rel="noopener">GitHub</a>
+                <a href="c5.html">C5 Radio</a>
                 <a href="flasher.html" class="btn-primary">Flash Firmware</a>
             </div>
             <div class="nav-actions">
@@ -367,13 +413,14 @@
         <div class="container">
             <h2>What's Next?</h2>
             <p>You're all set for solo practice sessions. When you're ready to explore more, FPVGate has a lot more to offer:</p>
+            <p>Planning a club session? <a href="docs.html#event-mode">Event Mode</a> on compatible S3 firmware with a C5MK receiver adds pilot groups, heat schedules, race formats and results exports.</p>
             <div class="qs-next-grid">
-                <a href="docs.html#multipilot" class="qs-next-card">
+                <a href="docs.html#c5-multipilot" class="qs-next-card">
                     <div class="qs-next-icon">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                     </div>
                     <h3>Multi-Pilot Racing</h3>
-                    <p>Sync multiple FPVGate timers for head-to-head racing with friends.</p>
+                    <p>Explore up to 8 pilots with one C5MK receiver and compatible firmware, or keep your SPI receiver and sync separate timers.</p>
                 </a>
                 <a href="docs.html#rotorhazard" class="qs-next-card">
                     <div class="qs-next-icon">

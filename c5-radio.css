@@ -1,7 +1,5 @@
 /* C5-only components; the standard flasher keeps its existing styles. */
-#c5-panel[hidden], #standard-flasher[hidden], #c5-panel [hidden] { display: none !important; }
-.toggle-row { flex-wrap: wrap; }
-.toggle-row .beta-mode-toggle { min-width: 220px; }
+#c5-panel[hidden], #c5-panel [hidden] { display: none !important; }
 .c5-heading { display: flex; align-items: center; gap: 1rem; margin-bottom: .75rem; }
 .c5-heading h2 { margin: 0; }
 .c5-badge { font: .7rem var(--font-mono); color: var(--warn); border: 1px solid var(--warn); padding: .2rem .45rem; border-radius: var(--r-sm); }

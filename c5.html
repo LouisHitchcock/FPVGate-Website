@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FPVGate C5 Radio | Multi-Pilot Guide &amp; Firmware Flasher</title>
+    <meta name="description" content="Flash C5MK or C5RX firmware and set up your ESP32-C5 radio. Up to 8 pilots with one C5, board wiring, calibration and direct USB to RotorHazard.">
+    <link rel="canonical" href="https://fpvgate.xyz/c5.html">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="FPVGate C5 Radio | Multi-Pilot Guide &amp; Firmware Flasher">
+    <meta property="og:description" content="Add C5 multi-pilot support to your FPVGate timer. Compare UART, direct USB to RotorHazard, and single-pilot SPI, with wiring and setup steps.">
+    <meta property="og:url" content="https://fpvgate.xyz/c5.html">
+    <meta property="og:image" content="https://fpvgate.xyz/logo-black.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="FPVGate C5 Radio | Setup &amp; Firmware Flasher">
+    <meta name="twitter:description" content="Up to 8 pilots with one ESP32-C5 receiver. Wiring, flashing, calibration and RotorHazard USB setup for FPVGate C5 radios.">
+    <meta name="twitter:image" content="https://fpvgate.xyz/logo-black.png">
+    <link rel="icon" type="image/png" href="logo-black.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+    <script>
+    (function(){try{var t=localStorage.getItem('fpvgate-theme');
+    if(!t)t=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';
+    document.documentElement.setAttribute('data-theme',t);}catch(e){
+    document.documentElement.setAttribute('data-theme','dark');}
+    document.documentElement.classList.add('js');})();
+    </script>
+    <link rel="stylesheet" href="styles.css?v=20261018seo">
+    <link rel="stylesheet" href="c5-site.css?v=20261018c">
+    <link rel="stylesheet" href="c5-radio.css?v=20261018">
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "TechArticle",
+          "headline": "FPVGateC5MK: Up to 8 Pilots with One ESP32-C5",
+          "description": "Setup guide for FPVGate C5MK multi-pilot receivers, UART wiring, firmware, calibration, direct USB to RotorHazard and C5RX single-pilot SPI builds.",
+          "url": "https://fpvgate.xyz/c5.html",
+          "mainEntityOfPage": "https://fpvgate.xyz/c5.html",
+          "dateModified": "2026-10-18",
+          "articleSection": ["Receiver options", "FPVGate multi-pilot", "Supported boards", "Wiring", "RotorHazard USB", "Single-pilot SPI", "Firmware compatibility", "Troubleshooting"],
+          "publisher": { "@type": "Organization", "name": "FPVGate", "url": "https://fpvgate.xyz/" }
+        },
+        {
+          "@type": "WebApplication",
+          "name": "FPVGate C5 Radio Flasher",
+          "url": "https://fpvgate.xyz/c5.html#flasher",
+          "applicationCategory": "DeveloperApplication",
+          "operatingSystem": "Web",
+          "browserRequirements": "Requires a browser with Web Serial support, such as Chrome or Edge, and HTTPS or localhost",
+          "description": "Browser USB firmware flasher for ESP32-C5 radios running FPVGateC5MK multi-pilot or FPVGateC5RX single-pilot SPI firmware. Includes board-specific wiring and flash verification."
+        },
+        {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "FPVGate", "item": "https://fpvgate.xyz/" },
+            { "@type": "ListItem", "position": 2, "name": "Documentation", "item": "https://fpvgate.xyz/docs.html" },
+            { "@type": "ListItem", "position": 3, "name": "C5 Receiver Guide", "item": "https://fpvgate.xyz/c5.html" }
+          ]
+        }
+      ]
+    }
+    </script>
+</head>
+<body class="c5-guide">
+    <nav class="navbar">
+        <div class="container">
+            <a class="nav-brand" href="index.html"><img src="images/LogoAnimated.svg" alt="" class="nav-logo"><span class="brand-name">FPVGate</span></a>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="shop.html">Shop</a>
+                <a href="docs.html">Documentation</a>
+                <a href="https://github.com/LouisHitchcock/FPVGate" target="_blank" rel="noopener">GitHub</a>
+                <a href="c5.html" aria-current="page">C5 Radio</a>
+                <a href="flasher.html" class="btn-primary">Flash Firmware</a>
+            </div>
+            <div class="nav-actions">
+                <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch theme">
+                    <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+                    <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/></svg>
+                </button>
+                <button class="nav-toggle" type="button" data-nav-toggle aria-label="Toggle menu" aria-expanded="false"><span></span><span></span><span></span></button>
+            </div>
+        </div>
+    </nav>
+    <header class="docs-hero">
+        <div class="container">
+            <nav class="c5-breadcrumb" aria-label="Breadcrumb"><a href="docs.html">Documentation</a> / C5 Receivers</nav>
+            <h1>FPVGate C5 Radio</h1>
+            <p class="subtitle">Add FPVGateC5MK multi-pilot support: up to 8 pilots with one ESP32-C5 receiver.</p>
+            <p>Already using an RX5808? Your SPI receiver is still supported. C5 is another receiver option for your FPVGate build.</p>
+            <div class="c5-doc-entry"><a href="#flasher" class="btn btn-primary">Flash C5 Firmware</a><a href="#fpvgate" class="btn btn-secondary">Multi-Pilot Setup</a></div>
+        </div>
+    </header>
+    <section id="flasher" class="c5-flash-section" aria-labelledby="c5-flasher-heading">
+        <div class="container">
+            <h2 id="c5-flasher-heading">Flash Your C5 Radio</h2>
+            <p>Connect your C5 over USB, choose your board and firmware, then flash. Board-specific wiring and setup instructions appear below your selection.</p>
+            <section id="c5-panel" class="flasher-container" aria-label="C5 Radio firmware">
+                <div class="flasher-main">
+                    <div class="flasher-config">
+                        <div class="c5-heading"><h2>C5 Radio</h2><span class="c5-badge">RADIO</span></div>
+                        <p class="c5-intro">Choose single-pilot SPI or multi-pilot UART/USB firmware. C5MK also connects directly to RotorHazard without an S3.</p>
+                        <div class="form-group">
+                            <label for="c5-board">1. Select Your C5 Board</label>
+                            <select id="c5-board" class="form-control">
+                                <option value="">Choose your C5 board...</option>
+                                <option value="xiao">Seeed XIAO ESP32-C5</option>
+                                <option value="zero">Waveshare ESP32-C5-Zero</option>
+                                <option value="devkit">Waveshare ESP32-C5-WIFI6-KIT / ESP32-C5-DevKitC-1</option>
+                                <option value="mini">Waveshare ESP32-C5-MINI-KIT</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="c5-firmware">2. Select Firmware</label>
+                            <select id="c5-firmware" class="form-control" disabled>
+                                <option value="">Choose a board first...</option>
+                                <option value="rx">Single Pilot · SPI · FPVGateC5RX</option>
+                                <option value="mk">Multi Pilot · UART / USB · FPVGateC5MK</option>
+                                <option value="mkrc">Multi Pilot · UART / USB · FPVGateC5MK 1.2.2 release candidate</option>
+                            </select>
+                        </div>
+                        <div id="c5-release" class="c5-release" hidden aria-live="polite"></div>
+                        <div class="form-group">
+                            <label for="c5-erase">3. Flash Options</label>
+                            <div class="flash-option-item">
+                                <div class="option-info"><span class="option-title">Full Chip Erase</span><small>Clears saved radio calibration and settings. Recommended when changing modes.</small></div>
+                                <label class="toggle-switch"><input type="checkbox" id="c5-erase" checked aria-label="C5 full chip erase"><span class="slider"></span></label>
+                            </div>
+                            <small>Firmware integrity and flash contents are verified automatically.</small>
+                        </div>
+                        <button id="c5-flash" class="btn btn-primary" type="button" disabled>Connect &amp; Flash C5 Radio</button>
+                        <p id="c5-status" class="c5-status" role="status">Select your board to see firmware and wiring.</p>
+                        <progress id="c5-progress" max="100" value="0" aria-label="C5 flashing progress" hidden></progress>
+                        <div id="c5-error" class="alert alert-error" role="alert" hidden></div>
+                        <div id="c5-complete" class="alert alert-info" hidden>Flashing verified. Disconnect USB and power, then reconnect to start your C5 radio. Follow the wiring and setup instructions below.</div>
+                        <details id="c5-log-panel" hidden><summary>Flashing log</summary><pre id="c5-log"></pre></details>
+                    </div>
+                    <section id="c5-wiring" class="info-card c5-wiring" aria-label="C5 wiring instructions" hidden></section>
+                </div>
+                <aside class="flasher-sidebar">
+                    <div class="info-card"><h3>Before You Flash</h3><ul>
+                        <li>Connect the <strong>C5 radio board</strong> to USB.</li>
+                        <li>Use Chrome or Edge with a USB data cable.</li>
+                        <li>Hold BOOT, press and release RESET, then release BOOT before connecting.</li>
+                        <li>Close serial monitors using this USB port.</li>
+                    </ul></div>
+                    <div class="info-card"><h3>Choose Your Mode</h3><p><strong>Single Pilot · SPI</strong><br>FPVGateC5RX replaces an RX5808. A resistor/capacitor filter provides analog RSSI to your timer.</p><p><strong>Multi Pilot · UART / USB</strong><br>C5MK connects to an FPVGate S3 over UART, or directly to RotorHazard over USB. The same board-specific firmware supports both.</p></div>
+                    <div class="info-card"><h3>Firmware Status</h3><p>C5RX SPI builds remain alpha. C5MK uses the published v1.2.1 release; the v1.2.2-rc.1 release candidate fixes and quietens direct USB timing with RotorHazard. The Waveshare C5-WIFI6-KIT and C5-MINI-KIT builds and physical XIAO USB are not yet hardware-tested. Validate reception and lap detection before racing.</p><p><a href="https://github.com/LouisHitchcock/FPVGateC5RX" target="_blank" rel="noopener">FPVGateC5RX source ↗</a><br><a href="https://github.com/LouisHitchcock/FPVGateC5MK" target="_blank" rel="noopener">FPVGateC5MK source ↗</a></p></div>
+                </aside>
+            </section>
+        </div>
+    </section>
+
+    <div class="docs-content">
+        <div class="container docs-layout">
+            <aside class="docs-sidebar">
+                <nav class="docs-nav" aria-label="C5 guide sections">
+                    <h2 class="c5-nav-heading">In this guide</h2>
+                    <a href="#flasher">C5 Firmware Flasher</a><a href="#options">Choose Your Setup</a><a href="#fpvgate">FPVGate Multi-Pilot</a><a href="#boards">Boards &amp; Wiring</a><a href="#rotorhazard">RotorHazard USB</a><a href="#single-pilot">Single-Pilot SPI</a><a href="#compatibility">Firmware &amp; Status</a><a href="#troubleshooting">Troubleshooting</a><a href="docs.html">All Documentation &rarr;</a>
+                </nav>
+            </aside>
+            <main class="docs-main">
+                <section id="options" class="doc-section">
+                    <h2>Choose your receiver setup</h2>
+                    <p>FPVGate measures signal strength from your drone's existing video transmitter. The S3 runs the timer and web interface; the receiver measures the RF signal. You can use a traditional SPI receiver or an ESP32-C5 running dedicated radio firmware.</p>
+                    <div class="c5-table-scroll"><table class="c5-table"><caption>Receiver options for FPVGate and RotorHazard</caption><thead><tr><th scope="col">Receiver</th><th scope="col">Pilots</th><th scope="col">Connection</th><th scope="col">Setup</th></tr></thead><tbody>
+                        <tr><th scope="row">RX5808 / existing SPI</th><td>One per timer</td><td>SPI + analog RSSI to S3</td><td><a href="docs.html#hardware">Existing wiring and firmware</a></td></tr>
+                        <tr><th scope="row">FPVGateC5MK</th><td>Up to 8 per C5</td><td>UART to S3</td><td><a href="#fpvgate">FPVGate multi-pilot</a></td></tr>
+                        <tr><th scope="row">FPVGateC5MK 1.2.0+</th><td>Up to 8 per C5</td><td>Native USB to RH computer</td><td><a href="#rotorhazard">RotorHazard USB</a></td></tr>
+                        <tr><th scope="row">FPVGateC5RX</th><td>One per timer</td><td>SPI + filtered analog RSSI to S3</td><td><a href="#single-pilot">C5 as an RX5808 replacement</a></td></tr>
+                    </tbody></table></div>
+                    <p>C5MK scans pilot channels in sequence and sends separate, timestamped readings. It supports 5180&ndash;5917 MHz, including Raceband R1&ndash;R8; Boscam E7 and E8 are outside that range. About 1,000 readings per pilot per second has been measured with eight Raceband channels. This is a receiver sampling rate, not a lap-accuracy guarantee.</p>
+                </section>
+                <section id="fpvgate" class="doc-section">
+                    <h2>FPVGateC5MK multi-pilot setup</h2>
+                    <div class="c5-path" aria-label="Connection path">C5MK receiver <span>&rarr; UART &rarr;</span> FPVGate S3 timer <span>&rarr;</span> Browser race interface</div>
+                    <p>One C5 supplies readings for up to eight pilots. Each pilot has their own channel, calibration and results in the FPVGate interface.</p>
+                    <p>For organised racing, <a href="docs.html#event-mode">Event Mode</a> on compatible S3 firmware adds pilot groups, race formats, heat scheduling and Elo or lap-time seeding. An event can rotate through several groups, with up to eight pilots in each heat.</p>
+                    <ol>
+                        <li><strong>Flash the C5 receiver.</strong> Open the <a href="#flasher">C5 Radio flasher</a>, select your board, then <strong>Multi Pilot &middot; UART / USB &middot; FPVGateC5MK</strong>. Use Chrome or Edge and connect the C5's USB port. Power cycle after flashing.</li>
+                        <li><strong>Flash compatible S3 firmware separately.</strong> In the <a href="flasher.html">timer flasher</a>, enable <strong>Pre-Release Firmware</strong> and choose a Multi-Alpha build offered for your S3. Multi-Alpha-3 is packaged for the Seeed XIAO ESP32S3 and Waveshare ESP32-S3-ETH; other supported boards use Multi-Alpha-2. Prepare the S3's SD card as described in the <a href="docs.html#sdcard">SD card guide</a>.</li>
+                        <li><strong>Wire the radio with power disconnected.</strong> Connect host TX to C5 RX, host RX to C5 TX, plus 5V and ground. Use the <a href="#boards">board tables below</a>. The C5 replaces the SPI receiver for this setup.</li>
+                        <li><strong>Select the receiver.</strong> Open FPVGate, choose <strong>Settings &rarr; Configuration &rarr; Receiver Module &rarr; ESP32-C5 Multi-Pilot</strong>, save, and check that the C5 shows online in Calibration.</li>
+                        <li><strong>Configure each pilot.</strong> Assign the correct VTX channels and calibrate each pilot's enter/exit thresholds. Check for cross-channel detections and fly deliberate test passes before racing.</li>
+                        <li><strong>Keep the race page open.</strong> The current Multi-Alpha firmware uses the browser for race completion and some announcements. The S3's onboard speech, LCD and external outputs do not yet provide full eight-pilot support.</li>
+                    </ol>
+                    <div class="c5-callout"><p><strong>This differs from syncing several single-pilot timers.</strong> C5 multi-pilot uses one S3 and one C5. Master/Slave sync and daisy-chaining are unavailable in the current C5 mode. For separate SPI timers, use the <a href="docs.html#multipilot">existing multi-timer sync guide</a>.</p></div>
+                </section>
+                <section id="boards" class="doc-section">
+                    <h2>C5 boards and UART wiring</h2>
+                    <p>The flasher offers the following board selections. Board pinouts differ: choose the actual board you have before choosing firmware. C5MK uses the same image for UART and native USB timing.</p>
+                    <div class="c5-table-scroll"><table class="c5-table"><caption>Radio-side UART pins and hardware status</caption><thead><tr><th scope="col">C5 board</th><th scope="col">C5 RX &larr; host TX</th><th scope="col">C5 TX &rarr; host RX</th><th scope="col">Status</th></tr></thead><tbody>
+                        <tr><th scope="row">Seeed XIAO ESP32-C5</th><td>D4 / GPIO23</td><td>D5 / GPIO24</td><td>UART tested; direct USB validation pending</td></tr>
+                        <tr><th scope="row">Waveshare ESP32-C5-Zero</th><td>GPIO4</td><td>GPIO5</td><td>UART tested; direct USB discovery and local RH timing tested</td></tr>
+                        <tr><th scope="row">ESP32-C5-DevKitC-1 / Waveshare C5-WIFI6-KIT</th><td>GPIO4</td><td>GPIO5</td><td>C5-Zero image; hardware validation pending</td></tr>
+                        <tr><th scope="row">Waveshare C5-MINI-KIT</th><td>GPIO4</td><td>GPIO5</td><td>C5-Zero image for multi-pilot; hardware validation pending</td></tr>
+                    </tbody></table></div>
+                    <div class="c5-table-scroll"><table class="c5-table"><caption>S3 host pins for the packaged Multi-Alpha-3 builds</caption><thead><tr><th scope="col">S3 timer board</th><th scope="col">Host TX &rarr; C5 RX</th><th scope="col">Host RX &larr; C5 TX</th></tr></thead><tbody>
+                        <tr><th scope="row">Seeed XIAO ESP32S3</th><td>D3 / GPIO4</td><td>D4 / GPIO5</td></tr>
+                        <tr><th scope="row">Waveshare ESP32-S3-ETH</th><td>GPIO43</td><td>GPIO44</td></tr>
+                    </tbody></table></div>
+                    <p>For example, XIAO S3 D3 connects to XIAO C5 D4, and XIAO S3 D4 connects to XIAO C5 D5. The shared D-labels do not mean that the two boards use the same GPIO numbers. For other S3 boards, check their receiver UART pin configuration.</p>
+                    <p><strong>Power:</strong> supply the C5's 5V/VUSB input and join grounds. Do not power the C5 from the S3's 3V3 pin: radio startup can exceed that regulator's capacity. Signal pins are <strong>3.3V logic only</strong>. If using separate USB supplies, join grounds and leave the 5V link disconnected. Disconnect power before changing wires.</p>
+                    <p>The UART link is 921600 baud, 8N1, without flow control. C5MK does not need the analog RSSI filter used by C5RX. Fit a suitable antenna and follow your board's antenna selection instructions.</p>
+                </section>
+                <section id="rotorhazard" class="doc-section">
+                    <h2>Direct USB to RotorHazard</h2>
+                    <div class="c5-path" aria-label="Connection path">C5MK 1.2.0+ <span>&rarr; native USB &rarr;</span> RotorHazard computer</div>
+                    <p>C5MK 1.2.0 and later exposes eight native RotorHazard serial nodes. This connection uses the C5 directly, without an S3, network gate or FPVGate plugin.</p>
+                    <ol>
+                        <li>Flash the board's multi-pilot C5MK firmware using the <a href="#flasher">C5 Radio flasher</a>. Power cycle and attach the antenna.</li>
+                        <li>Connect its <strong>native USB</strong> port to the RH computer using a data cable. Close browser serial connections and other applications using that port. An S3 must not also control this receiver.</li>
+                        <li>In RotorHazard, open <strong>Advanced Settings &rarr; Hardware &rarr; Serial Ports</strong>, add the C5's port and restart RH. On Linux, use a persistent <code>/dev/serial/by-id/</code> path when available.</li>
+                        <li>Assign pilot seats and frequencies, then calibrate EnterAt and ExitAt in Sensor Tuning. Verify intentional gate passes before starting a race.</li>
+                    </ol>
+                    <p>Direct USB has been checked on a Waveshare C5-Zero; physical XIAO USB validation is still pending. See the <a href="https://github.com/LouisHitchcock/FPVGateC5MK/blob/v1.2.1/docs/USB_ROTORHAZARD.md" target="_blank" rel="noopener">released USB setup guide</a> for details. Release-candidate changes are described in their release notes.</p>
+                    <p><strong>Already connecting an S3 timer to RH?</strong> That uses the <a href="docs.html#rotorhazard">FPVGate network plugin</a> instead. Multi-pilot S3 builds need plugin 2; Multi-Alpha-3's Marshal support uses plugin 2.1.4 or later. Choose one control path for each receiver.</p>
+                </section>
+                <section id="single-pilot" class="doc-section">
+                    <h2>Single-pilot SPI receivers</h2>
+                    <p><strong>Your existing RX5808 setup is still supported.</strong> Keep the SPI-modded receiver, its existing wiring, and firmware offered for your S3 board. A C5 is optional. See <a href="docs.html#hardware">traditional SPI hardware setup</a> and <a href="docs.html#calibration">RSSI calibration</a>.</p>
+                    <p>FPVGateC5RX is a separate single-pilot firmware that makes a C5 act like an RX5808. It receives tuning commands over SPI and returns analog RSSI through a resistor/capacitor filter. Select <strong>Single Pilot &middot; SPI &middot; FPVGateC5RX</strong> in the C5 flasher, rather than C5MK.</p>
+                    <div class="c5-table-scroll"><table class="c5-table"><caption>C5RX SPI pins for the builds in the web flasher</caption><thead><tr><th scope="col">C5 board</th><th scope="col">CLK</th><th scope="col">DATA</th><th scope="col">SEL</th><th scope="col">RSSI output</th></tr></thead><tbody>
+                        <tr><th scope="row">XIAO C5</th><td>23 / D4</td><td>24 / D5</td><td>1 / D0</td><td>10 / D10</td></tr>
+                        <tr><th scope="row">C5-Zero / DevKitC-1 layout</th><td>4</td><td>5</td><td>6</td><td>10</td></tr>
+                        <tr><th scope="row">C5-MINI-KIT</th><td>4</td><td>5</td><td>1</td><td>10</td></tr>
+                    </tbody></table></div>
+                    <p>For a XIAO S3 timer, connect S3 D3/GPIO4 to CLK, D4/GPIO5 to DATA through 330 &Omega;, and D5/GPIO6 to SEL. The filtered RSSI junction goes to S3 D2/GPIO3. Join grounds and follow the <a href="#boards">power guidance</a>.</p>
+                    <pre aria-label="Required C5RX analog RSSI filter">C5 GPIO10 --[10 kOhm]--+-- S3 D2 / GPIO3 (RSSI)
+                      +--[10 kOhm]-- GND
+                      +--[100 nF]--- GND</pre>
+                    <p>Do not connect GPIO10 directly to RSSI. The filter smooths the switching output and divides the voltage. Add 100 nF decoupling between the C5's 3V3 and ground. Use the RX5808 receiver setting on your timer, then tune and calibrate.</p>
+                    <p>C5RX is offered as an alpha snapshot. XIAO and Mini SPI pin adaptations still need hardware validation; DevKitC-1 layout support also needs a board test. Check the selected build's wiring in the flasher and the <a href="https://github.com/LouisHitchcock/FPVGateC5RX/blob/main/docs/HARDWARE.md" target="_blank" rel="noopener">upstream hardware guide</a>.</p>
+                </section>
+                <section id="compatibility" class="doc-section">
+                    <h2>Firmware, updates and current status</h2>
+                    <p>There are two separate firmware targets in an S3 + C5 build. The timer firmware goes on the <strong>ESP32-S3</strong>; C5MK or C5RX goes on the <strong>ESP32-C5</strong>. The C5 flasher checks for a C5 chip before writing.</p>
+                    <ul>
+                        <li><strong>SPI / RX5808:</strong> existing timer firmware and wiring remain available. No C5 upgrade is required.</li>
+                        <li><strong>C5MK through FPVGate:</strong> use compatible Multi-Alpha timer firmware. Multi-Alpha-3 is offered for the XIAO S3 and Waveshare S3-ETH; check the board/version picker for other builds.</li>
+                        <li><strong>C5MK direct USB:</strong> requires C5MK 1.2.0 or later. The flasher offers a released multi-pilot option and a separately labelled release candidate. Read the notes before choosing the RC.</li>
+                        <li><strong>Updates through the S3:</strong> C5MK 1.1.0+ with FPVGate Multi-Alpha-3+ can update over the UART link at <strong>Settings &rarr; System &rarr; C5 Receiver Firmware</strong>. C5MK 1.0 or earlier needs a full USB flash first because the partition layout changed.</li>
+                        <li><strong>Recalibrate after receiver updates.</strong> C5MK 1.2.1 changed measured RSSI levels. Re-run FPVGate calibration or RH Sensor Tuning instead of carrying over old thresholds.</li>
+                    </ul>
+                    <div class="c5-callout"><p><strong>Development status:</strong> up to eight channels are implemented and receiver sampling has been bench-tested. Full physical eight-pilot race validation and lap accuracy against video are still outstanding. Test your channels, thresholds and gate placement for your track.</p></div>
+                    <p>Sources: <a href="https://github.com/LouisHitchcock/FPVGateC5MK/releases" target="_blank" rel="noopener">C5MK releases</a>, <a href="preRelease/v1.9.0-Multi-Alpha-3/RELEASE_NOTES.md">packaged Multi-Alpha-3 notes</a>, and <a href="https://github.com/LouisHitchcock/FPVGateC5MK/blob/v1.2.1/README.md" target="_blank" rel="noopener">C5MK capabilities and validation</a>. Last reviewed 18 October 2026.</p>
+                </section>
+                <section id="troubleshooting" class="doc-section">
+                    <h2>C5 troubleshooting</h2>
+                    <details><summary>C5 is not online in FPVGate</summary><p>Check that the S3 has a compatible Multi-Alpha build and the ESP32-C5 Multi-Pilot receiver setting is saved. Confirm C5MK is on the radio, host TX goes to C5 RX, host RX goes to C5 TX, and ground is shared. Power the C5 from 5V/VUSB and check the selected board's pin map.</p></details>
+                    <details><summary>RotorHazard does not discover the USB receiver</summary><p>Use C5MK 1.2.0 or later and the native USB port with a data cable. Close anything else using the port, add the correct serial port in RH and restart RH. Disconnect an S3 controller and power cycle before switching to USB. Consult the selected release's notes for known USB issues.</p></details>
+                    <details><summary>False laps or no detections</summary><p>Match each pilot's VTX frequency, check the 5180&ndash;5917 MHz C5MK range, fit the correct antenna, and calibrate enter/exit thresholds individually. Recalibrate after firmware changes. For C5RX, also check the RSSI filter and the SPI pin assignments. For an RX5808, verify the SPI mod and follow the existing calibration guide.</p></details>
+                    <details><summary>Which firmware should I choose?</summary><p>Choose FPVGateC5MK for up to eight pilots over UART or native USB. Choose FPVGateC5RX for single-pilot SPI with filtered analog RSSI. For a traditional RX5808, use the standard S3 timer flasher; the receiver does not need C5 firmware.</p></details>
+                    <p><a href="#flasher" class="btn btn-primary">Open C5 Radio Flasher</a></p>
+                </section>
+            </main>
+        </div>
+    </div>
+    <footer><div class="container"><div class="footer-meta"><p>Built for the FPV community.</p><p>Licensed under CC BY-NC-SA 4.0</p></div><div class="footer-links"><a href="docs.html">Documentation</a><a href="#flasher">C5 Flasher</a><a href="https://github.com/LouisHitchcock/FPVGateC5MK" target="_blank" rel="noopener">C5MK on GitHub</a><a href="https://discord.gg/XwammuWCCj" target="_blank" rel="noopener">Discord</a></div></div></footer>
+    <script src="theme.js"></script>
+    <script type="module" src="c5-radio.js?v=20261018-page"></script>
+</body>
+</html>

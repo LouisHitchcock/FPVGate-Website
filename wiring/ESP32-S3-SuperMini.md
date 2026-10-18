@@ -78,4 +78,4 @@ The ESP32-S3 Super Mini requires a stable 5V power supply:
 ## References
 
 - [ESP32-S3 Super Mini Documentation](https://www.espboards.dev/esp32/esp32-s3-super-mini/)
-- [Complete Hardware Guide](../HARDWARE_GUIDE.md)
+- [Complete Hardware Guide](../docs.html#hardware)

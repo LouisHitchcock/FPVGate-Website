@@ -132,7 +132,10 @@ size are kept as compiled. No filesystem image is required.
 `c5-radio.js`, `c5-flasher.js` and `c5-radio.css` are isolated from the timer flasher.
 Firmware is hosted locally; SHA-256 is checked before opening the transport.
 The chip must identify as ESP32-C5 before erase/write; written images are MD5-verified
-using esptool-js. Mode switching is disabled while either flasher is busy.
+using esptool-js. The C5 page at `c5.html#flasher` hosts its own controls and wiring
+guide; `flasher.html` hosts the S3 timer flasher. C5 controls are locked during
+flashing, and a page-leave warning protects an active C5 operation. Old
+`flasher.html#c5-radio` bookmarks redirect to the C5 page.
 
 Pinned C5-only dependencies live in `vendor/c5`: esptool-js 0.7.0 (Apache-2.0) and
 SparkMD5 3.0.2 (MIT), with their licences. The existing timer's 0.4.1 import is unchanged.
@@ -162,7 +165,7 @@ locking, failed catalog retry, and dark/light/mobile layouts. The merged 3D view
 renders. Existing firmware validation checked 176 files with no errors (26 warnings
 for incomplete older board folders and the pre-existing v1.8.0-test directory).
 
-Local preview: http://127.0.0.1:8000/flasher.html#c5-radio
+Local preview: http://127.0.0.1:8000/c5.html#flasher
 and http://127.0.0.1:8000/print-files.html.
 
 Firmware project licences are included alongside this document. See the pinned

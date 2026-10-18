@@ -3,22 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FPVGate Documentation | FPV Lap Timer Setup & Calibration Guide</title>
-    <meta name="description" content="Step-by-step FPVGate docs: hardware wiring, flashing firmware, configuration, calibration, race use, and troubleshooting for the RSSI FPV lap timer. Formerly PhobosLT.">
-    <meta name="keywords" content="FPVGate documentation, PhobosLT, FPV lap timer setup, ESP32-S3 FPV timer, RX5808 wiring, RSSI calibration, drone lap timer guide, DIY FPV gate, RotorHazard integration, FPV timing system setup">
+    <title>FPVGate Docs | SPI Receiver &amp; C5 Multi-Pilot Setup</title>
+    <meta name="description" content="Set up SPI receivers or C5MK multi-pilot timing, then run Event Mode with pilot groups, race formats and heats. FPVGate wiring, firmware and calibration.">
+    <meta name="keywords" content="FPVGate documentation, C5MK multi-pilot setup, ESP32-C5 wiring, RX5808 SPI receiver, RSSI calibration, RotorHazard USB, FPV lap timer guide">
     <link rel="canonical" href="https://fpvgate.xyz/docs.html">
 
     <!-- Open Graph -->
     <meta property="og:type" content="article">
-    <meta property="og:title" content="FPVGate Documentation | FPV Lap Timer Setup & Calibration Guide">
-    <meta property="og:description" content="Hardware wiring, web flasher steps, configuration, calibration, racing workflow, and troubleshooting for FPVGate RSSI lap timer.">
+    <meta property="og:title" content="FPVGate Docs | SPI Receiver &amp; C5 Multi-Pilot Setup">
+    <meta property="og:description" content="Set up SPI or C5 receivers, then explore Event Mode: pilot groups, race formats, heat schedules, seeding and results. Includes flashing and calibration guides.">
     <meta property="og:url" content="https://fpvgate.xyz/docs.html">
     <meta property="og:image" content="https://fpvgate.xyz/logo-black.png">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="FPVGate Documentation | FPV Lap Timer Setup & Calibration">
-    <meta name="twitter:description" content="Complete guide: hardware setup, flashing, configuration, calibration, racing, and troubleshooting for FPVGate.">
+    <meta name="twitter:title" content="FPVGate Docs | SPI &amp; C5 Receiver Guides">
+    <meta name="twitter:description" content="Build and calibrate FPVGate with SPI or C5MK receivers. Event Mode setup, pilot groups, race formats and heat scheduling explained.">
     <meta name="twitter:image" content="https://fpvgate.xyz/logo-black.png">
 
     <link rel="icon" type="image/png" href="logo-black.png">
@@ -33,8 +33,9 @@
     document.documentElement.setAttribute('data-theme','dark');}
     document.documentElement.classList.add('js');})();
     </script>
-    <link rel="stylesheet" href="styles.css?v=20260925c">
+    <link rel="stylesheet" href="styles.css?v=20261018seo">
     <link rel="stylesheet" href="print-files.css?v=20260925a">
+    <link rel="stylesheet" href="c5-site.css?v=20261018c">
 
     <script type="application/ld+json">
     {
@@ -42,10 +43,23 @@
       "@graph": [
         {
           "@type": "TechArticle",
-          "headline": "FPVGate Documentation | FPV Lap Timer Setup & Calibration Guide",
-          "description": "Hardware wiring, flashing firmware, configuration, calibration, racing workflow, and troubleshooting for the FPVGate RSSI lap timer.",
+          "headline": "FPVGate Documentation: SPI Receivers and C5 Multi-Pilot Setup",
+          "description": "Hardware wiring, firmware, calibration and race setup for SPI or C5MK receivers, plus Event Mode pilot groups, seeding, race formats and heat scheduling.",
+          "dateModified": "2026-10-18",
           "proficiencyLevel": "Intermediate",
-          "articleSection": ["Getting Started", "Hardware Setup", "3D Printed Parts", "Flashing Firmware", "Configuration", "Calibration", "Racing", "Troubleshooting"],
+          "articleSection": [
+            "Getting Started",
+            "Hardware Setup",
+            "C5MK Multi-Pilot",
+            "Event Mode",
+            "3D Printed Parts",
+            "Flashing Firmware",
+            "Configuration",
+            "Calibration",
+            "Multi-Timer Sync",
+            "RotorHazard",
+            "Troubleshooting"
+          ],
           "url": "https://fpvgate.xyz/docs.html",
           "mainEntityOfPage": "https://fpvgate.xyz/docs.html",
           "publisher": {
@@ -53,82 +67,23 @@
             "name": "FPVGate",
             "url": "https://fpvgate.xyz/",
             "logo": "https://fpvgate.xyz/logo-black.png"
-          }
+          },
+          "image": "https://fpvgate.xyz/logo-black.png"
         },
         {
-          "@type": "FAQPage",
-          "mainEntity": [
+          "@type": "BreadcrumbList",
+          "itemListElement": [
             {
-              "@type": "Question",
-              "name": "Why can't I connect to the FPVGate WiFi?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Wait 30 seconds after boot for the access point to start, check the serial monitor for errors, and confirm firmware flashed correctly."
-              }
+              "@type": "ListItem",
+              "position": 1,
+              "name": "FPVGate",
+              "item": "https://fpvgate.xyz/"
             },
             {
-              "@type": "Question",
-              "name": "Why is FPVGate not detecting laps?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Verify the RX5808 module is SPI modded, ensure the configured VTx frequency matches your drone, rerun the calibration wizard, and confirm the drone is powered."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "How do I fix false lap detections?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Increase enter/exit RSSI thresholds, move the gate farther from the flight area, or lower transmitter power if the signal is too strong."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "Why doesn't the race start beep play on my phone?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Disable silent mode, ensure media volume is up, and on iOS make sure the hardware silent switch is off; the countdown tone needs media/ringer audio."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "What is the difference between FPVGate and PhobosLT?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "FPVGate is a heavily modified fork of PhobosLT with many additional features including voice announcements, race analytics, multi-pilot support, RotorHazard integration, a web-based firmware flasher, and an online shop for prebuilt hardware."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "How do I build a DIY FPV lap timer?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "You need an ESP32-S3 board (Seeed XIAO ESP32S3 recommended), an SPI-modded RX5808 5.8GHz receiver module, a MicroSD card formatted as FAT32, and a 5V power supply. Wire the components together, flash FPVGate firmware using the web flasher at fpvgate.xyz, and calibrate your RSSI thresholds."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "Can FPVGate work with RotorHazard?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "Yes, FPVGate has full bidirectional RotorHazard integration including race start/stop control, NTP-style clock synchronization for accurate timing, and automatic lap submission via HTTP POST. A companion RotorHazard plugin is included."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "What FPV frequencies does FPVGate support?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "FPVGate supports all major 5.8GHz bands including analog (Boscam A/B/E, Fatshark, RaceBand, LowBand) and digital (DJI, HDZero, WalkSnail) frequencies."
-              }
-            },
-            {
-              "@type": "Question",
-              "name": "Do I need a transponder to use FPVGate?",
-              "acceptedAnswer": {
-                "@type": "Answer",
-                "text": "No. FPVGate uses RSSI (Received Signal Strength Indicator) to detect your drone's existing video transmitter signal. No transponders or additional hardware on your drone is needed."
-              }
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Documentation",
+              "item": "https://fpvgate.xyz/docs.html"
             }
           ]
         }
@@ -141,13 +96,14 @@
         <div class="container">
             <a class="nav-brand" href="index.html">
                 <img src="images/LogoAnimated.svg" alt="" class="nav-logo">
-                <h1>FPVGate</h1>
+                <span class="brand-name">FPVGate</span>
             </a>
             <div class="nav-links">
                 <a href="index.html">Home</a>
                 <a href="shop.html">Shop</a>
                 <a href="docs.html">Documentation</a>
                 <a href="https://github.com/LouisHitchcock/FPVGate" target="_blank" rel="noopener">GitHub</a>
+                <a href="c5.html">C5 Radio</a>
                 <a href="flasher.html" class="btn-primary">Flash Firmware</a>
             </div>
             <div class="nav-actions">
@@ -165,7 +121,7 @@
     <section class="docs-hero">
         <div class="container">
             <h1>Documentation</h1>
-            <p class="subtitle">Everything you need to know to get started with FPVGate</p>
+            <p class="subtitle">Set up your FPVGate timer with an SPI receiver or C5MK multi-pilot radio.</p>
         </div>
     </section>
 
@@ -177,13 +133,16 @@
                         <h3>Quick Links</h3>
                         <a href="#getting-started">Getting Started</a>
                         <a href="#hardware">Hardware Setup</a>
+                        <a href="#c5-multipilot">C5MK Multi-Pilot</a>
+                        <a href="c5.html">C5 Wiring &amp; Setup Guide</a>
                         <a href="#print-files">3D Printed Parts</a>
                         <a href="#flashing">Flashing Firmware</a>
                         <a href="#sdcard">SD Card Setup</a>
                         <a href="#configuration">Configuration</a>
                         <a href="#calibration">Calibration</a>
                         <a href="#racing">Using the Timer</a>
-                        <a href="#multipilot">Multi-Pilot Setup</a>
+                        <a href="#event-mode">Event Mode &amp; Heats</a>
+                        <a href="#multipilot">Multi-Timer Sync (SPI)</a>
                         <a href="#rotorhazard">RotorHazard Integration</a>
                         <a href="#screenshots">Screenshots</a>
                         <a href="#troubleshooting">Troubleshooting</a>
@@ -197,14 +156,14 @@
                         
                         <div class="info-box">
                             <h4>Option 1: FPVGate AIO (Easiest)</h4>
-                            <p>The <strong>FPVGate AIO</strong> is a prebuilt all-in-one board with everything included. No soldering or wiring required. <a href="shop.html">Purchase from the FPVGate Shop</a>.</p>
+                            <p>The <strong>FPVGate AIO</strong> is a prebuilt all-in-one board with everything included. No soldering or wiring required. <a href="shop.html">Purchase from the FPVGate Shop</a> or follow the <a href="quickstart.html">AIO quick start guide</a>.</p>
                         </div>
 
                         <div class="info-box">
                             <h4>Option 2: Build Your Own</h4>
                             <ul>
                                 <li><strong>Seeed Studio XIAO ESP32S3</strong> (Recommended) or <strong>ESP32-S3 DevKitC-1</strong></li>
-                                <li><strong>RX5808 Module</strong> (SPI modded)</li>
+                                <li><strong>Receiver:</strong> SPI-modded RX5808 for single pilot, or an <strong>ESP32-C5 running FPVGateC5MK</strong> for up to 8 pilots with one C5 (requires compatible Multi-Alpha timer firmware)</li>
                                 <li><strong>MicroSD Card</strong> (FAT32, 1GB+)</li>
                                 <li><strong>5V Power Supply</strong> (USB power or any 5V source)</li>
                                 <li><strong>WS2812 RGB LEDs</strong> (optional)</li>
@@ -212,6 +171,7 @@
                                 <li><strong>3D printed enclosure</strong> (optional, see <a href="#print-files">3D Printed Parts</a>)</li>
                             </ul>
                         </div>
+                        <p>Existing SPI receiver builds remain supported. For a C5 build, start with the <a href="c5.html">C5 receiver guide</a>; it covers multi-pilot UART, direct USB to RotorHazard, and C5RX single-pilot SPI.</p>
                     </section>
 
                     <section id="hardware" class="doc-section">
@@ -222,7 +182,13 @@
                             <p>If you have the <strong>FPVGate AIO</strong> prebuilt board, no wiring is needed. Simply flash the firmware and insert an SD card to get started. <a href="shop.html">Get one from the Shop</a>.</p>
                         </div>
 
-                        <p>Building your own? FPVGate supports multiple ESP32 boards. Select your board below to see the wiring diagram:</p>
+                        <h3>Choose your receiver</h3>
+                        <div class="c5-table-scroll"><table class="c5-table"><thead><tr><th scope="col">Build</th><th scope="col">Receiver</th><th scope="col">Guide</th></tr></thead><tbody>
+                            <tr><th scope="row">Single pilot</th><td>RX5808 / existing SPI receiver and analog RSSI</td><td>Use the wiring diagrams below</td></tr>
+                            <tr><th scope="row">Up to 8 pilots, one C5</th><td>FPVGateC5MK over UART to your S3</td><td><a href="c5.html#fpvgate">C5MK setup and wiring</a></td></tr>
+                            <tr><th scope="row">Single-pilot C5 replacement</th><td>FPVGateC5RX over SPI with analog RSSI filter</td><td><a href="c5.html#single-pilot">C5RX SPI guide</a></td></tr>
+                        </tbody></table></div>
+                        <p>The diagrams below are for the traditional <strong>SPI receiver build</strong>. Select your S3 board to see its wiring. C5MK uses its own <a href="c5.html#boards">UART wiring tables</a> and does not need an analog RSSI filter.</p>
                         
                         <div class="warning-box ESP32S3SuperminiWarn" style="margin-top: 1rem;">
                             <h4>Note on ESP32-S3 Super Mini</h4>
@@ -252,6 +218,7 @@
                     <section id="flashing" class="doc-section">
                         <h2>Flashing Firmware</h2>
                         <p>Use our <a href="flasher.html">web-based flasher</a> for the easiest installation experience. No command line required!</p>
+                        <div class="c5-callout"><p><strong>S3 timer and C5 radio are flashed separately.</strong> Use the standard board picker for S3 firmware, with <strong>Pre-Release Firmware</strong> enabled for Multi-Alpha builds. Open the <a href="c5.html#flasher">C5 Radio page</a> to flash your receiver: choose its board, then C5MK multi-pilot or C5RX single-pilot SPI. An RX5808 needs no C5 firmware. <a href="c5.html#compatibility">Check firmware compatibility</a>.</p></div>
                         
                         <div class="steps-list">
                             <div class="step-item">
@@ -411,7 +378,7 @@
                         </ul>
 
                         <h3>Multi-Timer Race Sync</h3>
-                        <p>FPVGate v1.6.1 brings powerful multi-pilot racing capabilities. See the <a href="#multipilot">Multi-Pilot Setup</a> section for detailed instructions.</p>
+                        <p>Sync separate single-pilot timers using <a href="#multipilot">multi-timer sync</a>, or use <a href="#c5-multipilot">one C5MK receiver for up to eight pilots</a>. These are separate operating modes.</p>
 
                         <h3>After Race</h3>
                         <ul>
@@ -422,8 +389,54 @@
                         </ul>
                     </section>
 
+                    <section id="event-mode" class="doc-section">
+                        <h2>Event Mode: Pilots, Groups &amp; Heats</h2>
+                        <p>Event Mode adds a race-director workspace to your FPVGate S3 timer. Build a pilot roster, organise groups, choose how races are scored and plan the running order. An event can contain several groups, with <strong>up to eight pilots in each heat</strong> using one C5MK receiver.</p>
+                        <div class="c5-callout"><p><strong>Requirements:</strong> Event Mode is included in <strong>v1.9.0-Multi-Alpha-3</strong>, currently packaged for the Seeed XIAO ESP32S3 and Waveshare ESP32-S3-ETH. Running its heats requires the <a href="#c5-multipilot">ESP32-C5 multi-pilot receiver setup</a>. It is off by default; existing SPI builds keep their normal racing and multi-timer sync workflow.</p></div>
+                        <h3>Enable Event Mode</h3>
+                        <p>On the timer's web interface, open <strong>Settings &rarr; User Interface &rarr; Event Mode</strong> and turn it on. The <strong>Event</strong> tab appears. First make sure C5MK is connected, the C5 receiver mode is selected and pilot calibration works.</p>
+                        <h3>Build your event</h3>
+                        <ol>
+                            <li><strong>Add or import pilots.</strong> Set names, spoken names, colours, channels and enter/exit thresholds. Import an existing roster from CSV or JSON, or export a roster to reuse at another session.</li>
+                            <li><strong>Create groups.</strong> Choose a group size up to eight and select roster order, random, Elo rating, fastest lap or best three consecutive laps as the seeding method. Click <strong>Build groups</strong>, or edit groups yourself.</li>
+                            <li><strong>Assign channels.</strong> Choose a band and use <strong>Assign channels</strong> to spread each group's frequencies. You can override a pilot's channel within a group. Check assignments and calibrate on the channels you will race.</li>
+                            <li><strong>Choose a race format.</strong> Set a lap limit, heat time, minimum lap time, start countdown and win condition. Assign the appropriate format to each group.</li>
+                            <li><strong>Plan the heat order.</strong> Open <strong>Heat order</strong> to repeat a group or rotate through several groups. Drag blocks to reorder them, or tap to add them on a touchscreen.</li>
+                        </ol>
+                        <div class="c5-table-scroll"><table class="c5-table"><caption>Event Mode win conditions</caption><thead><tr><th scope="col">Format</th><th scope="col">How pilots are ranked</th></tr></thead><tbody>
+                            <tr><th scope="row">Most laps, fastest time</th><td>More completed laps first, then lower total time</td></tr>
+                            <tr><th scope="row">First to the lap limit</th><td>Fastest to complete the configured lap target</td></tr>
+                            <tr><th scope="row">Fastest lap</th><td>Best individual lap</td></tr>
+                            <tr><th scope="row">Fastest 3 consecutive laps</th><td>Best combined time for three consecutive laps</td></tr>
+                        </tbody></table></div>
+                        <h3>Run the heats</h3>
+                        <p>Click a heat to load its group into the C5's pilot slots. FPVGate applies the pilots' channels and thresholds together with the group's race format. Check the loaded heat, then start the race from the Race tab.</p>
+                        <p>When the race is saved, its results are recorded against that heat. Enable <strong>Load the next heat after each race</strong> to prepare the following heat automatically, or use <strong>Next Heat</strong> to select it yourself. <strong>Loading a heat does not start a race:</strong> start each race when the pilots and track are ready.</p>
+                        <p><strong>Example:</strong> twelve pilots split into groups A, B and C of four can rotate A &rarr; B &rarr; C three times for a nine-heat schedule. Each heat uses four of the C5's available pilot slots.</p>
+                        <h3>Results, seeding &amp; backups</h3>
+                        <p>Review individual heat results, group standings and pilot statistics, including fastest lap, best three consecutive laps and Elo rating. Elo is calculated from recorded event races; lap-time seeding uses the results recorded in the event.</p>
+                        <p>The event is saved on the gate. Export the whole event as JSON to back up pilots, groups, formats, heat order and results; import it to restore an event. Results can also be exported as CSV or as a standalone HTML report for sharing or printing. Export a backup before replacing an event or choosing <strong>New event</strong>.</p>
+                        <p>Keep the web race page open: the current Multi-Alpha build relies on the browser for race completion and heat timeout. Event Mode is part of the S3 timer interface; a C5 connected directly to RotorHazard uses RH's event tools instead.</p>
+                        <p><a href="flasher.html">Install compatible timer firmware</a> &middot; <a href="c5.html#fpvgate">Set up the C5 receiver</a> &middot; <a href="preRelease/v1.9.0-Multi-Alpha-3/RELEASE_NOTES.md">Multi-Alpha-3 release notes</a></p>
+                    </section>
+
+                    <section id="c5-multipilot" class="doc-section">
+                        <h2>FPVGateC5MK Multi-Pilot</h2>
+                        <p><strong>Up to 8 pilots with one ESP32-C5 receiver.</strong> C5MK scans each pilot's channel and sends timestamped RSSI to your S3 over UART. FPVGate provides individual calibration, race results and per-pilot Visual Marshal editing in compatible Multi-Alpha firmware.</p>
+                        <ol>
+                            <li>Flash <strong>FPVGateC5MK</strong> onto your C5 using the <a href="c5.html#flasher">C5 Radio flasher</a>.</li>
+                            <li>Install a compatible Multi-Alpha build on the S3. Multi-Alpha-3 is packaged for XIAO S3 and Waveshare S3-ETH; check the flasher for your board.</li>
+                            <li>Connect host TX to C5 RX and host RX to C5 TX, plus ground and 5V power, using the <a href="c5.html#boards">C5 wiring guide</a>.</li>
+                            <li>Select <strong>ESP32-C5 Multi-Pilot</strong> in Settings &rarr; Configuration &rarr; Receiver Module, save, and check that the radio is online in Calibration.</li>
+                            <li>Assign each pilot's channel and calibrate their thresholds. Keep the web race page open during racing.</li>
+                        </ol>
+                        <p>C5MK tunes 5180&ndash;5917 MHz, including Raceband R1&ndash;R8. Current C5 mode does not use Master/Slave sync or daisy-chaining. Full physical eight-pilot race validation is still outstanding; <a href="c5.html#compatibility">review the current status</a> and test your setup.</p>
+                        <div class="c5-doc-entry"><a href="c5.html" class="btn btn-secondary">C5 Setup &amp; Wiring Guide</a><a href="c5.html#flasher" class="btn btn-primary">Flash C5 Radio</a></div>
+                        <p><strong>Using RotorHazard?</strong> C5MK 1.2.0+ also supports <a href="c5.html#rotorhazard">direct native USB timing</a> without an S3 or plugin. Existing S3 timers still use the <a href="#rotorhazard">network plugin</a>.</p>
+                    </section>
+
                     <section id="multipilot" class="doc-section">
-                        <h2>Multi-Pilot Setup</h2>
+                        <h2>Multi-Timer Sync (SPI Receivers)</h2>
                         <p>FPVGate supports synchronizing multiple timers for multi-pilot racing. Each pilot has their own FPVGate device, and one device acts as the Master to control the race.</p>
                         
                         <div class="info-box">
@@ -487,6 +500,7 @@
 
                     <section id="rotorhazard" class="doc-section">
                         <h2>RotorHazard Integration</h2>
+                        <div class="c5-callout"><p><strong>Choose your connection:</strong> the instructions below connect an <strong>S3 timer over the network</strong> using the FPVGate plugin. For <strong>C5MK directly over USB</strong>, follow the <a href="c5.html#rotorhazard">C5 USB guide</a> instead. For an S3 + C5 multi-pilot gate, use plugin 2; Multi-Alpha-3's Marshal support uses 2.1.4 or later.</p></div>
                         <p>FPVGate v1.7.0+ can operate as an external RSSI node for <a href="https://github.com/RotorHazard/RotorHazard" target="_blank">RotorHazard</a>, enabling bidirectional race control and lap submission.</p>
 
                         <div class="info-box">
@@ -592,7 +606,7 @@
                         <div class="trouble-item">
                             <h4>No lap detection</h4>
                             <ul>
-                                <li>Verify RX5808 is SPI modded</li>
+                                <li>For RX5808, verify the SPI mod; for C5MK, check that the radio is online, UART pins match your board and the receiver mode is saved</li>
                                 <li>Check VTx frequency matches configuration</li>
                                 <li>Re-run calibration wizard</li>
                                 <li>Ensure drone is powered on</li>
@@ -671,7 +685,7 @@
     </footer>
 
     <script src="animations.js"></script>
-    <script src="wiring-loader.js"></script>
+    <script src="wiring-loader.js?v=20261018seo"></script>
     <script src="print-files-list.js"></script>
     <script src="theme.js"></script>
 </body>

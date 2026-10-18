@@ -3,22 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FPVGate | RSSI FPV Lap Timer for ESP32-S3 (5.8GHz) - formerly PhobosLT</title>
-    <meta name="description" content="FPVGate (formerly PhobosLT) is a compact RSSI FPV lap timer for 5.8GHz drones with web flasher, voice calls, LED feedback, and real-time race analysis on ESP32-S3 hardware.">
-    <meta name="keywords" content="FPVGate, PhobosLT, Phobos LT, FPV lap timer, RSSI lap timer, ESP32-S3, 5.8GHz, drone racing timer, DIY FPV timer, FPV gate timer, drone lap timer, FPV race timer, RotorHazard alternative, RX5808 lap timer, ESP32 lap timer, FPV timing system, personal lap timer">
+    <title>FPVGate | FPV Lap Timing System with SPI &amp; C5 Multi-Pilot</title>
+    <meta name="description" content="FPV lap timing for solo practice and club events. SPI receiver support, C5MK for up to 8 pilots, plus Event Mode for groups, heats and results.">
+    <meta name="keywords" content="FPVGate, ESP32-C5 FPV lap timer, C5MK, C5RX, multi-pilot lap timing, RotorHazard USB receiver, ESP32-S3, RX5808, PhobosLT">
     <link rel="canonical" href="https://fpvgate.xyz/">
 
     <!-- Open Graph -->
     <meta property="og:type" content="website">
-    <meta property="og:title" content="FPVGate | RSSI FPV Lap Timer for ESP32-S3 (5.8GHz)">
-    <meta property="og:description" content="Personal FPV lap timer with RSSI detection, voice announcements, LED feedback, and web-based firmware flasher.">
+    <meta property="og:title" content="FPVGate | FPV Lap Timing System with SPI &amp; C5 Multi-Pilot">
+    <meta property="og:description" content="FPV lap timing, voice calls and race analysis for solo practice and group racing. Supports SPI receivers and up to 8 pilots with one C5 running FPVGateC5MK.">
     <meta property="og:url" content="https://fpvgate.xyz/">
     <meta property="og:image" content="https://fpvgate.xyz/logo-black.png">
 
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="FPVGate | RSSI FPV Lap Timer for ESP32-S3">
-    <meta name="twitter:description" content="Practice and race with a self-contained RSSI FPV lap timer plus web firmware flasher for ESP32-S3.">
+    <meta name="twitter:title" content="FPVGate | FPV Lap Timing System">
+    <meta name="twitter:description" content="5.8 GHz lap timing with SPI receiver support, plus up to 8 pilots on one ESP32-C5 with FPVGateC5MK. Build, flash and race.">
     <meta name="twitter:image" content="https://fpvgate.xyz/logo-black.png">
 
     <link rel="icon" type="image/png" href="logo-black.png">
@@ -33,7 +33,7 @@
     document.documentElement.setAttribute('data-theme','dark');}
     document.documentElement.classList.add('js');})();
     </script>
-    <link rel="stylesheet" href="styles.css?v=20260925c">
+    <link rel="stylesheet" href="styles.css?v=20261018seo">
 
     <script type="application/ld+json">
     {
@@ -45,8 +45,9 @@
           "alternateName": ["PhobosLT", "Phobos LT"],
           "applicationCategory": "SportsApplication",
           "applicationSubCategory": "FPV lap timer",
-          "operatingSystem": "Web, ESP32-S3",
-          "description": "RSSI-based FPV lap timer with voice calls, LED feedback, web-based firmware flasher, and race analytics.",
+          "operatingSystem": "Web, ESP32-S3, ESP32-C5",
+          "description": "RSSI-based FPV lap timing system for ESP32-S3 with SPI receiver support, voice calls, race analysis, C5MK support for up to eight pilots, and Event Mode for pilot groups, race formats and heat scheduling.",
+          "featureList": ["ESP32-C5 radio receiver support", "Up to eight pilots with C5MK", "Event Mode pilot rosters, groups and heat scheduling", "Race formats and Elo or lap-time seeding", "Direct USB receivers for RotorHazard", "Single-pilot C5RX and RX5808 builds", "Browser firmware flashing", "Race analysis and calibration"],
           "url": "https://fpvgate.xyz/",
           "image": "https://fpvgate.xyz/logo-black.png",
           "offers": {
@@ -68,10 +69,15 @@
           "sameAs": [
             "https://github.com/LouisHitchcock/FPVGate",
             "https://ko-fi.com/louishitchcock",
-            "https://discord.gg/XwammuWCCj",
-            "https://www.reddit.com/r/fpv/comments/1savbai/fpvgate_modern_fpv_lap_timer_4_month_update/",
-            "https://www.reddit.com/r/esp32/comments/1pew507/fpvgate_a_modern_fpv_lap_timer/"
+            "https://discord.gg/XwammuWCCj"
           ]
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://fpvgate.xyz/#website",
+          "name": "FPVGate",
+          "alternateName": "PhobosLT",
+          "url": "https://fpvgate.xyz/"
         }
       ]
     }
@@ -82,13 +88,14 @@
         <div class="container">
             <a class="nav-brand" href="index.html">
                 <img src="images/LogoAnimated.svg" alt="" class="nav-logo">
-                <h1>FPVGate</h1>
+                <span class="brand-name">FPVGate</span>
             </a>
             <div class="nav-links">
                 <a href="index.html">Home</a>
                 <a href="shop.html">Shop</a>
                 <a href="docs.html">Documentation</a>
                 <a href="https://github.com/LouisHitchcock/FPVGate" target="_blank" rel="noopener">GitHub</a>
+                <a href="c5.html">C5 Radio</a>
                 <a href="flasher.html" class="btn-primary">Flash Firmware</a>
             </div>
             <div class="nav-actions">
@@ -106,13 +113,13 @@
     <section class="hero">
         <div class="container">
             <div class="hero-content fade-in-up">
-                <h1>Personal FPV Lap Timer</h1>
-                <p class="subtitle">Compact, self-contained RSSI-based lap timing for 5.8GHz FPV drones</p>
-                <p class="hero-description">No transponders, no complex setup - just plug in, calibrate, and fly. Perfect for personal practice sessions and small indoor tracks.</p>
+                <h1>FPV Lap Timing System</h1>
+                <p class="subtitle">RSSI-based lap timing for solo practice and multi-pilot racing with 5.8GHz FPV drones</p>
+                <p class="hero-description">No transponders, no complex setup - just plug in, calibrate, and fly. Practice with your SPI receiver, or add FPVGateC5MK for up to 8 pilots with one C5.</p>
                 <div class="hero-buttons">
                     <a href="flasher.html" class="btn btn-large btn-primary">Flash Firmware</a>
                     <a href="docs.html" class="btn btn-large btn-secondary">Documentation</a>
-                    <a href="https://github.com/LouisHitchcock/FPVGate" class="btn btn-large btn-ghost" target="_blank">View on GitHub</a>
+                    <a href="https://github.com/LouisHitchcock/FPVGate" class="btn btn-large btn-ghost" target="_blank" rel="noopener">View on GitHub</a>
                 </div>
             </div>
             <div class="hero-visual fade-in">
@@ -124,8 +131,18 @@
     <section class="features">
         <div class="container">
             <h2 class="section-title">Key Features</h2>
-            <p class="section-lead">Everything the timer does on its own, without a laptop, a transponder or a race director.</p>
+            <p class="section-lead">FPVGate's S3 timer brings your receiver, race controls and results together in a browser. Feature availability depends on firmware and receiver mode.</p>
             <div class="feature-grid" data-animation="fade-in-up">
+                <div class="feature-card">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"></rect><path d="M9 2v4m6-4v4M9 18v4m6-4v4M2 9h4m-4 6h4m12-6h4m-4 6h4"></path></svg></div>
+                    <h3>FPVGateC5MK Multi-Pilot</h3>
+                    <p>Up to 8 pilots with one ESP32-C5 receiver, with individual channels and calibration. <a href="c5.html#fpvgate">See the C5 multi-pilot setup</a> and firmware requirements.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M16 3v4M8 3v4M3 11h18M7 15h3M14 15h3M7 18h3"></path></svg></div>
+                    <h3>Event Mode</h3>
+                    <p>Organise pilots into groups, seed by Elo or lap times, and plan race formats and heat schedules. <a href="docs.html#event-mode">Run an event</a> on compatible S3 firmware with a C5MK receiver.</p>
+                </div>
                 <div class="feature-card">
                     <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M8 12h8"></path><path d="M12 8v8"></path></svg></div>
                     <h3>Visual Feedback</h3>
@@ -144,12 +161,7 @@
                 <div class="feature-card">
                     <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg></div>
                     <h3>Race Analysis</h3>
-                    <p>Real-time lap tracking, lap comparison charts, consistency analysis, and race history</p>
-                </div>
-                <div class="feature-card">
-                    <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path><path d="M8 13h6"></path><path d="M8 17h4"></path></svg></div>
-                    <h3>Race Notes</h3>
-                    <p>Jot notes during or after a race, saved with the run so you can see what you changed and why</p>
+                    <p>Real-time laps, comparison charts, consistency analysis and race history, with notes saved alongside your runs.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg></div>
@@ -157,14 +169,9 @@
                     <p>Create and manage track profiles with distance tracking and custom metadata</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div>
-                    <h3>Multi-Pilot Racing</h3>
-                    <p>Sync multiple timers for group races with side-by-side pilot comparison</p>
-                </div>
-                <div class="feature-card">
                     <div class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg></div>
                     <h3>RotorHazard Integration</h3>
-                    <p>Bidirectional race control with RotorHazard, NTP clock sync, and automatic lap submission</p>
+                    <p>Connect C5MK directly over USB, or link an FPVGate S3 timer through the network plugin. <a href="c5.html#rotorhazard">Choose your connection</a>.</p>
                 </div>
             </div>
         </div>
@@ -173,7 +180,7 @@
     <section class="hardware">
         <div class="container">
             <h2>Supported Hardware</h2>
-            <p class="section-lead">Any of these ESP32-S3 boards will run the firmware. The AIO board is the same thing prebuilt, if you would rather not solder.</p>
+            <p class="section-lead">Choose an ESP32-S3 timer board, then the receiver that suits your build: a traditional SPI receiver or a C5 radio. The AIO board is available prebuilt.</p>
 <div class="hardware-grid"><a href="shop.html" class="hardware-card" style="text-decoration:none;color:inherit;">
                     <h3>FPVGate AIO</h3>
                     <p>All in one Prebuilt board</p>
@@ -189,7 +196,7 @@
                     <span class="badge">Recommended</span>
                 </div></div>
             <p class="hardware-note">
-                <strong>Required:</strong> RX5808 Module (SPI modded), MicroSD Card (FAT32), 5V Power Supply
+                <strong>Single pilot:</strong> SPI-modded RX5808 receivers remain supported. <strong>C5 multi-pilot:</strong> use an ESP32-C5 running FPVGateC5MK, wired to the S3 over UART with compatible firmware. Both S3 setups use an SD card and 5V power. <a href="docs.html#hardware">Compare receiver options</a> or <a href="c5.html">read the C5 guide</a>.
             </p>
         </div>
     </section>
@@ -197,7 +204,7 @@
     <section class="bands">
         <div class="container">
             <h2>Supported Bands</h2>
-            <p class="section-lead">Analog and digital video systems are both detected on the same hardware.</p>
+            <p class="section-lead">Detection uses signal strength, not decoded video. Channel coverage depends on your receiver and firmware: C5MK tunes 5180&ndash;5917 MHz, including Raceband R1&ndash;R8. Boscam E7/E8 are outside that range.</p>
             <div class="bands-grid">
                 <div class="band-section">
                     <h3>Analog FPV</h3>
@@ -228,18 +235,18 @@
                 <div class="step">
                     <div class="step-number">1</div>
                     <h3>Flash Firmware</h3>
-                    <p>Use our web-based flasher to install FPVGate on your ESP32-S3 in seconds</p>
+                    <p>Flash your S3 timer here, and use the <a href="c5.html#flasher">C5 Radio page</a> to flash a C5 receiver separately.</p>
                     <a href="flasher.html" class="btn btn-primary">Go to Flasher</a>
                 </div>
                 <div class="step">
                     <div class="step-number">2</div>
                     <h3>Prepare SD Card</h3>
-                    <p>Format SD card as FAT32 and load audio files from the release package</p>
+                    <p>For an S3 timer, format an SD card as FAT32 and load the audio files. Direct USB C5MK needs no SD card.</p>
                 </div>
                 <div class="step">
                     <div class="step-number">3</div>
                     <h3>Connect & Configure</h3>
-                    <p>Connect to FPVGate WiFi network and set your VTx frequency and thresholds</p>
+                    <p>Follow the C5 wiring guide, then set channels and thresholds in FPVGate or RotorHazard.</p>
                 </div>
                 <div class="step">
                     <div class="step-number">4</div>
@@ -260,6 +267,7 @@
                 <a href="https://github.com/LouisHitchcock/FPVGate" target="_blank">GitHub</a>
                 <a href="https://github.com/LouisHitchcock/FPVGate/issues" target="_blank">Issues</a>
                 <a href="docs.html">Documentation</a>
+                <a href="c5.html">C5 Radio Guide</a>
                 <a href="https://discord.gg/XwammuWCCj" target="_blank">Discord</a>
                 <a href="https://ko-fi.com/louishitchcock" target="_blank" class="kofi-link">Support on Ko-fi</a>
             </div>
