@@ -119,7 +119,7 @@
                                 <option value="">Choose a board first...</option>
                                 <option value="rx">Single Pilot · SPI · FPVGateC5RX</option>
                                 <option value="mk">Multi Pilot · UART / USB · FPVGateC5MK</option>
-                                <option value="mkrc">Multi Pilot · UART / USB · FPVGateC5MK 1.2.2 release candidate</option>
+                                <option value="mkrc">Multi Pilot · UART / USB · FPVGateC5MK 1.2.2-RC.3 release candidate</option>
                             </select>
                         </div>
                         <div id="c5-release" class="c5-release" hidden aria-live="polite"></div>
@@ -148,7 +148,7 @@
                         <li>Close serial monitors using this USB port.</li>
                     </ul></div>
                     <div class="info-card"><h3>Choose Your Mode</h3><p><strong>Single Pilot · SPI</strong><br>FPVGateC5RX replaces an RX5808. A resistor/capacitor filter provides analog RSSI to your timer.</p><p><strong>Multi Pilot · UART / USB</strong><br>C5MK connects to an FPVGate S3 over UART, or directly to RotorHazard over USB. The same board-specific firmware supports both.</p></div>
-                    <div class="info-card"><h3>Firmware Status</h3><p>C5RX SPI builds remain alpha. C5MK uses the published v1.2.1 release; the v1.2.2-rc.1 release candidate fixes and quietens direct USB timing with RotorHazard. The Waveshare C5-WIFI6-KIT and C5-MINI-KIT builds and physical XIAO USB are not yet hardware-tested. Validate reception and lap detection before racing.</p><p><a href="https://github.com/LouisHitchcock/FPVGateC5RX" target="_blank" rel="noopener">FPVGateC5RX source ↗</a><br><a href="https://github.com/LouisHitchcock/FPVGateC5MK" target="_blank" rel="noopener">FPVGateC5MK source ↗</a></p></div>
+                    <div class="info-card"><h3>Firmware Status</h3><p>C5RX SPI builds remain alpha. C5MK uses the published v1.2.1 release; the v1.2.2-rc.3 release candidate fixes USB discovery after unexpected serial input, in addition to the earlier direct USB timing improvements. The Waveshare C5-WIFI6-KIT and C5-MINI-KIT builds and physical XIAO USB are not yet hardware-tested. Validate reception and lap detection before racing.</p><p><a href="https://github.com/LouisHitchcock/FPVGateC5RX" target="_blank" rel="noopener">FPVGateC5RX source ↗</a><br><a href="https://github.com/LouisHitchcock/FPVGateC5MK" target="_blank" rel="noopener">FPVGateC5MK source ↗</a></p></div>
                 </aside>
             </section>
         </div>
@@ -261,6 +261,6 @@
     </div>
     <footer><div class="container"><div class="footer-meta"><p>Built for the FPV community.</p><p>Licensed under CC BY-NC-SA 4.0</p></div><div class="footer-links"><a href="docs.html">Documentation</a><a href="#flasher">C5 Flasher</a><a href="https://github.com/LouisHitchcock/FPVGateC5MK" target="_blank" rel="noopener">C5MK on GitHub</a><a href="https://discord.gg/XwammuWCCj" target="_blank" rel="noopener">Discord</a></div></div></footer>
     <script src="theme.js"></script>
-    <script type="module" src="c5-radio.js?v=20261018-page"></script>
+    <script type="module" src="c5-radio.js?v=20261018-rc3"></script>
 </body>
 </html>

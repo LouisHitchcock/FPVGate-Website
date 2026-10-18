@@ -13,7 +13,7 @@ const escape = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;
 
 async function loadCatalog() {
     if (catalog) return catalog;
-    if (!loading) loading = fetch('firmware/c5/manifest.json?v=c5mk-1.2.2-rc.1', { cache: 'no-cache' })
+    if (!loading) loading = fetch('firmware/c5/manifest.json?v=c5mk-1.2.2-rc.3', { cache: 'no-cache' })
         .then(response => {
             if (!response.ok) throw new Error('C5 firmware could not be loaded. Check your connection and reselect your board to retry.');
             return response.json();
