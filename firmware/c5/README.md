@@ -10,13 +10,13 @@ The multi-pilot UART/USB builds (FPVGateC5MK) are the published
 [v1.2.1 release](https://github.com/LouisHitchcock/FPVGateC5MK/releases/tag/v1.2.1),
 copied unchanged from that tag's `release/<board>/` folders into `c5mk-v1.2.1/`.
 (`c5mk-v1.1.0/` and `c5mk-v1.2.0/` are earlier releases, no longer listed.)
-The [v1.2.2-rc.3 release candidate](https://github.com/LouisHitchcock/FPVGateC5MK/releases/tag/v1.2.2-rc.3)
+The [v1.2.2-rc.4 release candidate](https://github.com/LouisHitchcock/FPVGateC5MK/releases/tag/v1.2.2-rc.4)
 is offered beside it as its own firmware choice for every board
-(`mkrc-*` keys), copied the same way into `c5mk-v1.2.2-rc.3/`. It changes only
+(`mkrc-*` keys), copied the same way into `c5mk-v1.2.2-rc.4/`. It changes only
 direct USB timing and discovery with RotorHazard; the UART link is as in 1.2.1.
-RC.3 includes Linux virtual-serial regression tests for discovery after partial
-input, buffer overflow and tty echo. Physical validation on the reported Pi is
-still pending.
+RC.4 fixes discovery on Linux, where opening the port resets the C5: it stays
+quiet on USB until the host sends a byte. Tested on a Raspberry Pi 4 with stock
+RotorHazard 4.4.0 and a C5-Zero; the XIAO C5 image was not run with RH.
 From 1.1.0 the C5 has two app slots, and FPVGate 1.9.0-Multi-Alpha-3 and later can
 update it over the UART link. A C5 flashed with the earlier 2026-10-08 MK alpha
 must be reflashed here once before the gate can update it.
