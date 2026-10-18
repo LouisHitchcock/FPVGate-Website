@@ -1,6 +1,11 @@
 {
     "versions": [
         {
+            "tag": "v1.9.0-Alpha-4",
+            "date": "2026-10-18",
+            "notes": "Fourth Multi-Pilot alpha, the one after Multi-Alpha-3 (the alphas are now named 1.9.0-Alpha-N), for the Seeed XIAO ESP32S3 and the Waveshare ESP32-S3-ETH only; other boards should stay on Multi-Alpha-2. Race analysis now works in C5 races: Fastest Lap, Fastest 3 Consecutive, Best 3 Laps and Median Lap showed nothing however many laps were flown. The race screen shows those four as boxes in a row, with Consistency and Lap Times charts below, opening on Consistency. Fixes a gate rebooting when a browser disconnected, and a USB flash leaving a gate last updated over the air starting its old firmware. Adds a RotorHazard test pass (POST /api/rh/testPass). Tested on a XIAO ESP32S3 with an ESP32-C5, including a C5 update through the gate; not given Multi-Alpha-3's overnight run. Known issue: with an SD card fitted, Race History can show no races, or come and go, while races are being saved. Devices on earlier 1.9.0 alphas, 1.8.3 or the 1.8 release candidates can update over the air."
+        },
+        {
             "tag": "v1.9.0-Multi-Alpha-3",
             "date": "2026-10-12",
             "notes": "Third Multi-Pilot alpha, for the Seeed XIAO ESP32S3 and the Waveshare ESP32-S3-ETH only; other boards should stay on Multi-Alpha-2. The Waveshare ESP32-S3-ETH is now tested and no longer needs expert mode: uploads and OTA updates over Ethernet, which crawled at about 10 KB/s, now run at over 1 MB/s. The ESP32-C5 receiver can now be updated through the gate (Settings > System), with no USB cable on the C5, once it is on FPVGate C5MK 1.1.0. Also adds the race director (Event Mode), manual +Lap for C5 pilots, and RotorHazard RSSI at 20 a second with pass peaks for the Marshal page (use RotorHazard plugin 2.1.4). Fixes a fly-through counting as several passes, lost C5 data while a race was saved, and the XIAO freezing on Wi-Fi when several pages loaded at once. Tested overnight on both boards with an ESP32-C5 and RotorHazard. Devices on earlier 1.9.0 alphas, 1.8.3 or the 1.8 release candidates can update over the air; a Waveshare board on Multi-Alpha-2 should update over USB or Wi-Fi, not Ethernet."

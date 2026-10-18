@@ -5,8 +5,8 @@ const SDCARD_GITHUB_API = 'https://api.github.com/repos/LouisHitchcock/FPVGate/r
 let sdcardReleases = [];
 
 function getSDCardUrl(version) {
-    // The Multi alpha uses the same SD files as the stable release.
-    const sdVersion = ['v1.9.0-Multi-Alpha-1', 'v1.9.0-Multi-Alpha-2', 'v1.9.0-Multi-Alpha-3'].includes(version) ? 'v1.8.3' : version;
+    // The 1.9.0 alphas use the same SD files as the stable release.
+    const sdVersion = ['v1.9.0-Multi-Alpha-1', 'v1.9.0-Multi-Alpha-2', 'v1.9.0-Multi-Alpha-3', 'v1.9.0-Alpha-4'].includes(version) ? 'v1.8.3' : version;
     return `${window.location.origin}/firmware/${sdVersion}/SD_Card.zip`;
 }
 

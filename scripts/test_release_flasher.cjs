@@ -134,12 +134,19 @@ test('Alpha-2 offers four boards with complete images and correct partition offs
         ['esp32s3', 'xiaos3plus', 'esp32s3supermini', 'esp32c3', 'lilygo', 'wavesharelcd2', 'novablade']);
 });
 
-test('Alpha-3 is the newest pre-release and offers the XIAO S3 and S3-ETH only', () => {
-    const index = JSON.parse(fs.readFileSync(path.join(root, 'preRelease/index.json'), 'utf8'));
-    assert.equal(index.versions[0].tag, 'v1.9.0-Multi-Alpha-3');
+test('Alpha-3 offers the XIAO S3 and S3-ETH only', () => {
     checkMultiAlphaRelease('v1.9.0-Multi-Alpha-3', 'Multi-Alpha-3',
         { seeedxiaos3: 'SeeedXIAOESP32S3', waveshares3eth: 'WaveshareS3ETH' },
         ['fpvgateaio', 'fpvgatesolo', 'esp32s3', 'xiaos3plus', 'esp32s3supermini', 'esp32c3', 'lilygo', 'wavesharelcd2', 'novablade']);
+});
+
+test('Alpha-4 is the newest pre-release and offers the XIAO S3 and S3-ETH only', () => {
+    const index = JSON.parse(fs.readFileSync(path.join(root, 'preRelease/index.json'), 'utf8'));
+    assert.equal(index.versions[0].tag, 'v1.9.0-Alpha-4');
+    checkMultiAlphaRelease('v1.9.0-Alpha-4', 'Alpha-4',
+        { seeedxiaos3: 'SeeedXIAOESP32S3', waveshares3eth: 'WaveshareS3ETH' },
+        ['fpvgateaio', 'fpvgatesolo', 'esp32s3', 'xiaos3plus', 'esp32s3supermini', 'esp32c3', 'lilygo', 'wavesharelcd2', 'novablade']);
+    assert.ok(fs.existsSync(path.join(root, 'preRelease/v1.9.0-Alpha-4/boot_app0.bin')));
 });
 
 test('the S3-ETH is tested and offered without expert mode', () => {
@@ -157,6 +164,7 @@ test('Multi Alpha SD setup reuses the stable SD archive', () => {
     assert.equal(vm.runInContext("getSDCardUrl('v1.9.0-Multi-Alpha-1')", context), 'https://fpvgate.xyz/firmware/v1.8.3/SD_Card.zip');
     assert.equal(vm.runInContext("getSDCardUrl('v1.9.0-Multi-Alpha-2')", context), 'https://fpvgate.xyz/firmware/v1.8.3/SD_Card.zip');
     assert.equal(vm.runInContext("getSDCardUrl('v1.9.0-Multi-Alpha-3')", context), 'https://fpvgate.xyz/firmware/v1.8.3/SD_Card.zip');
+    assert.equal(vm.runInContext("getSDCardUrl('v1.9.0-Alpha-4')", context), 'https://fpvgate.xyz/firmware/v1.8.3/SD_Card.zip');
     assert.equal(vm.runInContext("getSDCardUrl('v1.8.3')", context), 'https://fpvgate.xyz/firmware/v1.8.3/SD_Card.zip');
     assert.equal(vm.runInContext("getSDCardUrl('v1.7.2')", context), 'https://fpvgate.xyz/firmware/v1.7.2/SD_Card.zip');
 });
@@ -178,8 +186,8 @@ test('SD ZIP and refreshed flasher script references are present', () => {
     const zip = fs.readFileSync(path.join(root, 'firmware/v1.8.3/SD_Card.zip'));
     assert.equal(zip.readUInt32LE(0), 0x04034b50);
     assert.ok(zip.includes(Buffer.from('voice_default_en')));
-    assert.match(fs.readFileSync(path.join(root, 'flasher.html'), 'utf8'), /flasher\.js\?v=1\.9\.0-Multi-Alpha-3/);
-    assert.match(fs.readFileSync(path.join(root, 'flasher.js'), 'utf8'), /import\('\.\/esp-flasher\.js\?v=1\.8\.3-reset1'\)/);
+    assert.match(fs.readFileSync(path.join(root, 'flasher.html'), 'utf8'), /flasher\.js\?v=1\.9\.0-Alpha-4/);
+    assert.match(fs.readFileSync(path.join(root, 'flasher.js'), 'utf8'), /import\('\.\/esp-flasher\.js\?v=1\.9\.0-Alpha-4-otadata'\)/);
 });
 
 for (const mode of ['existing bootloader', 'previously authorised USB replacement', 'first-time USB replacement']) {
@@ -256,6 +264,27 @@ test('successful writes followed by a USB reset error still complete', async () 
     assert.equal(progress.percent, 100);
     assert.match(progress.status, /unplug and reconnect/);
     assert.ok(logs.some(message => message.includes('All files were written')));
+});
+
+test('a flash clears otadata so the gate starts app0, not an old app1', async () => {
+    const flasher = resetTestFlasher();
+    let written;
+    flasher.setHandlers({});
+    flasher.esploader = { async writeFlash(options) { written = options.fileArray; }, async hardReset() {} };
+    await flasher.flash({ builds: [{ parts: [{ path: 'firmware.bin', offset: 0x10000 }] }] });
+    const otadata = written.find(file => file.address === 0xe000);
+    assert.ok(otadata);
+    assert.equal(otadata.data.length, 0x2000);
+    assert.ok(/^ÿ+$/.test(otadata.data));
+});
+
+test('a full erase leaves otadata to the erase', async () => {
+    const flasher = resetTestFlasher();
+    let written;
+    flasher.setHandlers({});
+    flasher.esploader = { async eraseFlash() {}, async writeFlash(options) { written = options.fileArray; }, async hardReset() {} };
+    await flasher.flash({ builds: [{ parts: [{ path: 'firmware.bin', offset: 0x10000 }] }] }, true);
+    assert.equal(written.some(file => file.address === 0xe000), false);
 });
 
 test('write errors still fail without resetting or reporting completion', async () => {

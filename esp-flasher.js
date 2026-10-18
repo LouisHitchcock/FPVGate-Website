@@ -223,6 +223,14 @@ export class CustomESPFlasher {
                 })
             );
 
+            // Clear otadata (0xe000 in every FPVGate partition table) so the
+            // gate starts the app just written to app0. A gate last updated
+            // over the air runs from app1 and otherwise keeps starting its old
+            // firmware. An erased otadata selects app0, as boot_app0.bin does.
+            if (!eraseAll) {
+                fileArray.push({ data: new Uint8Array(0x2000).fill(0xff).buffer, address: 0xe000 });
+            }
+
             this.log('Starting flash write...');
             this.updateProgress(50, 'Writing firmware');
 
@@ -254,7 +262,7 @@ export class CustomESPFlasher {
                 compress: true,
                 reportProgress: (fileIndex, written, total) => {
                     const overallProgress = 50 + ((written / total) * 45);
-                    const fileName = manifest.builds[0].parts[fileIndex]?.path.split('/').pop() || 'firmware';
+                    const fileName = manifest.builds[0].parts[fileIndex]?.path.split('/').pop() || 'boot selection';
                     this.updateProgress(
                         Math.round(overallProgress),
                         `Writing ${fileName} (${Math.round((written / total) * 100)}%)`
