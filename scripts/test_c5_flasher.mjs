@@ -32,7 +32,7 @@ for (const [key, build] of Object.entries(manifest.builds)) {
     assert.ok(appPartition && app.data.length <= appPartition, `Application must fit its partition at 0x${app.address.toString(16)}`);
     if (build.mode === 'uart') {
         // The release, and the release candidate offered beside it.
-        const tag = 'v1.2.2';
+        const tag = 'v1.2.3';
         assert.equal(build.version, tag.slice(1));
         assert.equal(build.tag, tag);
         assert.equal(build.usb_timing, true);
