@@ -30,43 +30,45 @@ function flasherContext() {
     return context;
 }
 
-test('v1.8.3 manifests point to all 20 images with matching partition offsets', () => {
-    const context = flasherContext();
-    for (const [id, directory] of Object.entries(boards)) {
-        vm.runInContext(`selectedBoard = '${id}'; selectedVersion = { tag_name: 'v1.8.3' };`, context);
-        assert.equal(vm.runInContext('updateFlashInfo()', context), true);
-        const manifest = vm.runInContext('generateManifest()', context);
-        const parts = manifest.builds[0].parts;
-        assert.deepEqual(Array.from(parts, p => p.offset), [0, 0x8000, 0x10000, id === 'xiaos3plus' ? 0x610000 : 0x410000]);
-        for (const part of parts) {
-            const url = new URL(part.path);
-            assert.equal(url.origin, 'https://fpvgate.xyz');
-            assert.equal(path.posix.dirname(url.pathname), `/firmware/v1.8.3/${directory}`);
-            assert.ok(fs.statSync(path.join(root, url.pathname)).size > 0);
-        }
-        const partitionData = fs.readFileSync(path.join(root, 'firmware/v1.8.3', directory, 'partitions.bin'));
-        let filesystem;
-        for (let offset = 0; offset + 32 <= partitionData.length && partitionData.readUInt16LE(offset) === 0x50aa; offset += 32) {
-            if (partitionData[offset + 2] === 1 && partitionData[offset + 3] === 0x82) {
-                filesystem = { offset: partitionData.readUInt32LE(offset + 4), size: partitionData.readUInt32LE(offset + 8) };
+for (const tag of ['v1.8.3', 'v1.8.4']) {
+    test(`${tag} manifests point to all 20 images with matching partition offsets`, () => {
+        const context = flasherContext();
+        for (const [id, directory] of Object.entries(boards)) {
+            vm.runInContext(`selectedBoard = '${id}'; selectedVersion = { tag_name: '${tag}' };`, context);
+            assert.equal(vm.runInContext('updateFlashInfo()', context), true);
+            const manifest = vm.runInContext('generateManifest()', context);
+            const parts = manifest.builds[0].parts;
+            assert.deepEqual(Array.from(parts, p => p.offset), [0, 0x8000, 0x10000, id === 'xiaos3plus' ? 0x610000 : 0x410000]);
+            for (const part of parts) {
+                const url = new URL(part.path);
+                assert.equal(url.origin, 'https://fpvgate.xyz');
+                assert.equal(path.posix.dirname(url.pathname), `/firmware/${tag}/${directory}`);
+                assert.ok(fs.statSync(path.join(root, url.pathname)).size > 0);
             }
+            const partitionData = fs.readFileSync(path.join(root, `firmware/${tag}`, directory, 'partitions.bin'));
+            let filesystem;
+            for (let offset = 0; offset + 32 <= partitionData.length && partitionData.readUInt16LE(offset) === 0x50aa; offset += 32) {
+                if (partitionData[offset + 2] === 1 && partitionData[offset + 3] === 0x82) {
+                    filesystem = { offset: partitionData.readUInt32LE(offset + 4), size: partitionData.readUInt32LE(offset + 8) };
+                }
+            }
+            assert.ok(filesystem);
+            assert.equal(parts[3].offset, filesystem.offset);
+            assert.equal(fs.statSync(path.join(root, `firmware/${tag}`, directory, 'littlefs.bin')).size, filesystem.size);
+            const firmware = fs.readFileSync(path.join(root, `firmware/${tag}`, directory, 'firmware.bin'));
+            assert.ok(firmware.includes(Buffer.from(`${tag.slice(1)}\0`)));
         }
-        assert.ok(filesystem);
-        assert.equal(parts[3].offset, filesystem.offset);
-        assert.equal(fs.statSync(path.join(root, 'firmware/v1.8.3', directory, 'littlefs.bin')).size, filesystem.size);
-        const firmware = fs.readFileSync(path.join(root, 'firmware/v1.8.3', directory, 'firmware.bin'));
-        assert.ok(firmware.includes(Buffer.from('1.8.3\0')));
-    }
-});
+    });
 
-test('unsupported v1.8.3 boards cannot start flashing', () => {
-    const context = flasherContext();
-    for (const id of ['esp32s3supermini', 'lilygo', 'esp32c3', 'wavesharelcd2', 'novablade']) {
-        vm.runInContext(`selectedBoard = '${id}'; selectedVersion = { tag_name: 'v1.8.3' }; updateFlashSection();`, context);
-        assert.equal(context.document.getElementById('flash-section').style.display, 'none');
-        assert.match(context.document.getElementById('error-message').textContent, /has no build/);
-    }
-});
+    test(`unsupported ${tag} boards cannot start flashing`, () => {
+        const context = flasherContext();
+        for (const id of ['esp32s3supermini', 'lilygo', 'esp32c3', 'wavesharelcd2', 'novablade']) {
+            vm.runInContext(`selectedBoard = '${id}'; selectedVersion = { tag_name: '${tag}' }; updateFlashSection();`, context);
+            assert.equal(context.document.getElementById('flash-section').style.display, 'none');
+            assert.match(context.document.getElementById('error-message').textContent, /has no build/);
+        }
+    });
+}
 
 test('Multi Alpha index and manifests expose only the five packaged boards', () => {
     const tag = 'v1.9.0-Multi-Alpha-1';
@@ -166,6 +168,7 @@ test('Multi Alpha SD setup reuses the stable SD archive', () => {
     assert.equal(vm.runInContext("getSDCardUrl('v1.9.0-Multi-Alpha-3')", context), 'https://fpvgate.xyz/firmware/v1.8.3/SD_Card.zip');
     assert.equal(vm.runInContext("getSDCardUrl('v1.9.0-Alpha-4')", context), 'https://fpvgate.xyz/firmware/v1.8.3/SD_Card.zip');
     assert.equal(vm.runInContext("getSDCardUrl('v1.8.3')", context), 'https://fpvgate.xyz/firmware/v1.8.3/SD_Card.zip');
+    assert.equal(vm.runInContext("getSDCardUrl('v1.8.4')", context), 'https://fpvgate.xyz/firmware/v1.8.3/SD_Card.zip');
     assert.equal(vm.runInContext("getSDCardUrl('v1.7.2')", context), 'https://fpvgate.xyz/firmware/v1.7.2/SD_Card.zip');
 });
 
@@ -186,7 +189,7 @@ test('SD ZIP and refreshed flasher script references are present', () => {
     const zip = fs.readFileSync(path.join(root, 'firmware/v1.8.3/SD_Card.zip'));
     assert.equal(zip.readUInt32LE(0), 0x04034b50);
     assert.ok(zip.includes(Buffer.from('voice_default_en')));
-    assert.match(fs.readFileSync(path.join(root, 'flasher.html'), 'utf8'), /flasher\.js\?v=1\.9\.0-Alpha-4/);
+    assert.match(fs.readFileSync(path.join(root, 'flasher.html'), 'utf8'), /flasher\.js\?v=1\.8\.4/);
     assert.match(fs.readFileSync(path.join(root, 'flasher.js'), 'utf8'), /import\('\.\/esp-flasher\.js\?v=1\.9\.0-Alpha-4-otadata'\)/);
 });
 
