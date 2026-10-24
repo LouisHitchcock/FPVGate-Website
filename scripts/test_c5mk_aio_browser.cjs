@@ -33,6 +33,26 @@ const base = process.env.TEST_BASE_URL || 'http://127.0.0.1:8025';
             assert.equal(crypto.createHash('sha256').update(bytes).digest('hex'),
                 crypto.createHash('sha256').update(fs.readFileSync(path.join(__dirname, '..', relative))).digest('hex'));
         }
+        const boards = {
+            seeedxiaos3: 'SeeedXIAOESP32S3', waveshares3eth: 'WaveshareS3ETH',
+            esp32s3: 'ESP32S3', fpvgateaio: 'FPVGateAIO', fpvgatesolo: 'FPVGateSolo',
+            fpvgatec5mkaio: 'FPVGateC5MKAIO'
+        };
+        for (const [id, directory] of Object.entries(boards)) {
+            await page.locator('#board-select').selectOption(id);
+            assert.equal(await page.locator('#flash-section').isVisible(), true);
+            const images = await page.evaluate(() => generateManifest().builds[0].parts);
+            assert.deepEqual(images.map(p => p.offset), [0, 0x8000, 0x10000, id === 'waveshares3eth' ? 0x610000 : 0x410000]);
+            for (const image of images) {
+                const relative = new URL(image.path).pathname;
+                assert.equal(path.posix.dirname(relative), `/preRelease/v1.9.0-alpha-5/${directory}`);
+                const response = await page.request.get(base + relative);
+                assert.equal(response.status(), 200);
+                assert((await response.body()).equals(fs.readFileSync(path.join(__dirname, '..', relative))));
+            }
+            console.log(`PASS refreshed Alpha 5 board selection and four images: ${directory}`);
+        }
+        await page.locator('#board-select').selectOption('fpvgatec5mkaio');
         await page.locator('#version-select').selectOption('v1.9.0-Alpha-4');
         assert.equal(await page.locator('#flash-section').isVisible(), false);
         assert.match(await page.locator('#error-message').innerText(), /no build/);

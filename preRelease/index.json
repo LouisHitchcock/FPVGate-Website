@@ -3,7 +3,7 @@
         {
             "tag": "v1.9.0-alpha-5",
             "date": "2026-10-24",
-            "notes": "Fifth Multi-Pilot alpha for Seeed XIAO ESP32S3, Waveshare ESP32-S3-ETH and the dedicated FPVGate C5MK AIO. The additional AIO S3 build uses its own board identity and AIO outputs, with the receiver fixed to ESP32-C5; it is not the older FPVGate AIO. Original XIAO S3/S3-ETH images are unchanged. Fixes RotorHazard live-versus-Marshal peak timestamps and keeps clock corrections between crossings; pair with RH plugin v2.3.2-rc.1. All three firmware/filesystem builds and 61 frontend/config tests pass; camera, physical AIO flash and multi-transmitter validation remain pending. The C5 receiver is updated separately (AIO uses XIAO C5 firmware). Enable Pre-Release Firmware, select the matching board and v1.9.0-alpha-5."
+            "notes": "Refreshed Alpha 5: all six S3 timer boards (XIAO S3, S3-ETH, DevKitC-1 8MB, FPVGate AIO, Solo and C5MK AIO). Merges consecutive 2-/3-lap announcer fixes and C5 gate-side max-lap/heat stopping plus history saving, retaining the RH peak timing fixes. Reinstall both firmware and filesystem even if already on Alpha 5; BUILD_INFO.json identifies this refresh. 118 frontend/config tests, native race-control checks and 16 RH plugin regressions pass. Events results/next heat and non-C5 completion still require a browser. Physical six-board flash, closed-browser/storage, camera and multi-transmitter qualification remain pending. For RH through FPVGate pair with plugin v2.3.2-rc.1; C5 receiver firmware is separate."
         },
         {
             "tag": "v1.9.0-Alpha-4",

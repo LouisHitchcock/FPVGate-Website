@@ -123,6 +123,10 @@ function checkMultiAlphaRelease(tag, stage, packaged, unpackaged) {
         const firmware = fs.readFileSync(path.join(base, 'firmware.bin'));
         assert.ok(firmware.includes(Buffer.from('1.9.0\0')));
         assert.ok(firmware.includes(Buffer.from(`${stage}\0`)));
+        if (tag === 'v1.9.0-alpha-5') {
+            assert.ok(firmware.includes(Buffer.from(`${directory}\0`)), 'Firmware must identify the selected board');
+            assert.ok(firmware.includes(Buffer.from('gateManaged')), 'Must contain the integrated gate race controller');
+        }
     }
     for (const id of unpackaged) {
         vm.runInContext(`selectedBoard = '${id}'; selectedVersion = { tag_name: '${tag}', isLocalPreRelease: true }; updateFlashSection();`, context);
@@ -151,13 +155,18 @@ test('Alpha-4 offers the XIAO S3 and S3-ETH only', () => {
     assert.ok(fs.existsSync(path.join(root, 'preRelease/v1.9.0-Alpha-4/boot_app0.bin')));
 });
 
-test('Alpha-5 is the newest pre-release with versioned images for all three boards', () => {
+test('Alpha-5 is the newest pre-release with versioned images for all six boards', () => {
     const index = JSON.parse(fs.readFileSync(path.join(root, 'preRelease/index.json'), 'utf8'));
     assert.equal(index.versions[0].tag, 'v1.9.0-alpha-5');
     checkMultiAlphaRelease('v1.9.0-alpha-5', 'alpha-5',
-        { seeedxiaos3: 'SeeedXIAOESP32S3', waveshares3eth: 'WaveshareS3ETH', fpvgatec5mkaio: 'FPVGateC5MKAIO' },
-        ['fpvgateaio', 'fpvgatesolo', 'esp32s3', 'xiaos3plus', 'esp32s3supermini', 'esp32c3', 'lilygo', 'wavesharelcd2', 'novablade']);
+        { seeedxiaos3: 'SeeedXIAOESP32S3', waveshares3eth: 'WaveshareS3ETH', esp32s3: 'ESP32S3', fpvgateaio: 'FPVGateAIO', fpvgatesolo: 'FPVGateSolo', fpvgatec5mkaio: 'FPVGateC5MKAIO' },
+        ['xiaos3plus', 'esp32s3supermini', 'esp32c3', 'lilygo', 'wavesharelcd2', 'novablade']);
     assert.ok(fs.existsSync(path.join(root, 'preRelease/v1.9.0-alpha-5/boot_app0.bin')));
+    const build = JSON.parse(fs.readFileSync(path.join(root, 'preRelease/v1.9.0-alpha-5/BUILD_INFO.json'), 'utf8'));
+    assert.equal(build.build, 'integrated-six-board-refresh');
+    assert.equal(build.boards.length, 6);
+    assert.equal(build.hardwareQualified, false);
+    assert.match(build.sourceCommit, /^[0-9a-f]{40}$/);
 });
 
 test('C5MK AIO has a distinct board identity, is standard, and refuses unbuilt releases', () => {
@@ -213,8 +222,8 @@ test('SD ZIP and refreshed flasher script references are present', () => {
     const zip = fs.readFileSync(path.join(root, 'firmware/v1.8.3/SD_Card.zip'));
     assert.equal(zip.readUInt32LE(0), 0x04034b50);
     assert.ok(zip.includes(Buffer.from('voice_default_en')));
-    assert.match(fs.readFileSync(path.join(root, 'flasher.html'), 'utf8'), /flasher\.js\?v=1\.9\.0-alpha-5-c5aio/);
-    assert.match(fs.readFileSync(path.join(root, 'flasher.js'), 'utf8'), /import\('\.\/esp-flasher\.js\?v=1\.9\.0-Alpha-4-otadata'\)/);
+    assert.match(fs.readFileSync(path.join(root, 'flasher.html'), 'utf8'), /flasher\.js\?v=1\.9\.0-alpha-5-integrated/);
+    assert.match(fs.readFileSync(path.join(root, 'flasher.js'), 'utf8'), /import\('\.\/esp-flasher\.js\?v=1\.9\.0-alpha-5-integrated'\)/);
 });
 
 for (const mode of ['existing bootloader', 'previously authorised USB replacement', 'first-time USB replacement']) {
@@ -260,16 +269,34 @@ for (const mode of ['existing bootloader', 'previously authorised USB replacemen
     });
 }
 
-function resetTestFlasher() {
+function resetTestFlasher(fetchFile = async () => ({ ok: true, arrayBuffer: async () => new ArrayBuffer(4) })) {
     const context = vm.createContext({
         console: { log() {} }, Uint8Array,
-        fetch: async () => ({ ok: true, arrayBuffer: async () => new ArrayBuffer(4) })
+        fetch: fetchFile
     });
     const source = fs.readFileSync(path.join(root, 'esp-flasher.js'), 'utf8')
         .replace(/^import .*;\r?\n/m, '').replace('export class CustomESPFlasher', 'class CustomESPFlasher');
     vm.runInContext(source, context);
     return vm.runInContext('new CustomESPFlasher()', context);
 }
+
+test('same-version refreshes never reuse browser-cached firmware or filesystem', async () => {
+    const calls = [];
+    const flasher = resetTestFlasher(async (url, options) => {
+        calls.push({ url, cache: options.cache });
+        return { ok: true, arrayBuffer: async () => new ArrayBuffer(4) };
+    });
+    flasher.setHandlers({});
+    flasher.esploader = { async writeFlash() {}, async hardReset() {} };
+    await flasher.flash({ builds: [{ parts: [
+        { path: 'firmware.bin', offset: 0x10000 },
+        { path: 'littlefs.bin', offset: 0x410000 }
+    ] }] });
+    assert.deepEqual(calls, [
+        { url: 'firmware.bin', cache: 'no-store' },
+        { url: 'littlefs.bin', cache: 'no-store' }
+    ]);
+});
 
 test('successful writes followed by a USB reset error still complete', async () => {
     const flasher = resetTestFlasher();

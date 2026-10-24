@@ -209,7 +209,9 @@ export class CustomESPFlasher {
             const fileArray = await Promise.all(
                 manifest.builds[0].parts.map(async (part) => {
                     this.log(`Downloading ${part.path}...`);
-                    const response = await fetch(part.path);
+                    // Alpha releases may be refreshed under the same tag.
+                    // Never reuse a browser-cached image from an earlier build.
+                    const response = await fetch(part.path, { cache: 'no-store' });
                     if (!response.ok) {
                         throw new Error(`Failed to download ${part.path}: ${response.statusText}`);
                     }

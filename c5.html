@@ -181,7 +181,7 @@
                     <p>For organised racing, <a href="docs.html#event-mode">Event Mode</a> on compatible S3 firmware adds pilot groups, race formats, heat scheduling and Elo or lap-time seeding. An event can rotate through several groups, with up to eight pilots in each heat.</p>
                     <ol>
                         <li><strong>Flash the C5 receiver.</strong> Open the <a href="#flasher">C5 Radio flasher</a>, select your board, then <strong>Multi Pilot &middot; UART / USB &middot; FPVGateC5MK</strong>. Use Chrome or Edge and connect the C5's USB port. Power cycle after flashing.</li>
-                        <li><strong>Flash compatible S3 firmware separately.</strong> In the <a href="flasher.html">timer flasher</a>, enable <strong>Pre-Release Firmware</strong> and choose a Multi-Alpha build offered for your S3. Multi-Alpha-3 is packaged for the Seeed XIAO ESP32S3 and Waveshare ESP32-S3-ETH; other supported boards use Multi-Alpha-2. Prepare the S3's SD card as described in the <a href="docs.html#sdcard">SD card guide</a>.</li>
+                        <li><strong>Flash compatible S3 firmware separately.</strong> In the <a href="flasher.html">timer flasher</a>, enable <strong>Pre-Release Firmware</strong> and choose <strong>v1.9.0-alpha-5</strong> for your board: XIAO S3, S3-ETH, DevKitC-1 (8MB), FPVGate AIO, Solo or C5MK AIO. The refreshed Alpha 5 includes consecutive-lap announcement fixes and C5 gate-side stopping/history saving; install both firmware and filesystem even if already on Alpha 5. Hardware qualification of these images remains pending. Prepare the S3's SD card as described in the <a href="docs.html#sdcard">SD card guide</a>.</li>
                         <li><strong>Wire the radio with power disconnected.</strong> Connect host TX to C5 RX, host RX to C5 TX, plus 5V and ground. Use the <a href="#boards">board tables below</a>. The C5 replaces the SPI receiver for this setup.</li>
                         <li><strong>Select the receiver.</strong> Open FPVGate, choose <strong>Settings &rarr; Configuration &rarr; Receiver Module &rarr; ESP32-C5 Multi-Pilot</strong>, save, and check that the C5 shows online in Calibration.</li>
                         <li><strong>Configure each pilot.</strong> Assign the correct VTX channels and calibrate each pilot's enter/exit thresholds. Check for cross-channel detections and fly deliberate test passes before racing.</li>
@@ -198,8 +198,10 @@
                         <tr><th scope="row">ESP32-C5-DevKitC-1 / Waveshare C5-WIFI6-KIT</th><td>GPIO4</td><td>GPIO5</td><td>C5-Zero image; hardware validation pending</td></tr>
                         <tr><th scope="row">Waveshare C5-MINI-KIT</th><td>GPIO4</td><td>GPIO5</td><td>C5-Zero image for multi-pilot; hardware validation pending</td></tr>
                     </tbody></table></div>
-                    <div class="c5-table-scroll"><table class="c5-table"><caption>S3 host pins for the packaged Multi-Alpha-3 builds</caption><thead><tr><th scope="col">S3 timer board</th><th scope="col">Host TX &rarr; C5 RX</th><th scope="col">Host RX &larr; C5 TX</th></tr></thead><tbody>
+                    <div class="c5-table-scroll"><table class="c5-table"><caption>S3 host pins for the six packaged Alpha 5 builds</caption><thead><tr><th scope="col">S3 timer board</th><th scope="col">Host TX &rarr; C5 RX</th><th scope="col">Host RX &larr; C5 TX</th></tr></thead><tbody>
                         <tr><th scope="row">Seeed XIAO ESP32S3</th><td>D3 / GPIO4</td><td>D4 / GPIO5</td></tr>
+                        <tr><th scope="row">FPVGate AIO / Solo / C5MK AIO</th><td>D3 / GPIO4</td><td>D4 / GPIO5</td></tr>
+                        <tr><th scope="row">ESP32-S3 DevKitC-1 (8MB)</th><td>GPIO43</td><td>GPIO44</td></tr>
                         <tr><th scope="row">Waveshare ESP32-S3-ETH</th><td>GPIO43</td><td>GPIO44</td></tr>
                     </tbody></table></div>
                     <p>For example, XIAO S3 D3 connects to XIAO C5 D4, and XIAO S3 D4 connects to XIAO C5 D5. The shared D-labels do not mean that the two boards use the same GPIO numbers. For other S3 boards, check their receiver UART pin configuration.</p>

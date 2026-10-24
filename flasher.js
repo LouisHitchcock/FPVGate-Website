@@ -191,7 +191,7 @@ const RELEASE_BOARDS = {
     'v1.9.0-Multi-Alpha-2': ['fpvgateaio', 'fpvgatesolo', 'seeedxiaos3', 'waveshares3eth'],
     'v1.9.0-Multi-Alpha-3': ['seeedxiaos3', 'waveshares3eth'],
     'v1.9.0-Alpha-4': ['seeedxiaos3', 'waveshares3eth'],
-    'v1.9.0-alpha-5': ['seeedxiaos3', 'waveshares3eth', 'fpvgatec5mkaio']
+    'v1.9.0-alpha-5': ['seeedxiaos3', 'waveshares3eth', 'esp32s3', 'fpvgateaio', 'fpvgatesolo', 'fpvgatec5mkaio']
 };
 
 // Fetch something that changes when a release is published, bypassing the
@@ -793,7 +793,7 @@ async function startFlashing() {
         const manifest = generateManifest();
         
         // Import and create flasher
-        const { CustomESPFlasher } = await import('./esp-flasher.js?v=1.9.0-Alpha-4-otadata');
+        const { CustomESPFlasher } = await import('./esp-flasher.js?v=1.9.0-alpha-5-integrated');
         flasher = new CustomESPFlasher();
         
         // Setup event handlers
