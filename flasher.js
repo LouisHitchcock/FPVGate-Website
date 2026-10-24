@@ -95,6 +95,19 @@ const BOARD_CONFIGS = {
             { path: 'filesystem.bin', offset: 0x410000 }
         ]
     },
+    fpvgatec5mkaio: {
+        name: 'FPVGate C5MK AIO (ESP32-S3 + ESP32-C5)',
+        chipFamily: 'ESP32-S3',
+        firmwareDir: 'FPVGateC5MKAIO',
+        modernFirmwareDir: 'FPVGateC5MKAIO',
+        filePrefix: 'FPVGate_C5MK_AIO',
+        parts: [
+            { path: 'bootloader.bin', offset: 0x0 },
+            { path: 'partitions.bin', offset: 0x8000 },
+            { path: 'firmware.bin', offset: 0x10000 },
+            { path: 'filesystem.bin', offset: 0x410000 }
+        ]
+    },
     // boards.json offers this in the dropdown, so it needs an entry here or
     // selecting it leaves BOARD_CONFIGS[selectedBoard] undefined and no
     // manifest can be built. Same XIAO ESP32S3 module and 8MB partition layout
@@ -178,7 +191,7 @@ const RELEASE_BOARDS = {
     'v1.9.0-Multi-Alpha-2': ['fpvgateaio', 'fpvgatesolo', 'seeedxiaos3', 'waveshares3eth'],
     'v1.9.0-Multi-Alpha-3': ['seeedxiaos3', 'waveshares3eth'],
     'v1.9.0-Alpha-4': ['seeedxiaos3', 'waveshares3eth'],
-    'v1.9.0-alpha-5': ['seeedxiaos3', 'waveshares3eth']
+    'v1.9.0-alpha-5': ['seeedxiaos3', 'waveshares3eth', 'fpvgatec5mkaio']
 };
 
 // Fetch something that changes when a release is published, bypassing the
@@ -246,12 +259,14 @@ async function loadBoardConfigurations() {
 
 // Boards not yet in FPVGate main's boards.json (pre-release builds only).
 const EXTRA_BOARDS = [
+    { value: 'fpvgatec5mkaio', label: 'FPVGate C5MK AIO (ESP32-S3 + ESP32-C5)', expert_mode: 0 },
     { value: 'waveshares3eth', label: 'Waveshare ESP32-S3-ETH (16MB, Ethernet)', expert_mode: 0 }
 ];
 
 // Fallback board configurations if GitHub fetch fails
 function useFallbackBoards() {
     ALL_BOARDS = [
+        { value: 'fpvgatec5mkaio', label: 'FPVGate C5MK AIO (ESP32-S3 + ESP32-C5)', expert_mode: 0 },
         { value: 'fpvgateaio', label: 'FPVGate AIO - Recommended', expert_mode: 0 },
         { value: 'fpvgatesolo', label: 'FPVGate Solo', expert_mode: 0 },
         { value: 'seeedxiaos3', label: 'Seeed Studio XIAO ESP32S3 (8MB)', expert_mode: 0 },
@@ -404,6 +419,13 @@ function updateFlashInfo() {
         return false;
     }
 
+    // This dedicated C5-only target first ships in Alpha 5. Unknown/older
+    // releases must not fall back to another AIO's images.
+    if (selectedBoard === 'fpvgatec5mkaio' && !RELEASE_BOARDS[selectedVersion.tag_name]?.includes(selectedBoard)) {
+        showError(`${selectedVersion.tag_name} has no build for ${boardConfig.name}. Enable Pre-Release Firmware and choose v1.9.0-alpha-5.`);
+        document.getElementById('flash-section').style.display = 'none';
+        return false;
+    }
     const supportedBoards = RELEASE_BOARDS[selectedVersion.tag_name];
     if (supportedBoards && !supportedBoards.includes(selectedBoard)) {
         showError(`${selectedVersion.tag_name} has no build for ${boardConfig.name}. Choose an earlier release or a supported board.`);

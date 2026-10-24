@@ -151,13 +151,27 @@ test('Alpha-4 offers the XIAO S3 and S3-ETH only', () => {
     assert.ok(fs.existsSync(path.join(root, 'preRelease/v1.9.0-Alpha-4/boot_app0.bin')));
 });
 
-test('Alpha-5 is the newest pre-release with versioned images for both boards', () => {
+test('Alpha-5 is the newest pre-release with versioned images for all three boards', () => {
     const index = JSON.parse(fs.readFileSync(path.join(root, 'preRelease/index.json'), 'utf8'));
     assert.equal(index.versions[0].tag, 'v1.9.0-alpha-5');
     checkMultiAlphaRelease('v1.9.0-alpha-5', 'alpha-5',
-        { seeedxiaos3: 'SeeedXIAOESP32S3', waveshares3eth: 'WaveshareS3ETH' },
+        { seeedxiaos3: 'SeeedXIAOESP32S3', waveshares3eth: 'WaveshareS3ETH', fpvgatec5mkaio: 'FPVGateC5MKAIO' },
         ['fpvgateaio', 'fpvgatesolo', 'esp32s3', 'xiaos3plus', 'esp32s3supermini', 'esp32c3', 'lilygo', 'wavesharelcd2', 'novablade']);
     assert.ok(fs.existsSync(path.join(root, 'preRelease/v1.9.0-alpha-5/boot_app0.bin')));
+});
+
+test('C5MK AIO has a distinct board identity, is standard, and refuses unbuilt releases', () => {
+    const context = flasherContext();
+    assert.equal(vm.runInContext("EXTRA_BOARDS.find(b => b.value === 'fpvgatec5mkaio').expert_mode", context), 0);
+    assert.equal(vm.runInContext('BOARD_CONFIGS.fpvgatec5mkaio.modernFirmwareDir', context), 'FPVGateC5MKAIO');
+    const image = fs.readFileSync(path.join(root, 'preRelease/v1.9.0-alpha-5/FPVGateC5MKAIO/firmware.bin'));
+    assert.ok(image.includes(Buffer.from('FPVGateC5MKAIO\0')));
+    assert.ok(!image.includes(Buffer.from('/api/c5/pintest')));
+    for (const tag of ['v1.7.2', 'v1.8.4', 'v1.9.0-Alpha-4']) {
+        vm.runInContext(`selectedBoard = 'fpvgatec5mkaio'; selectedVersion = { tag_name: '${tag}' }; updateFlashSection();`, context);
+        assert.equal(context.document.getElementById('flash-section').style.display, 'none');
+        assert.match(context.document.getElementById('error-message').textContent, /no build/);
+    }
 });
 
 test('the S3-ETH is tested and offered without expert mode', () => {
@@ -199,7 +213,7 @@ test('SD ZIP and refreshed flasher script references are present', () => {
     const zip = fs.readFileSync(path.join(root, 'firmware/v1.8.3/SD_Card.zip'));
     assert.equal(zip.readUInt32LE(0), 0x04034b50);
     assert.ok(zip.includes(Buffer.from('voice_default_en')));
-    assert.match(fs.readFileSync(path.join(root, 'flasher.html'), 'utf8'), /flasher\.js\?v=1\.9\.0-alpha-5/);
+    assert.match(fs.readFileSync(path.join(root, 'flasher.html'), 'utf8'), /flasher\.js\?v=1\.9\.0-alpha-5-c5aio/);
     assert.match(fs.readFileSync(path.join(root, 'flasher.js'), 'utf8'), /import\('\.\/esp-flasher\.js\?v=1\.9\.0-Alpha-4-otadata'\)/);
 });
 
