@@ -13,6 +13,10 @@ assert.equal(calculateC5MD5(md5Input.subarray(1, 4)), '900150983cd24fb0d6963f7d2
 
 globalThis.location = new URL('http://localhost:8000/flasher.html');
 const manifest = JSON.parse(await readFile(new URL('../firmware/c5/manifest.json', import.meta.url)));
+for (const board of ['xiao', 'zero', 'devkit', 'mini']) {
+    assert.equal(manifest.builds[`mk-${board}`].tag, 'v1.2.3', 'Stable must remain available');
+    assert.equal(manifest.builds[`mkrc-${board}`].tag, 'v1.2.4-rc.1', 'The USB timing RC must be available');
+}
 const fetchFile = async url => new Response(await readFile(new URL(`..${url.pathname}`, import.meta.url)));
 for (const [key, build] of Object.entries(manifest.builds)) {
     const files = await loadC5Firmware(build, fetchFile);
@@ -32,7 +36,7 @@ for (const [key, build] of Object.entries(manifest.builds)) {
     assert.ok(appPartition && app.data.length <= appPartition, `Application must fit its partition at 0x${app.address.toString(16)}`);
     if (build.mode === 'uart') {
         // The release, and the release candidate offered beside it.
-        const tag = 'v1.2.3';
+        const tag = key.startsWith('mkrc-') ? 'v1.2.4-rc.1' : 'v1.2.3';
         assert.equal(build.version, tag.slice(1));
         assert.equal(build.tag, tag);
         assert.equal(build.usb_timing, true);

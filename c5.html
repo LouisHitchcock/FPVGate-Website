@@ -119,6 +119,7 @@
                                 <option value="">Choose a board first...</option>
                                 <option value="rx">Single Pilot · SPI · FPVGateC5RX</option>
                                 <option value="mk">Multi Pilot · UART / USB · FPVGateC5MK</option>
+                                <option value="mkrc">Multi Pilot RC · UART / USB · 1.2.4-rc.1</option>
                             </select>
                         </div>
                         <div id="c5-release" class="c5-release" hidden aria-live="polite"></div>
@@ -147,7 +148,7 @@
                         <li>Close serial monitors using this USB port.</li>
                     </ul></div>
                     <div class="info-card"><h3>Choose Your Mode</h3><p><strong>Single Pilot · SPI</strong><br>FPVGateC5RX replaces an RX5808. A resistor/capacitor filter provides analog RSSI to your timer.</p><p><strong>Multi Pilot · UART / USB</strong><br>C5MK connects to an FPVGate S3 over UART, or directly to RotorHazard or the <a href="https://c5mk.fpvgate.xyz/">browser dashboard</a> over USB. The same board-specific firmware supports all three. Install 1.2.3 for the fast browser signal feed. The <a href="https://c5mk.fpvgate.xyz/timer/">browser lap timer</a> supports 1–4 pilots on desktop Chrome/Edge or Android Chrome; physical Android USB testing is pending and iPhone/iPad USB is not supported.</p></div>
-                    <div class="info-card"><h3>Firmware Status</h3><p>C5RX SPI builds remain alpha. C5MK 1.2.3 adds fast USB signals for the browser dashboard and lap timer, and retains the 1.2.2 RotorHazard fixes for Linux and the Raspberry Pi. These new binaries have not had a new physical-device flash or race test. The Waveshare C5-WIFI6-KIT and C5-MINI-KIT builds and physical XIAO USB are not yet hardware-tested. Validate reception and lap detection before racing.</p><p><a href="https://github.com/LouisHitchcock/FPVGateC5RX" target="_blank" rel="noopener">FPVGateC5RX source ↗</a><br><a href="https://github.com/LouisHitchcock/FPVGateC5MK" target="_blank" rel="noopener">FPVGateC5MK source ↗</a></p></div>
+                    <div class="info-card"><h3>Firmware Status</h3><p><strong>RotorHazard accuracy test: choose Multi Pilot RC · 1.2.4-rc.1.</strong> This release candidate adds native USB live/Marshal peak-history alignment, multipath crossing merging and shared samples for seats on the same frequency. Stable 1.2.3 remains a separate option. The RC has software tests, not new physical-device or camera qualification; its crossing rules are not identical to RX5808. See the <a href="https://github.com/LouisHitchcock/FPVGateC5MK/releases/tag/v1.2.4-rc.1" target="_blank" rel="noopener">RC release notes and test instructions</a>.</p><p>C5RX SPI builds remain alpha. C5MK 1.2.3 adds fast USB signals for the browser dashboard and lap timer, and retains the 1.2.2 RotorHazard fixes for Linux and the Raspberry Pi. The Waveshare C5-WIFI6-KIT and C5-MINI-KIT builds and physical XIAO USB are not yet hardware-tested. Validate reception and lap detection before racing.</p><p><a href="https://github.com/LouisHitchcock/FPVGateC5RX" target="_blank" rel="noopener">FPVGateC5RX source ↗</a><br><a href="https://github.com/LouisHitchcock/FPVGateC5MK" target="_blank" rel="noopener">FPVGateC5MK source ↗</a></p></div>
                 </aside>
             </section>
         </div>
@@ -260,6 +261,6 @@
     </div>
     <footer><div class="container"><div class="footer-meta"><p>Built for the FPV community.</p><p>Licensed under CC BY-NC-SA 4.0</p></div><div class="footer-links"><a href="docs.html">Documentation</a><a href="#flasher">C5 Flasher</a><a href="https://github.com/LouisHitchcock/FPVGateC5MK" target="_blank" rel="noopener">C5MK on GitHub</a><a href="https://discord.gg/XwammuWCCj" target="_blank" rel="noopener">Discord</a></div></div></footer>
     <script src="theme.js"></script>
-    <script type="module" src="c5-radio.js?v=20261018-v122"></script>
+    <script type="module" src="c5-radio.js?v=20261024-v124rc1"></script>
 </body>
 </html>

@@ -23,7 +23,7 @@ MANIFEST = ROOT / 'firmware/c5/manifest.json'
 RX_DEST = ROOT / 'firmware/c5/alpha-20261008'
 RX_SHA = '572a82b3c2e2a4549c5210ca5aadfb78cdb093f1'
 MK_TAG = 'v1.2.3'
-MK_RC_TAG = 'v1.2.2-rc.3'
+MK_RC_TAG = 'v1.2.4-rc.1'
 # (manifest key, PlatformIO environment, board)
 RX_BUILDS = [('rx-xiao', 'xiaoc5', 'xiao'), ('rx-zero', 'waveshare_c5_zero', 'zero'),
              ('rx-mini', 'waveshare_c5_mini', 'mini')]

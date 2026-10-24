@@ -1,6 +1,17 @@
 # C5 radio firmware
 
-All eight selections are listed in `manifest.json`, which `c5-radio.js` loads.
+All twelve selections are listed in `manifest.json`, which `c5-radio.js` loads.
+
+The existing **Multi Pilot RC** choice now offers
+[v1.2.4-rc.1](https://github.com/LouisHitchcock/FPVGateC5MK/releases/tag/v1.2.4-rc.1)
+alongside stable 1.2.3, for all four board selections. Its eight images are
+copied unchanged from the release tag into `c5mk-v1.2.4-rc.1/`; the WIFI6-KIT
+and MINI-KIT entries alias C5-Zero, as below. This RC includes native USB
+live/Marshal peak-history alignment, 300 ms multipath crossing merging and
+same-frequency sample sharing. Software tests pass, but these images still
+need camera/RX5808 comparison, physical flash, multi-transmitter and reconnect
+validation. No S3 or FPVGate plugin is needed for direct USB to RH. Stable
+1.2.3 and the SPI alpha entries are unchanged.
 
 The single-pilot SPI builds (FPVGateC5RX) are locally compiled, pinned alpha
 snapshots of the same commit, **not published upstream releases**. They are in
