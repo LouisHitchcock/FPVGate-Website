@@ -268,11 +268,89 @@ function renderProductCard(p, pi) {
 
 // --- Product Modal ---
 let modalCarouselState = 0;
+let activeProductLink = '';
+let productLinkRequest = 0;
+let linkedProductsPromise = null;
 
-function openProductModal(pi, sourceArray) {
+function productShareUrl(id) {
+    const url = new URL('shop.html', window.location.href);
+    url.searchParams.set('id', id);
+    return url.href;
+}
+
+function setProductUrl(id) {
+    const url = new URL(window.location.href);
+    if (id === null) url.searchParams.delete('id');
+    else url.searchParams.set('id', id);
+    if (url.href !== window.location.href) window.history.pushState(null, '', url.href);
+}
+
+async function copyProductLink(button) {
+    if (!activeProductLink) return;
+    try {
+        await navigator.clipboard.writeText(activeProductLink);
+        button.textContent = 'Link copied!';
+        setTimeout(() => { button.textContent = 'Copy link'; }, 2000);
+    } catch (e) {
+        window.prompt('Copy this product link:', activeProductLink);
+    }
+}
+
+function showProductLinkMessage(message, retry) {
+    let notice = document.getElementById('product-link-message');
+    if (!notice) {
+        notice = document.createElement('div');
+        notice.id = 'product-link-message';
+        notice.className = 'search-empty';
+        notice.setAttribute('role', 'status');
+        (document.querySelector('.store-hero .container') || document.body).appendChild(notice);
+    }
+    notice.textContent = message;
+    if (retry) {
+        const button = document.createElement('button');
+        button.className = 'btn btn-secondary';
+        button.textContent = 'Try again';
+        button.addEventListener('click', openProductFromUrl);
+        notice.appendChild(button);
+    }
+}
+
+async function openProductFromUrl() {
+    const request = ++productLinkRequest;
+    const id = new URL(window.location.href).searchParams.get('id');
+    document.getElementById('product-link-message')?.remove();
+    closeProductModal(false);
+    if (!id) return;
+    try {
+        if (!linkedProductsPromise) {
+            linkedProductsPromise = fetch(STORE_API + '/products').then(response => {
+                if (!response.ok) throw new Error('Could not load products');
+                return response.json();
+            }).catch(error => { linkedProductsPromise = null; throw error; });
+        }
+        const products = await linkedProductsPromise;
+        if (request !== productLinkRequest) return;
+        const index = products.findIndex(product => product.id === id);
+        if (index < 0) {
+            showProductLinkMessage('This product is unavailable or no longer listed. You can browse the store below.');
+            return;
+        }
+        window._linkedProducts = products;
+        openProductModal(index, '_linkedProducts', false);
+    } catch (e) {
+        if (request === productLinkRequest) showProductLinkMessage('Unable to load this product. Please try again.', true);
+    }
+}
+
+window.addEventListener('popstate', openProductFromUrl);
+
+function openProductModal(pi, sourceArray, updateUrl = true) {
     const arr = sourceArray || '_products';
-    const p = window[arr][pi];
+    const p = window[arr]?.[pi];
     if (!p) return;
+    if (updateUrl) { ++productLinkRequest; setProductUrl(p.id); }
+    activeProductLink = productShareUrl(p.id);
+    document.getElementById('product-link-message')?.remove();
 
     addRecentlyViewed(p);
     renderRecentlyViewed();
@@ -311,7 +389,8 @@ function openProductModal(pi, sourceArray) {
         <button class="btn btn-primary" onclick="addToCart(${arr}[${pi}])"
             ${availableQty(p) <= 0 ? 'disabled' : ''}>
             ${buyButtonLabel(p)}
-        </button>`;
+        </button>
+        <button type="button" class="btn btn-secondary" onclick="copyProductLink(this)">Copy link</button>`;
 
     const descEl = document.getElementById('modal-description');
     if (p.longDescription) {
@@ -329,7 +408,12 @@ function openProductModal(pi, sourceArray) {
     document.body.style.overflow = 'hidden';
 }
 
-function closeProductModal() { document.getElementById('product-modal').classList.remove('active'); document.body.style.overflow = ''; }
+function closeProductModal(updateUrl = true) {
+    if (updateUrl) { ++productLinkRequest; setProductUrl(null); }
+    activeProductLink = '';
+    document.getElementById('product-modal').classList.remove('active');
+    document.body.style.overflow = '';
+}
 function moveModalCarousel(dir) { const c=document.getElementById('modal-carousel');if(!c)return;const t=c.querySelectorAll('.carousel-slide').length;modalCarouselState+=dir;if(modalCarouselState<0)modalCarouselState=t-1;if(modalCarouselState>=t)modalCarouselState=0;goToModalSlide(modalCarouselState); }
 function goToModalSlide(idx) { const c=document.getElementById('modal-carousel');if(!c)return;modalCarouselState=idx;c.querySelector('.carousel-track').style.transform='translateX(-'+idx*100+'%)';c.querySelectorAll('.carousel-dot').forEach((d,i)=>d.classList.toggle('active',i===idx)); }
 document.addEventListener('keydown', function(e) { if(!document.getElementById('product-modal').classList.contains('active'))return;if(e.key==='Escape')closeProductModal();if(e.key==='ArrowLeft')moveModalCarousel(-1);if(e.key==='ArrowRight')moveModalCarousel(1); });
@@ -344,3 +428,4 @@ function escHtml(s){if(!s)return'';const d=document.createElement('div');d.textC
 updateCartUI();
 renderRecentlyViewed();
 initSearch();
+openProductFromUrl();
