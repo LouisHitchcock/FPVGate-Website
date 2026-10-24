@@ -1900,15 +1900,23 @@ async function handleUpdateInventory(productId, request, env, corsHeaders) {
 
 async function handleAddInventoryProduct(request, env, corsHeaders) {
     const body = await request.json();
-    const { product_id, product_name, sku, stock_quantity, low_stock_threshold, price, description, short_description, long_description, image_url, unit_cost, category, featured } = body;
+    const { product_id, product_name, sku, stock_quantity, low_stock_threshold, price, description, short_description, long_description, image_url, unit_cost, category, featured, preorder_enabled, preorder_ship_date, preorder_limit } = body;
 
     if (!product_id || !product_name) return jsonResponse({ error: 'product_id and product_name are required' }, corsHeaders, 400);
     if (!price) return jsonResponse({ error: 'Price is required' }, corsHeaders, 400);
 
+    const enabled = !!preorder_enabled;
+    const shipDate = preorder_ship_date || null;
+    const limit = parseInt(preorder_limit, 10) || 0;
+    if (shipDate && !/^\d{4}-\d{2}-\d{2}$/.test(shipDate)) return jsonResponse({ error: 'Pre-order ship date must be YYYY-MM-DD' }, corsHeaders, 400);
+    if (limit < 0) return jsonResponse({ error: 'Pre-order quantity cannot be negative' }, corsHeaders, 400);
+    if (enabled && !shipDate) return jsonResponse({ error: 'Set a ship date before enabling pre-orders' }, corsHeaders, 400);
+    if (enabled && limit === 0) return jsonResponse({ error: 'Set how many units can be pre-ordered before enabling pre-orders' }, corsHeaders, 400);
+
     try {
         await env.DB.prepare(
-            'INSERT INTO inventory (product_id, product_name, sku, stock_quantity, low_stock_threshold, price, description, short_description, long_description, image_url, unit_cost, category, featured) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-        ).bind(product_id, product_name, sku || null, stock_quantity || 0, low_stock_threshold || 5, price || 0, description || null, short_description || null, long_description || null, image_url || null, unit_cost || 0, category || 'fpvgate', featured ? 1 : 0).run();
+            'INSERT INTO inventory (product_id, product_name, sku, stock_quantity, low_stock_threshold, price, description, short_description, long_description, image_url, unit_cost, category, featured, preorder_enabled, preorder_ship_date, preorder_limit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        ).bind(product_id, product_name, sku || null, stock_quantity || 0, low_stock_threshold || 5, price || 0, description || null, short_description || null, long_description || null, image_url || null, unit_cost || 0, category || 'fpvgate', featured ? 1 : 0, enabled ? 1 : 0, shipDate, limit).run();
 
         if (stock_quantity && stock_quantity > 0) {
             await env.DB.prepare('INSERT INTO inventory_log (product_id, change_amount, reason) VALUES (?, ?, ?)').bind(product_id, stock_quantity, 'Initial stock').run();

@@ -125,8 +125,79 @@ async function loadInventory(){const ld=document.getElementById('inventory-loadi
 async function saveStock(pid){if(exampleReadOnly())return;const q=parseInt(document.getElementById(`si-${pid}`).value);const reason=prompt('Reason for stock change (optional):')||'Manual adjustment';try{const r=await storeApi(`/api/inventory/${encodeURIComponent(pid)}`,'PUT',{stock_quantity:q,reason});if(r.error){alert(r.error);return}loadInventory()}catch(e){alert('Failed: '+e.message)}}
 async function viewLog(pid,name){const card=document.getElementById('stock-log-card'),ct=document.getElementById('stock-log-content');document.getElementById('stock-log-title').textContent='Stock History: '+name;card.style.display='block';ct.innerHTML='<div class="loading"><div class="spinner"></div>Loading...</div>';try{const d=await storeApi(`/api/inventory/${encodeURIComponent(pid)}/log`);const log=d.log||[];if(log.length===0){ct.innerHTML='<div style="color:#a0aec0;text-align:center;padding:20px">No changes recorded</div>';return}ct.innerHTML=log.map(l=>{const dt=new Date(l.created_at).toLocaleString('en-GB');const cls=l.change_amount>=0?'log-change-pos':'log-change-neg';const sign=l.change_amount>=0?'+':'';return`<div class="log-entry"><div><span class="${cls}">${sign}${l.change_amount}</span> - ${escHtml(l.reason||'No reason')}</div><div class="log-date">${dt}</div></div>`}).join('')}catch(e){ct.innerHTML=`<div class="error-text">Failed: ${e.message}</div>`}}
 function openAddProductModal(){if(exampleReadOnly())return;document.getElementById('add-product-modal').classList.add('open');document.body.classList.add('no-scroll')}
-function closeAddProductModal(){document.getElementById('add-product-modal').classList.remove('open');document.getElementById('add-product-error').textContent='';document.body.classList.remove('no-scroll')}
-async function addProduct(){if(exampleReadOnly())return;const id=document.getElementById('new-product-id').value.trim(),nm=document.getElementById('new-product-name').value.trim(),sk=document.getElementById('new-product-sku').value.trim(),pr=parseFloat(document.getElementById('new-product-price').value)||0,desc=document.getElementById('new-product-desc').value.trim(),sdesc=document.getElementById('new-product-short-desc').value.trim(),ldesc=document.getElementById('new-product-long-desc').value.trim(),img=document.getElementById('new-product-image').value.trim(),st=parseInt(document.getElementById('new-product-stock').value)||0,th=parseInt(document.getElementById('new-product-threshold').value)||5,uc=parseFloat(document.getElementById('new-product-unit-cost').value)||0,ct=(document.getElementById('new-product-category')||{}).value||'fpvgate',fe=(document.getElementById('new-product-featured')||{}).checked,err=document.getElementById('add-product-error');err.textContent='';if(!id||!nm){err.textContent='Product ID and Name are required';return}if(!pr){err.textContent='Price is required';return}try{const r=await storeApi('/api/inventory','POST',{product_id:id,product_name:nm,sku:sk||null,price:pr,description:desc||null,short_description:sdesc||null,long_description:ldesc||null,image_url:img||null,stock_quantity:st,low_stock_threshold:th,unit_cost:uc,category:ct,featured:fe});if(r.error){err.textContent=r.error;return}closeAddProductModal();loadInventory()}catch(e){err.textContent='Failed: '+e.message}}
+let newProductImages = [], addingProduct = false, createdProductId = null;
+function closeAddProductModal(){if(addingProduct)return;document.getElementById('add-product-modal').classList.remove('open');document.getElementById('add-product-error').textContent='';document.body.classList.remove('no-scroll')}
+function updateNewPreorderFields(){document.getElementById('new-preorder-fields').hidden=!document.getElementById('new-product-preorder').checked}
+function renderNewProductImages(){
+    document.getElementById('new-img-count').textContent='('+newProductImages.length+'/8)';
+    document.getElementById('new-img-gallery').innerHTML=newProductImages.map((image,i)=>'<div class="img-thumb"><img src="'+image.url+'" alt="Selected product image"><button type="button" class="img-delete" aria-label="Remove image '+(i+1)+'" onclick="removeNewProductImage('+i+')">&times;</button>'+(i===0?'<span class="img-badge">Main</span>':'')+'</div>').join('');
+}
+function selectNewProductImages(){
+    const input=document.getElementById('new-img-file'),err=document.getElementById('add-product-error');
+    if(addingProduct){input.value='';return}
+    err.textContent='';
+    for(const file of input.files){
+        if(!file.type.startsWith('image/')){err.textContent='Please select image files only';continue}
+        if(newProductImages.length>=8){err.textContent='Maximum 8 images per product';break}
+        newProductImages.push({file,url:URL.createObjectURL(file)});
+    }
+    input.value='';renderNewProductImages();
+}
+function removeNewProductImage(index){if(addingProduct)return;URL.revokeObjectURL(newProductImages[index].url);newProductImages.splice(index,1);renderNewProductImages()}
+async function sendProductImage(pid,file){
+    let upload;try{upload=typeof normaliseProductImage==='function'?await normaliseProductImage(file):file}catch(e){upload=file}
+    const fd=new FormData();fd.append('image',upload);
+    const response=await fetch(STORE_API+'/api/inventory/'+encodeURIComponent(pid)+'/images',{method:'POST',headers:{'Authorization':'Bearer '+adminToken},body:fd});
+    const data=await response.json();
+    if(!response.ok||data.error||!data.key)throw new Error(data.error||'Image upload failed ('+response.status+')');
+    return data.key;
+}
+async function addProduct(){
+    if(exampleReadOnly()||addingProduct)return;
+    const value=id=>document.getElementById('new-product-'+id).value.trim();
+    const err=document.getElementById('add-product-error'),button=document.getElementById('add-product-submit');
+    const enabled=document.getElementById('new-product-preorder').checked;
+    const shipDate=value('preorder-date'),limit=Number(value('preorder-limit'));
+    err.textContent='';
+    if(!createdProductId){
+        if(!value('id')||!value('name')){err.textContent='Product ID and Name are required';return}
+        if(!(Number(value('price'))>0)){err.textContent='Price is required';return}
+        if(enabled&&!shipDate){err.textContent='Set a ship date before enabling pre-orders';return}
+        if(enabled&&(!Number.isInteger(limit)||limit<=0)){err.textContent='Set a positive pre-order quantity';return}
+    }
+    addingProduct=true;button.disabled=true;button.textContent='Adding product...';
+    const inputs=[...document.querySelectorAll('#add-product-modal input, #add-product-modal textarea, #add-product-modal select')];
+    try{
+        inputs.forEach(input=>input.disabled=true);
+        if(!createdProductId){
+            const result=await storeApi('/api/inventory','POST',{
+                product_id:value('id'),product_name:value('name'),sku:value('sku')||null,price:Number(value('price')),
+                description:value('desc')||null,short_description:value('short-desc')||null,long_description:value('long-desc')||null,
+                image_url:value('image')||null,stock_quantity:parseInt(value('stock'),10)||0,
+                low_stock_threshold:parseInt(value('threshold'),10)||5,unit_cost:Number(value('unit-cost'))||0,
+                category:value('category')||'fpvgate',featured:document.getElementById('new-product-featured').checked,
+                preorder_enabled:enabled,preorder_ship_date:enabled?shipDate:null,preorder_limit:enabled?limit:0
+            });
+            if(result.error)throw new Error(result.error);
+            createdProductId=value('id');
+        }
+        while(newProductImages.length){
+            button.textContent='Uploading images ('+newProductImages.length+' left)...';
+            await sendProductImage(createdProductId,newProductImages[0].file);
+            URL.revokeObjectURL(newProductImages[0].url);newProductImages.shift();renderNewProductImages();
+        }
+        createdProductId=null;
+        inputs.forEach(input=>{input.disabled=false;if(input.type==='checkbox')input.checked=false;else input.value=input.defaultValue||''});
+        document.getElementById('new-product-category').value='fpvgate';updateNewPreorderFields();
+        addingProduct=false;closeAddProductModal();loadInventory();
+    }catch(e){
+        err.textContent=(createdProductId?'Product created, but image upload failed: ':'Failed: ')+e.message+(createdProductId?' Retry to upload the remaining images.':'');
+        if(createdProductId)loadInventory();
+    }finally{
+        if(!createdProductId)inputs.forEach(input=>input.disabled=false);
+        addingProduct=false;button.disabled=false;button.textContent=createdProductId?'Retry Image Uploads':'Add Product';
+    }
+}
 let flasherCharts={};let flasherDateRange=7;
 function setFlasherDateFilter(days,btn){flasherDateRange=days;document.querySelectorAll('#section-flasherstats .filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');loadFlasherStats()}
 async function loadFlasherStats(){const ld=document.getElementById('flasher-loading'),ct=document.getElementById('flasher-content');ld.style.display='block';ct.style.display='none';try{const daysParam=flasherDateRange==='all'?'':'?days='+flasherDateRange;const data=await analyticsApi('/stats/detailed'+daysParam);renderFlasherStats(data);ld.style.display='none';ct.style.display='block'}catch(e){ld.innerHTML=`<div class="error-text">Failed to load: ${e.message}</div>`}}
