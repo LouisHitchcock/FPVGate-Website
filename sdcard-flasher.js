@@ -6,7 +6,7 @@ let sdcardReleases = [];
 
 function getSDCardUrl(version) {
     // The 1.8.4 hotfix and the 1.9.0 alphas use the same SD files as 1.8.3.
-    const sdVersion = ['v1.8.4', 'v1.9.0-Multi-Alpha-1', 'v1.9.0-Multi-Alpha-2', 'v1.9.0-Multi-Alpha-3', 'v1.9.0-Alpha-4'].includes(version) ? 'v1.8.3' : version;
+    const sdVersion = ['v1.8.4', 'v1.9.0-Multi-Alpha-1', 'v1.9.0-Multi-Alpha-2', 'v1.9.0-Multi-Alpha-3', 'v1.9.0-Alpha-4', 'v1.9.0-alpha-5'].includes(version) ? 'v1.8.3' : version;
     return `${window.location.origin}/firmware/${sdVersion}/SD_Card.zip`;
 }
 

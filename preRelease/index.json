@@ -1,6 +1,11 @@
 {
     "versions": [
         {
+            "tag": "v1.9.0-alpha-5",
+            "date": "2026-10-24",
+            "notes": "Fifth Multi-Pilot alpha for Seeed XIAO ESP32S3 and Waveshare ESP32-S3-ETH. Fixes RotorHazard live-versus-Marshal timing by timestamping RSSI peaks at their sample times and keeping clock corrections between crossings. Install the matching FPVGate RH plugin v2.3.2-rc.1 and restart RotorHazard. Existing Alpha-4 C5 receivers need no update. Firmware/filesystem builds, 58 frontend tests and 16 plugin regressions pass; camera and physical multi-transmitter validation are still pending. Earlier 1.9.0 alphas can update over the air using the matching firmware and filesystem pair."
+        },
+        {
             "tag": "v1.9.0-Alpha-4",
             "date": "2026-10-18",
             "notes": "Fourth Multi-Pilot alpha, the one after Multi-Alpha-3 (the alphas are now named 1.9.0-Alpha-N), for the Seeed XIAO ESP32S3 and the Waveshare ESP32-S3-ETH only; other boards should stay on Multi-Alpha-2. Race analysis now works in C5 races: Fastest Lap, Fastest 3 Consecutive, Best 3 Laps and Median Lap showed nothing however many laps were flown. The race screen shows those four as boxes in a row, with Consistency and Lap Times charts below, opening on Consistency. Fixes a gate rebooting when a browser disconnected, and a USB flash leaving a gate last updated over the air starting its old firmware. Adds a RotorHazard test pass (POST /api/rh/testPass). Tested on both boards, each with an ESP32-C5 receiver on C5MK 1.2.1 or later; not given Multi-Alpha-3's overnight run. Devices on earlier 1.9.0 alphas, 1.8.3 or the 1.8 release candidates can update over the air."

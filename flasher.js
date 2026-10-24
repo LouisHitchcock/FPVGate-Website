@@ -177,7 +177,8 @@ const RELEASE_BOARDS = {
     'v1.9.0-Multi-Alpha-1': ['esp32s3', 'fpvgateaio', 'fpvgatesolo', 'seeedxiaos3', 'xiaos3plus'],
     'v1.9.0-Multi-Alpha-2': ['fpvgateaio', 'fpvgatesolo', 'seeedxiaos3', 'waveshares3eth'],
     'v1.9.0-Multi-Alpha-3': ['seeedxiaos3', 'waveshares3eth'],
-    'v1.9.0-Alpha-4': ['seeedxiaos3', 'waveshares3eth']
+    'v1.9.0-Alpha-4': ['seeedxiaos3', 'waveshares3eth'],
+    'v1.9.0-alpha-5': ['seeedxiaos3', 'waveshares3eth']
 };
 
 // Fetch something that changes when a release is published, bypassing the
