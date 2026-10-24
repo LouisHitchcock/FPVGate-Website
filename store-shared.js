@@ -271,8 +271,27 @@ let modalCarouselState = 0;
 let activeProductLink = '';
 let productLinkRequest = 0;
 let linkedProductsPromise = null;
+let productPreviewLinks = null;
+let productPreviewPromise = null;
+
+function loadProductPreviewLinks() {
+    if (!productPreviewPromise) {
+        const url = new URL('product-previews.json', window.location.href);
+        productPreviewPromise = fetch(url.href, { cache: 'no-cache' }).then(response => {
+            if (!response.ok) throw new Error('Preview links unavailable');
+            return response.json();
+        }).then(links => { productPreviewLinks = links; }).catch(() => {
+            productPreviewPromise = null;
+        });
+    }
+    return productPreviewPromise;
+}
 
 function productShareUrl(id) {
+    if (productPreviewLinks && Object.hasOwn(productPreviewLinks, id)) {
+        const preview = new URL(productPreviewLinks[id], window.location.href);
+        if (preview.origin === new URL(window.location.href).origin) return preview.href;
+    }
     const url = new URL('shop.html', window.location.href);
     url.searchParams.set('id', id);
     return url.href;
@@ -287,12 +306,16 @@ function setProductUrl(id) {
 
 async function copyProductLink(button) {
     if (!activeProductLink) return;
+    const id = new URL(window.location.href).searchParams.get('id');
+    const fallback = activeProductLink;
+    await loadProductPreviewLinks();
+    const link = id ? productShareUrl(id) : fallback;
     try {
-        await navigator.clipboard.writeText(activeProductLink);
+        await navigator.clipboard.writeText(link);
         button.textContent = 'Link copied!';
         setTimeout(() => { button.textContent = 'Copy link'; }, 2000);
     } catch (e) {
-        window.prompt('Copy this product link:', activeProductLink);
+        window.prompt('Copy this product link:', link);
     }
 }
 
@@ -428,4 +451,5 @@ function escHtml(s){if(!s)return'';const d=document.createElement('div');d.textC
 updateCartUI();
 renderRecentlyViewed();
 initSearch();
+loadProductPreviewLinks();
 openProductFromUrl();

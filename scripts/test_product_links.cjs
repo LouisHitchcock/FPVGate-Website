@@ -123,3 +123,21 @@ test('Copy link uses the canonical product URL and falls back when clipboard acc
     await context.copyProductLink(button);
     assert.equal(prompts[0][1], copied[0]);
 });
+
+test('Copy link uses published preview pages and falls back for unpublished products', async () => {
+    const { context, copied } = store();
+    const preview = 'https://fpvgate.xyz/products/test-gate-123/';
+    context.fetch = async () => ({ ok: true, json: async () => ({ [product.id]: preview }) });
+    context.openProductModal(0);
+    await context.copyProductLink({});
+    assert.equal(copied[0], preview);
+    assert.equal(new URL(context.productShareUrl('brand-new')).searchParams.get('id'), 'brand-new');
+});
+
+test('preview lookup failure does not prevent copying a working product link', async () => {
+    const { context, copied } = store();
+    context.fetch = async () => { throw new Error('Network unavailable'); };
+    context.openProductModal(0);
+    await context.copyProductLink({});
+    assert.equal(new URL(copied[0]).searchParams.get('id'), product.id);
+});
