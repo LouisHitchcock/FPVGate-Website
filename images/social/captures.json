@@ -1,0 +1,110 @@
+{
+  "style": "actual-website-screenshot",
+  "capturedAt": "2026-10-25T22:25:56.760Z",
+  "viewport": {
+    "width": 1200,
+    "height": 783
+  },
+  "cards": [
+    {
+      "page": "index.html",
+      "slug": "home",
+      "title": "FPV Lap Timing System",
+      "description": "RSSI-based lap timing for solo practice and multi-pilot racing with 5.8GHz FPV drones",
+      "scrollY": 0,
+      "captureSelector": null,
+      "screenshotHash": "b61514a3b4727689e2ab183d8b6fcd36d159051eead3f2104664e85017d3baf9",
+      "imageHash": "56883a351fa07618acd1e62e92d94467040cfa5e26f416523da00ad01a7aeea9"
+    },
+    {
+      "page": "flasher.html",
+      "slug": "flasher",
+      "title": "FPVGate Web Flasher",
+      "description": "Flash FPVGate firmware directly from your browser - no command line required!",
+      "scrollY": 0,
+      "captureSelector": null,
+      "screenshotHash": "71fc0ad5eb427fe2e34e662f60bc1b28380f9ddf624555dcb85e5b15c834835c",
+      "imageHash": "2c01be189f16c10e5116da606ba46050e52875429ec6df7b7921829808bf3c09"
+    },
+    {
+      "page": "docs.html",
+      "slug": "docs",
+      "title": "Documentation",
+      "description": "Set up your FPVGate timer with an SPI receiver or C5MK multi-pilot radio.",
+      "scrollY": 0,
+      "captureSelector": null,
+      "screenshotHash": "61d6383037180b2033c31581d39ae503df964a4b0884b9ad227f33d57bfdcd76",
+      "imageHash": "c8477b920f12336a215762b311ecf558d8ab5a0680e6d065074006dc2545ba6e"
+    },
+    {
+      "page": "c5.html",
+      "slug": "c5",
+      "title": "FPVGate C5 Radio",
+      "description": "Add FPVGateC5MK multi-pilot support: up to 8 pilots with one ESP32-C5 receiver.",
+      "scrollY": 0,
+      "captureSelector": null,
+      "screenshotHash": "7ad17a35e3a56094d21386eb9a0b8970e555235ad086110825592d715e634347",
+      "imageHash": "631cb79c081887f02e865817a640d93e919d96f223659cab28b2e536c0cced99"
+    },
+    {
+      "page": "quickstart.html",
+      "slug": "quickstart",
+      "title": "FPVGate AIO Quick Start",
+      "description": "From unboxing to your first race in minutes",
+      "scrollY": 0,
+      "captureSelector": null,
+      "screenshotHash": "ecbca821c37379685848c54bd036488f87ad26f09223a5f2064389024ba1f845",
+      "imageHash": "5c7ad0f9404cf29983f44edb0485ce5caf3ce6a4d1da314c8f21fc1a0f27796d"
+    },
+    {
+      "page": "print-files.html",
+      "slug": "print-files",
+      "title": "3D Print Files",
+      "description": "Enclosures and mounts for self-built timers. Preview a part, check the print settings, download the STL.",
+      "scrollY": 0,
+      "captureSelector": ".viewer-frame",
+      "screenshotHash": "69a6a0642ce6dd4a06c6ef274c1e33d5a4bc68283c1cc892ad96342d6b82b8cf",
+      "imageHash": "cd474ec924869cfe503aa1eb21eadad36eec223a20d39ff2941615a68a9f46e4"
+    },
+    {
+      "page": "shop.html",
+      "slug": "shop",
+      "title": "FPVGate Shop",
+      "description": "Official hardware for the FPVGate lap timing system",
+      "scrollY": 120,
+      "captureSelector": null,
+      "screenshotHash": "708b64268d2b360847433c064e6f5042989d67880893127f77bec4cca76e07d8",
+      "imageHash": "8285f1879731054fc264f5473fe8ccdb235ee146b27abf6d06106e07ca106bf0"
+    },
+    {
+      "page": "shop-fpvgate.html",
+      "slug": "shop-fpvgate",
+      "title": "FPVGate Hardware",
+      "description": "FPVGate lap timers, AIO boards, and kits",
+      "scrollY": 120,
+      "captureSelector": null,
+      "screenshotHash": "d2c365f408b457f6a87bdbd7805d3938bf51bbf64b9709c0d4e9d8f626610aae",
+      "imageHash": "eb024e9a096134f690c9e6e5bdf5616128ea37541685135c07751157fe245b91"
+    },
+    {
+      "page": "shop-components.html",
+      "slug": "shop-components",
+      "title": "Components",
+      "description": "Individual parts for building and customizing your setup",
+      "scrollY": 120,
+      "captureSelector": null,
+      "screenshotHash": "22dcd405fe9aa8cef95dba4be0aeea411e786f449198fc40802e2508d39311a4",
+      "imageHash": "87ebd187543a8cf1c25407dbb747615dbfd194c9bfd7e04e72a3bb7e3ae20d0b"
+    },
+    {
+      "page": "shop-misc.html",
+      "slug": "shop-misc",
+      "title": "Miscellaneous",
+      "description": "Tools, accessories, and other items",
+      "scrollY": 0,
+      "captureSelector": "#product-grid",
+      "screenshotHash": "4e11377c8b66d01eb1173cd4304365fc8b1ebe58e7a24d680153ae009dfc8e2d",
+      "imageHash": "86ed9bbf3568515f77b9ef0239e3a46041f4e26f053c510f67360bbff1fa5225"
+    }
+  ]
+}
