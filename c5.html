@@ -159,7 +159,7 @@
             <aside class="docs-sidebar">
                 <nav class="docs-nav" aria-label="C5 guide sections">
                     <h2 class="c5-nav-heading">In this guide</h2>
-                    <a href="#flasher">C5 Firmware Flasher</a><a href="#options">Choose Your Setup</a><a href="#fpvgate">FPVGate Multi-Pilot</a><a href="#boards">Boards &amp; Wiring</a><a href="#rotorhazard">RotorHazard USB</a><a href="#single-pilot">Single-Pilot SPI</a><a href="#compatibility">Firmware &amp; Status</a><a href="#troubleshooting">Troubleshooting</a><a href="docs.html">All Documentation &rarr;</a>
+                    <a href="#flasher">C5 Firmware Flasher</a><a href="#options">Choose Your Setup</a><a href="#fpvgate">FPVGate Multi-Pilot</a><a href="#boards">Boards &amp; Wiring</a><a href="#rotorhazard">RotorHazard USB</a><a href="#browser-tools">Browser Tools</a><a href="#single-pilot">Single-Pilot SPI</a><a href="#compatibility">Firmware &amp; Status</a><a href="#troubleshooting">Troubleshooting</a><a href="docs.html">All Documentation &rarr;</a>
                 </nav>
             </aside>
             <main class="docs-main">
@@ -170,6 +170,7 @@
                         <tr><th scope="row">RX5808 / existing SPI</th><td>One per timer</td><td>SPI + analog RSSI to S3</td><td><a href="docs.html#hardware">Existing wiring and firmware</a></td></tr>
                         <tr><th scope="row">FPVGateC5MK</th><td>Up to 8 per C5</td><td>UART to S3</td><td><a href="#fpvgate">FPVGate multi-pilot</a></td></tr>
                         <tr><th scope="row">FPVGateC5MK 1.2.0+</th><td>Up to 8 per C5</td><td>Native USB to RH computer</td><td><a href="#rotorhazard">RotorHazard USB</a></td></tr>
+                        <tr><th scope="row">FPVGateC5MK</th><td>1&ndash;4 in the browser timer</td><td>USB to a phone or computer</td><td><a href="#browser-tools">Browser lap timer and tools</a></td></tr>
                         <tr><th scope="row">FPVGateC5RX</th><td>One per timer</td><td>SPI + filtered analog RSSI to S3</td><td><a href="#single-pilot">C5 as an RX5808 replacement</a></td></tr>
                     </tbody></table></div>
                     <p>C5MK scans pilot channels in sequence and sends separate, timestamped readings. It supports 5180&ndash;5917 MHz, including Raceband R1&ndash;R8; Boscam E7 and E8 are outside that range. About 1,000 readings per pilot per second has been measured with eight Raceband channels. This is a receiver sampling rate, not a lap-accuracy guarantee.</p>
@@ -218,8 +219,19 @@
                         <li>In RotorHazard, open <strong>Advanced Settings &rarr; Hardware &rarr; Serial Ports</strong>, add the C5's port and restart RH. On Linux, use a persistent <code>/dev/serial/by-id/</code> path when available.</li>
                         <li>Assign pilot seats and frequencies, then calibrate EnterAt and ExitAt in Sensor Tuning. Verify intentional gate passes before starting a race.</li>
                     </ol>
-                    <p>Direct USB has been checked on a Waveshare C5-Zero, on Windows and on a Raspberry Pi 4 with RotorHazard 4.4.0; physical XIAO USB validation is still pending. See the <a href="https://github.com/LouisHitchcock/FPVGateC5MK/blob/v1.2.3/docs/USB_ROTORHAZARD.md" target="_blank" rel="noopener">USB setup guide</a> for details.</p>
+                    <p>Direct USB has been checked on a Waveshare C5-Zero, on Windows and on a Raspberry Pi 4 with RotorHazard 4.4.0; physical XIAO USB validation is still pending. See <a href="https://c5mk.fpvgate.xyz/rotorhazard/">C5MK with RotorHazard</a> for a step-by-step guide and a comparison with RX5808 nodes, and the <a href="https://github.com/LouisHitchcock/FPVGateC5MK/blob/v1.2.3/docs/USB_ROTORHAZARD.md" target="_blank" rel="noopener">USB setup guide</a> for technical details.</p>
                     <p><strong>Already connecting an S3 timer to RH?</strong> That uses the <a href="docs.html#rotorhazard">FPVGate network plugin</a> instead. Multi-pilot S3 builds need plugin 2; Multi-Alpha-3's Marshal support uses plugin 2.1.4 or later. Choose one control path for each receiver.</p>
+                </section>
+                <section id="browser-tools" class="doc-section">
+                    <h2>Browser tools for C5MK</h2>
+                    <div class="c5-path" aria-label="Connection path">C5MK <span>&rarr; USB &rarr;</span> Phone or computer browser</div>
+                    <p>Plug a C5MK receiver into a computer or Android phone and these free tools run in the browser, with no install, account or upload. Use Chrome or Edge on a computer, or Chrome on Android. iPhone and iPad browsers cannot connect to USB devices.</p>
+                    <div class="c5-table-scroll"><table class="c5-table"><caption>C5MK browser tools</caption><thead><tr><th scope="col">Tool</th><th scope="col">What it does</th></tr></thead><tbody>
+                        <tr><th scope="row"><a href="https://c5mk.fpvgate.xyz/timer/">FPV lap timer</a></th><td>Practice or race with 1&ndash;4 pilots, with spoken lap times, sensitivity presets, RSSI graphs and CSV results</td></tr>
+                        <tr><th scope="row"><a href="https://c5mk.fpvgate.xyz/">Live signal dashboard</a></th><td>Up to eight pilot channels with live RSSI, peak hold, a waterfall and optional 5180&ndash;5917 MHz spectrum sweeps</td></tr>
+                        <tr><th scope="row"><a href="https://c5mk.fpvgate.xyz/vtx/">VTX channel check</a></th><td>Find a quad's video channel, check its centre frequency and compare its power with a saved reference</td></tr>
+                    </tbody></table></div>
+                    <p>Only one program can use the receiver's USB port at a time: close RotorHazard and serial monitors first. Physical Android USB testing is still pending.</p>
                 </section>
                 <section id="single-pilot" class="doc-section">
                     <h2>Single-pilot SPI receivers</h2>
@@ -261,7 +273,7 @@
             </main>
         </div>
     </div>
-    <footer><div class="container"><div class="footer-meta"><p>Built for the FPV community.</p><p>Licensed under CC BY-NC-SA 4.0</p></div><div class="footer-links"><a href="docs.html">Documentation</a><a href="#flasher">C5 Flasher</a><a href="https://github.com/LouisHitchcock/FPVGateC5MK" target="_blank" rel="noopener">C5MK on GitHub</a><a href="https://discord.gg/XwammuWCCj" target="_blank" rel="noopener">Discord</a></div></div></footer>
+    <footer><div class="container"><div class="footer-meta"><p>Built for the FPV community.</p><p>Licensed under CC BY-NC-SA 4.0</p></div><div class="footer-links"><a href="docs.html">Documentation</a><a href="#flasher">C5 Flasher</a><a href="https://c5mk.fpvgate.xyz/timer/">Browser Lap Timer</a><a href="https://github.com/LouisHitchcock/FPVGateC5MK" target="_blank" rel="noopener">C5MK on GitHub</a><a href="https://discord.gg/XwammuWCCj" target="_blank" rel="noopener">Discord</a></div></div></footer>
     <script src="theme.js"></script>
     <script type="module" src="c5-radio.js?v=20261024-v124rc1"></script>
 </body>
