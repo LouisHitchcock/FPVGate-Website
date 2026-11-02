@@ -73,6 +73,12 @@ export default {
         });
       }
 
+      if (url.pathname === '/stats/c5' && request.method === 'GET') {
+        const days = Math.min(Math.max(parseInt(url.searchParams.get('days')) || 30, 1), 3650);
+        const since = new Date(Date.now() - days * 86400000).toISOString();
+        const rows = await env.DB.prepare(`SELECT event_name, board, version, error_message, COUNT(*) as count FROM analytics_events WHERE event_name GLOB 'c5_*' AND timestamp >= ? GROUP BY event_name, board, version, error_message ORDER BY count DESC`).bind(since).all();
+        return new Response(JSON.stringify({rows: rows.results}), {headers: {...corsHeaders, 'Content-Type': 'application/json'}});
+      }
       // GET /stats - Get analytics statistics
       if (url.pathname === '/stats' && request.method === 'GET') {
         const stats = await getStats(env.DB);

@@ -57,7 +57,7 @@ function signOut(){localStorage.removeItem('fpvgate_admin_token');localStorage.r
 window.addEventListener('DOMContentLoaded',()=>{initAuth()});
 
 let currentEmailFilter=null;
-function switchSection(name,btn){document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.getElementById('section-'+name).classList.add('active');if(btn)btn.classList.add('active');document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-overlay').classList.remove('open');document.body.classList.remove('no-scroll');if(liveStatsInterval){clearInterval(liveStatsInterval);liveStatsInterval=null}if(name==='dashboard')loadDashboard();else if(name==='orders')loadOrders();else if(name==='livestats'){loadLiveStats();liveStatsInterval=setInterval(loadLiveStats,30000)}else if(name==='inventory')loadInventory();else if(name==='flasherstats')loadFlasherStats();else if(name==='analytics')loadAnalytics();else if(name==='users')loadUsers();else if(name==='emails')loadEmails();else if(name==='tools')loadShortUrls()}
+function switchSection(name,btn){document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.getElementById('section-'+name).classList.add('active');if(btn)btn.classList.add('active');document.getElementById('sidebar').classList.remove('open');document.getElementById('sidebar-overlay').classList.remove('open');document.body.classList.remove('no-scroll');if(liveStatsInterval){clearInterval(liveStatsInterval);liveStatsInterval=null}if(name==='dashboard')loadDashboard();else if(name==='orders')loadOrders();else if(name==='livestats'){loadLiveStats();liveStatsInterval=setInterval(loadLiveStats,30000)}else if(name==='inventory')loadInventory();else if(name==='flasherstats')loadFlasherStats();else if(name==='c5stats')loadC5Stats();else if(name==='analytics')loadAnalytics();else if(name==='users')loadUsers();else if(name==='emails')loadEmails();else if(name==='tools')loadShortUrls()}
 function toggleSidebar(){const sb=document.getElementById('sidebar');const ov=document.getElementById('sidebar-overlay');sb.classList.toggle('open');ov.classList.toggle('open');document.body.classList.toggle('no-scroll',sb.classList.contains('open'))}
 
 async function storeApi(path,method='GET',body=null){if(IS_DEBUG_PORTAL)return getDebugStoreResponse(path,method,body);return rawStoreApi(path,method,body)}
@@ -550,4 +550,14 @@ ${o.label_url?'<div class="label-page"><iframe src="'+esc(o.label_url)+'#toolbar
 </body></html>`);
         w.document.close();
     }catch(e){alert('Failed to generate invoice: '+e.message)}
+}
+
+async function loadC5Stats(){
+ const summary=document.getElementById('c5-stats-summary'),body=document.getElementById('c5-stats-rows');summary.textContent='Loading...';body.replaceChildren();
+ try{const data=await analyticsApi('/stats/c5?days='+document.getElementById('c5-stats-days').value);if(!Array.isArray(data.rows))throw new Error('Deploy the updated analytics Worker.');
+ const count=name=>data.rows.filter(r=>r.event_name==='c5_'+name).reduce((n,r)=>n+Number(r.count),0),ok=count('flash_complete'),failed=count('flash_failed');
+ summary.textContent=`Started: ${count('flash_started')} | Successful: ${ok} | Failed: ${failed} | Cancelled: ${count('connection_cancelled')} | Success rate: ${ok+failed?Math.round(ok/(ok+failed)*100)+'%':'?'}`;
+ for(const r of data.rows){const tr=document.createElement('tr');for(const v of [r.event_name.replace('c5_',''),r.board,r.version,r.error_message,r.count]){const td=document.createElement('td');td.textContent=v??'?';tr.append(td)}body.append(tr)}
+ if(!data.rows.length)summary.textContent='No C5 events recorded for this period.';
+ }catch(e){summary.textContent='Unable to load C5 analytics: '+e.message}
 }

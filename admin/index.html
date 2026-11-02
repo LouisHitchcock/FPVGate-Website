@@ -22,6 +22,7 @@
 <button class="nav-item" onclick="switchSection('livestats',this)"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>Live Stats<span class="live-indicator" style="margin-left:6px"><span class="live-dot"></span></span></button>
 <button class="nav-item" onclick="switchSection('inventory',this)"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>Inventory<span class="nav-badge" id="low-stock-badge" style="display:none">!</span></button>
 <button class="nav-item" onclick="switchSection('flasherstats',this)"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>Flasher Stats</button>
+<button class="nav-item" onclick="switchSection('c5stats',this)">C5 Flasher</button>
 <button class="nav-item" onclick="switchSection('analytics',this)"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>Analytics</button>
 <button class="nav-item" onclick="switchSection('emails',this)"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>Sent Emails</button>
 <button class="nav-item" onclick="switchSection('users',this)"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>Users</button>
@@ -145,6 +146,7 @@
 </div>
 </div>
 
+<div id="section-c5stats" class="section"><div class="page-header"><h2>C5 Flasher</h2><p>Selections, flash outcomes and errors. Tracking starts after deployment.</p></div><div class="controls"><select id="c5-stats-days" onchange="loadC5Stats()"><option value="7">7 Days</option><option value="30" selected>30 Days</option><option value="90">90 Days</option><option value="365">1 Year</option></select><button class="refresh-btn" onclick="loadC5Stats()">Refresh</button></div><p id="c5-stats-summary"></p><div class="card table-responsive"><table><thead><tr><th>Event</th><th>Board</th><th>Version</th><th>Error</th><th>Count</th></tr></thead><tbody id="c5-stats-rows"></tbody></table></div></div>
 <div id="section-analytics" class="section">
 <div class="page-header"><h2>Analytics</h2><p>Revenue, profit, forecasting and shipping insights</p></div>
 <div class="controls">
@@ -427,6 +429,6 @@
 <div class="modal-actions"><button class="btn btn-secondary" onclick="closeEditProductModal()">Cancel</button><button class="btn btn-primary" onclick="saveEditProduct()">Save Changes</button></div>
 </div></div>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="script.js?v=20261024a"></script>
+<script src="script.js?v=20261102-c5"></script>
 </body>
 </html>

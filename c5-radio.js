@@ -9,11 +9,13 @@ let catalog;
 let loading;
 let busy = false;
 
+function trackC5(event, build, extra = {}) { try { window.fpvgateAnalytics?.track('c5_' + event, {board: board.value, version: build.version, category: 'c5', event_data: {project: build.project, environment: build.environment, mode: build.mode}, ...extra}); } catch {} }
+
 const escape = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
 
 async function loadCatalog() {
     if (catalog) return catalog;
-    if (!loading) loading = fetch('firmware/c5/manifest.json?v=c5mk-1.2.4-rc.1', { cache: 'no-cache' })
+    if (!loading) loading = fetch('firmware/c5/manifest.json?v=c5mk-1.2.2-rc.1', { cache: 'no-cache' })
         .then(response => {
             if (!response.ok) throw new Error('C5 firmware could not be loaded. Check your connection and reselect your board to retry.');
             return response.json();
@@ -114,6 +116,7 @@ async function selectBuild() {
         if (selectedKey() !== selected) return;
         const build = data.builds[selected];
         if (!build) throw new Error('Firmware is not available for this board yet.');
+        trackC5('build_selected', build);
         byId('c5-release').innerHTML = `<strong>${escape(build.project)} · ${escape(build.version)}</strong><small>${build.usb_timing ? 'UART / USB' : escape(build.mode.toUpperCase())} mode · ESP32-C5 · <a href="https://github.com/LouisHitchcock/${build.project}/commit/${build.commit}" target="_blank" rel="noopener">Source ${escape(build.commit.slice(0, 7))}</a></small><small>${build.tag ? `Release <a href="https://github.com/LouisHitchcock/${build.project}/releases/tag/${escape(build.tag)}" target="_blank" rel="noopener">${escape(build.tag)}</a>` : 'Pinned alpha build'} · ${escape(build.environment)}${pendingNote(build)}</small>`;
         byId('c5-release').hidden = false;
         showWiring(build);
@@ -145,6 +148,7 @@ button.addEventListener('click', async () => {
     try {
         // Must run directly in this user gesture, before downloads or imports.
         const port = await navigator.serial.requestPort();
+        trackC5('flash_started', build);
         await flashC5({
             port, build, erase: byId('c5-erase').checked,
             onStatus: message => { status.textContent = message; },
@@ -152,8 +156,10 @@ button.addEventListener('click', async () => {
             onLog: message => { const log = byId('c5-log'); log.textContent = (log.textContent + message + '\n').slice(-24000); log.scrollTop = log.scrollHeight; }
         });
         byId('c5-complete').hidden = false;
+        trackC5('flash_complete', build);
     } catch (error) {
         const cancelled = error.name === 'NotFoundError';
+        trackC5(cancelled ? 'connection_cancelled' : 'flash_failed', build, {error_message: cancelled ? null : String(error.message).slice(0,500)});
         status.textContent = cancelled ? 'Connection cancelled. Ready when you are.' : 'C5 flashing failed. You can retry.';
         if (!cancelled) {
             byId('c5-error').textContent = error.message;
