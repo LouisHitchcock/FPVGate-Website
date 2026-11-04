@@ -15,7 +15,7 @@ globalThis.location = new URL('http://localhost:8000/flasher.html');
 const manifest = JSON.parse(await readFile(new URL('../firmware/c5/manifest.json', import.meta.url)));
 for (const board of ['xiao', 'zero', 'devkit', 'mini']) {
     assert.equal(manifest.builds[`mk-${board}`].tag, 'v1.2.5', 'Stable must point to published v1.2.5');
-    assert.equal(manifest.builds[`mkrc-${board}`].tag, 'v1.2.4-rc.1', 'The USB timing RC must be available');
+    assert.equal(manifest.builds[`mkrc-${board}`], undefined, 'Retired RC must not be offered');
 }
 const fetchFile = async url => new Response(await readFile(new URL(`..${url.pathname}`, import.meta.url)));
 for (const [key, build] of Object.entries(manifest.builds)) {
@@ -35,12 +35,11 @@ for (const [key, build] of Object.entries(manifest.builds)) {
     }
     assert.ok(appPartition && app.data.length <= appPartition, `Application must fit its partition at 0x${app.address.toString(16)}`);
     if (build.mode === 'uart') {
-        // The release, and the release candidate offered beside it.
-        const tag = key.startsWith('mkrc-') ? 'v1.2.4-rc.1' : 'v1.2.5';
+        const tag = 'v1.2.5';
         assert.equal(build.version, tag.slice(1));
         assert.equal(build.tag, tag);
         assert.equal(build.usb_timing, true);
-        if (!key.startsWith('mkrc-')) assert.equal(build.commit, '396dfe724df9ed5c236e82792522b7bfecfbe903', 'Published source tag');
+        assert.equal(build.commit, '396dfe724df9ed5c236e82792522b7bfecfbe903', 'Published source tag');
         assert.equal(otaSlots, 2, 'MK needs two app slots for updates through FPVGate');
         assert.equal(otaData, files[2].address, 'OTA data must be written where the partition table puts it');
         const version = Buffer.from(app.data.subarray(48, 80)).toString('latin1').split('\0')[0];

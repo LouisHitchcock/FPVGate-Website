@@ -1,7 +1,7 @@
 # C5 radio firmware
 
-All twelve selections are listed in manifest.json. Stable Multi Pilot uses
-v1.2.5, tag commit 396dfe7. Previous RC 1.2.4-rc.1 remains available.
+All eight selections are listed in manifest.json. Stable Multi Pilot uses
+v1.2.5, tag commit 396dfe7. Previous RC 1.2.4-rc.1 is no longer offered in the flasher.
 WIFI6-KIT/MINI-KIT alias C5-Zero; physical tests on those boards are pending.
 Images are hosted on this origin and size/SHA-256 checked before serial access.
 C5MK offsets are 0x2000 bootloader, 0x8000 partitions, 0xf000 OTA data and
@@ -48,8 +48,7 @@ tested on hardware yet. Some MINI-KITs carry ESP32-C5 revision v1.2, which espto
 with `esptool --no-stub`.
 
 To package a later MK release, check out its tag, set `MK_TAG` in
-`scripts/package_c5_alpha.py`, and run it with `--mk MK_CHECKOUT` only. For a
-release candidate, set `MK_RC_TAG` and use `--mk-rc MK_CHECKOUT`. The script
+`scripts/package_c5_alpha.py`, and run it with `--mk MK_CHECKOUT` only. The script
 checks the checkout is at the tag and each image's version and board.
 
 ## Sources and build changes

@@ -124,7 +124,6 @@
                                 <option value="">Choose a board first...</option>
                                 <option value="rx">Single Pilot · SPI · FPVGateC5RX</option>
                                 <option value="mk">Multi Pilot · UART / USB · 1.2.5</option>
-                                <option value="mkrc">Previous RC · UART / USB · 1.2.4-rc.1</option>
                             </select>
                         </div>
                         <div id="c5-release" class="c5-release" hidden aria-live="polite"></div>
@@ -153,7 +152,7 @@
                         <li>Close serial monitors using this USB port.</li>
                     </ul></div>
                     <div class="info-card"><h3>Choose Your Mode</h3><p><strong>Single Pilot · SPI</strong><br>FPVGateC5RX replaces an RX5808. A resistor/capacitor filter provides analog RSSI to your timer.</p><p><strong>Multi Pilot · UART / USB</strong><br>C5MK connects to an FPVGate S3 over UART, or directly to RotorHazard or the <a href="https://c5mk.fpvgate.xyz/">browser dashboard</a> over USB. The same board-specific firmware supports all three. Install 1.2.5 for current multi-pilot firmware and the fast browser signal feed. The <a href="https://c5mk.fpvgate.xyz/timer/">browser lap timer</a> supports 1–4 pilots on desktop Chrome/Edge or Android Chrome; physical Android USB testing is pending and iPhone/iPad USB is not supported.</p></div>
-                    <div class="info-card"><h3>Firmware Status</h3><p><strong>Stable multi-pilot firmware: 1.2.5.</strong> This release includes shared samples for seats on the same frequency, multipath crossing merging and RotorHazard live/Marshal peak-history alignment. Select Multi Pilot to install it. The previous 1.2.4-rc.1 remains available for comparison. See the <a href="https://github.com/LouisHitchcock/FPVGateC5MK/releases/tag/v1.2.5" target="_blank" rel="noopener">1.2.5 release notes and validation limits</a>.</p><p>C5MK uses the same board-specific image for FPVGate UART, native RotorHazard USB and browser tools. The complete FPVGate and direct USB timing paths can still differ; calibrate each installation. Independent RF/timing and additional XIAO USB validation remain pending. C5RX SPI builds remain alpha; WIFI6-KIT and MINI-KIT selections have not been hardware-tested.</p><p><a href="https://github.com/LouisHitchcock/FPVGateC5RX" target="_blank" rel="noopener">FPVGateC5RX source &#8599;</a><br><a href="https://github.com/LouisHitchcock/FPVGateC5MK" target="_blank" rel="noopener">FPVGateC5MK source &#8599;</a></p></div>
+                    <div class="info-card"><h3>Firmware Status</h3><p><strong>Stable multi-pilot firmware: 1.2.5.</strong> This release includes shared samples for seats on the same frequency, multipath crossing merging and RotorHazard live/Marshal peak-history alignment. Select Multi Pilot to install it. See the <a href="https://github.com/LouisHitchcock/FPVGateC5MK/releases/tag/v1.2.5" target="_blank" rel="noopener">1.2.5 release notes and validation limits</a>.</p><p>C5MK uses the same board-specific image for FPVGate UART, native RotorHazard USB and browser tools. The complete FPVGate and direct USB timing paths can still differ; calibrate each installation. Independent RF/timing and additional XIAO USB validation remain pending. C5RX SPI builds remain alpha; WIFI6-KIT and MINI-KIT selections have not been hardware-tested.</p><p><a href="https://github.com/LouisHitchcock/FPVGateC5RX" target="_blank" rel="noopener">FPVGateC5RX source &#8599;</a><br><a href="https://github.com/LouisHitchcock/FPVGateC5MK" target="_blank" rel="noopener">FPVGateC5MK source &#8599;</a></p></div>
                 </aside>
             </section>
         </div>
@@ -281,6 +280,6 @@
     <footer><div class="container"><div class="footer-meta"><p>Built for the FPV community.</p><p>Licensed under CC BY-NC-SA 4.0</p></div><div class="footer-links"><a href="docs.html">Documentation</a><a href="#flasher">C5 Flasher</a><a href="https://c5mk.fpvgate.xyz/timer/">Browser Lap Timer</a><a href="https://github.com/LouisHitchcock/FPVGateC5MK" target="_blank" rel="noopener">C5MK on GitHub</a><a href="https://discord.gg/XwammuWCCj" target="_blank" rel="noopener">Discord</a></div></div></footer>
     <script src="theme.js"></script>
     <script src="analytics-tracker.js"></script>
-    <script type="module" src="c5-radio.js?v=20261104-v125"></script>
+    <script type="module" src="c5-radio.js?v=20261104-v125-stable"></script>
 </body>
 </html>

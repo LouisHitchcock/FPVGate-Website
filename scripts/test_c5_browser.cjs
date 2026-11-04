@@ -23,6 +23,7 @@ const catalog = require('../firmware/c5/manifest.json');
         assert.equal(await page.locator('#prerelease-mode').isChecked(), true);
         await page.locator('.nav-links a[href="c5.html"]').click();
         await page.waitForSelector('#c5-panel');
+        assert.equal(await page.locator('#c5-firmware option[value="mkrc"]').count(), 0);
         assert.equal(await page.locator('#standard-flasher').count(), 0);
         assert.equal(await page.locator('#c5-firmware').isDisabled(), true);
         assert.equal(await page.locator('#c5-flash').isDisabled(), true);
