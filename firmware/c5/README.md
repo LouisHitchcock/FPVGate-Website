@@ -1,31 +1,21 @@
 # C5 radio firmware
 
-All twelve selections are listed in `manifest.json`, which `c5-radio.js` loads.
-
-The existing **Multi Pilot RC** choice now offers
-[v1.2.4-rc.1](https://github.com/LouisHitchcock/FPVGateC5MK/releases/tag/v1.2.4-rc.1)
-alongside stable 1.2.3, for all four board selections. Its eight images are
-copied unchanged from the release tag into `c5mk-v1.2.4-rc.1/`; the WIFI6-KIT
-and MINI-KIT entries alias C5-Zero, as below. This RC includes native USB
-live/Marshal peak-history alignment, 300 ms multipath crossing merging and
-same-frequency sample sharing. Software tests pass, but these images still
-need camera/RX5808 comparison, physical flash, multi-transmitter and reconnect
-validation. No S3 or FPVGate plugin is needed for direct USB to RH. Stable
-1.2.3 and the SPI alpha entries are unchanged.
+All twelve selections are listed in manifest.json. Stable Multi Pilot uses
+v1.2.5, tag commit 396dfe7. Previous RC 1.2.4-rc.1 remains available.
+WIFI6-KIT/MINI-KIT alias C5-Zero; physical tests on those boards are pending.
+Images are hosted on this origin and size/SHA-256 checked before serial access.
+C5MK offsets are 0x2000 bootloader, 0x8000 partitions, 0xf000 OTA data and
+0x20000 application, matching the actual partition table.
 
 The single-pilot SPI builds (FPVGateC5RX) are locally compiled, pinned alpha
 snapshots of the same commit, **not published upstream releases**. They are in
 `alpha-20261008/`; the Mini build was added on 2026-10-15.
 
-The multi-pilot UART/USB builds (FPVGateC5MK) are the published
-[v1.2.3 release](https://github.com/LouisHitchcock/FPVGateC5MK/releases/tag/v1.2.3),
-copied unchanged from that tag's `release/<board>/` folders into `c5mk-v1.2.3/`.
-(`c5mk-v1.1.0/`, `c5mk-v1.2.0/`, `c5mk-v1.2.1/` and the 1.2.2 release candidates
-in `c5mk-v1.2.2-rc.*/` are earlier builds, no longer listed.) 1.2.2 makes direct
-USB timing with RotorHazard work on Linux and the Raspberry Pi. 1.2.3 adds the
-fast USB scanner for the browser dashboard and lap timer; UART and RH are unchanged.
-These 1.2.3 binaries have not had a new physical flash or race test. Physical
-Android USB testing is also pending.
+Stable multi-pilot UART/USB uses published v1.2.5, copied byte-for-byte from
+the tagged release/<board>/ folders into c5mk-v1.2.5/. Older release folders
+remain available but are not the stable selection. New-image physical smoke
+remains pending; linked OTA/rollback/sampling evidence applies to equivalent
+1.2.4-rc.1 runtime. The full FPVGate and direct USB timing paths still differ.
 From 1.1.0 the C5 has two app slots, and FPVGate 1.9.0-Multi-Alpha-3 and later can
 update it over the UART link. A C5 flashed with the earlier 2026-10-08 MK alpha
 must be reflashed here once before the gate can update it.
@@ -34,7 +24,7 @@ The same MK images also expose eight native RH serial receivers over USB,
 without an S3 or plugin. Configure the serial port in RH once and restart it.
 Waveshare USB is tested on Windows and on a Raspberry Pi 4 with RotorHazard 4.4.0;
 physical XIAO USB validation is pending. See the
-[USB setup guide](https://github.com/LouisHitchcock/FPVGateC5MK/blob/v1.2.3/docs/USB_ROTORHAZARD.md).
+[USB setup guide](https://github.com/LouisHitchcock/FPVGateC5MK/blob/v1.2.5/docs/USB_ROTORHAZARD.md).
 
 | Selection | Source | Environment | Pins on C5 |
 |---|---|---|---|
@@ -42,7 +32,7 @@ physical XIAO USB validation is pending. See the
 | Waveshare C5-Zero Single Pilot / SPI | same RX commit | `waveshare_c5_zero` | CLK 4, DATA 5, SEL 6, RSSI 10 |
 | Waveshare C5-WIFI6-KIT / C5-DevKitC-1 Single Pilot / SPI | the C5-Zero image | `waveshare_c5_zero` | CLK 4, DATA 5, SEL 6, RSSI 10 |
 | Waveshare C5-MINI-KIT Single Pilot / SPI | same RX commit | `waveshare_c5_mini` (adaptation below) | CLK 4, DATA 5, SEL 1, RSSI 10 |
-| XIAO Multi Pilot / UART or USB | FPVGateC5MK `v1.2.3` | `xiaoc5` | RX 23 / D4, TX 24 / D5 (UART only) |
+| XIAO Multi Pilot / UART or USB | FPVGateC5MK `v1.2.5` | `xiaoc5` | RX 23 / D4, TX 24 / D5 (UART only) |
 | Waveshare C5-Zero Multi Pilot / UART or USB | same MK release | `c5zero` | RX 4, TX 5 (UART only) |
 | Waveshare C5-WIFI6-KIT / C5-DevKitC-1 Multi Pilot | the C5-Zero image | `c5zero` | RX 4, TX 5 (UART only) |
 | Waveshare C5-MINI-KIT Multi Pilot | the C5-Zero image | `c5zero` | RX 4, TX 5 (UART only) |
@@ -65,7 +55,7 @@ checks the checkout is at the tag and each image's version and board.
 ## Sources and build changes
 
 - [FPVGateC5RX source](https://github.com/LouisHitchcock/FPVGateC5RX/tree/572a82b3c2e2a4549c5210ca5aadfb78cdb093f1)
-- [FPVGateC5MK v1.2.3 release](https://github.com/LouisHitchcock/FPVGateC5MK/releases/tag/v1.2.3)
+- [FPVGateC5MK v1.2.5 release](https://github.com/LouisHitchcock/FPVGateC5MK/releases/tag/v1.2.5)
 - [Seeed pin definitions](https://github.com/espressif/arduino-esp32/blob/master/variants/XIAO_ESP32C5/pins_arduino.h)
 - [Espressif ESP32-C5-DevKitC-1 header pins](https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32c5/esp32-c5-devkitc-1/user_guide.html)
 - [Waveshare ESP32-C5-WIFI6-KIT](https://docs.waveshare.com/ESP32-C5-WIFI6-KIT) and [ESP32-C5-MINI-KIT](https://docs.waveshare.com/ESP32-C5-MINI-KIT) pinouts
