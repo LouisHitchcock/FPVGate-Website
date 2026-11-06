@@ -21,14 +21,14 @@ ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / 'firmware/c5/manifest.json'
 RX_DEST = ROOT / 'firmware/c5/alpha-20261008'
 RX_SHA = '572a82b3c2e2a4549c5210ca5aadfb78cdb093f1'
-MK_TAG = 'v1.2.5'
+MK_TAG = 'v1.2.6'
 # (manifest key, PlatformIO environment, board)
 RX_BUILDS = [('rx-xiao', 'xiaoc5', 'xiao'), ('rx-zero', 'waveshare_c5_zero', 'zero'),
              ('rx-mini', 'waveshare_c5_mini', 'mini')]
 # Boards that use another board's images unchanged: the ESP32-C5-DevKitC-1
 # layout (Waveshare ESP32-C5-WIFI6-KIT) has the C5-Zero's GPIO4/5/6/10, and the
-# Waveshare ESP32-C5-MINI-KIT its GPIO4/5 for the MK link. Neither firmware uses
-# any other board pin.
+# Waveshare ESP32-C5-MINI-KIT its GPIO4/5 for the MK link. MK 1.2.6 also
+# drives GPIO27 for the onboard status LED; alias-board LEDs are unqualified.
 ALIASES = {'rx-devkit': ('rx-zero', 'devkit'), 'mk-devkit': ('mk-zero', 'devkit'), 'mk-mini': ('mk-zero', 'mini')}
 ORDER = ['rx-xiao', 'rx-zero', 'rx-devkit', 'rx-mini', 'mk-xiao', 'mk-zero', 'mk-devkit', 'mk-mini']
 
