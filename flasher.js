@@ -191,7 +191,8 @@ const RELEASE_BOARDS = {
     'v1.9.0-Multi-Alpha-2': ['fpvgateaio', 'fpvgatesolo', 'seeedxiaos3', 'waveshares3eth'],
     'v1.9.0-Multi-Alpha-3': ['seeedxiaos3', 'waveshares3eth'],
     'v1.9.0-Alpha-4': ['seeedxiaos3', 'waveshares3eth'],
-    'v1.9.0-alpha-5': ['seeedxiaos3', 'waveshares3eth', 'esp32s3', 'fpvgateaio', 'fpvgatesolo', 'fpvgatec5mkaio']
+    'v1.9.0-alpha-5': ['seeedxiaos3', 'waveshares3eth', 'esp32s3', 'fpvgateaio', 'fpvgatesolo', 'fpvgatec5mkaio'],
+    'v1.9.0-alpha-6': ['seeedxiaos3', 'waveshares3eth', 'esp32s3', 'fpvgateaio', 'fpvgatesolo', 'fpvgatec5mkaio']
 };
 
 // Fetch something that changes when a release is published, bypassing the
@@ -503,7 +504,7 @@ function generateManifest() {
     // firmware/v1.5.7/ESP32S3-Devkit-C1/S3_Devkit_bootloader.bin
     // Pre-release firmware uses preRelease/ folder instead of firmware/
     const baseUrl = new URL(window.location.href);
-    const firmwareFolder = selectedVersion.isLocalPreRelease ? 'preRelease' : 'firmware';
+    const firmwareFolder = (selectedVersion.isLocalPreRelease || version === 'v1.9.0-alpha-6') ? 'preRelease' : 'firmware';
     const useModernLayout = shouldUseModernFirmwareLayout(version, firmwareFolder);
     const firmwareDir = useModernLayout
         ? (boardConfig.modernFirmwareDir || boardConfig.firmwareDir)
@@ -521,6 +522,15 @@ function generateManifest() {
         };
     });
     
+    // Alpha-6 ships an OTA selector as well as app0. Without it, keeping NVS
+    // on a board previously updated over the air can leave app1 selected.
+    if (version === 'v1.9.0-alpha-6') {
+        parts.splice(2, 0, {
+            path: new URL(`${firmwareFolder}/${version}/boot_app0.bin`, baseUrl).href,
+            offset: 0xe000
+        });
+    }
+
     // Build the manifest object
     const manifest = {
         name: `FPVGate ${version}`,

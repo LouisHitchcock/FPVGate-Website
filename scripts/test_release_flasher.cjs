@@ -155,9 +155,9 @@ test('Alpha-4 offers the XIAO S3 and S3-ETH only', () => {
     assert.ok(fs.existsSync(path.join(root, 'preRelease/v1.9.0-Alpha-4/boot_app0.bin')));
 });
 
-test('Alpha-5 is the newest pre-release with versioned images for all six boards', () => {
+test('Alpha-5 images remain available for all six boards', () => {
     const index = JSON.parse(fs.readFileSync(path.join(root, 'preRelease/index.json'), 'utf8'));
-    assert.equal(index.versions[0].tag, 'v1.9.0-alpha-5');
+    assert.ok(index.versions.some(version => version.tag === 'v1.9.0-alpha-5'));
     checkMultiAlphaRelease('v1.9.0-alpha-5', 'alpha-5',
         { seeedxiaos3: 'SeeedXIAOESP32S3', waveshares3eth: 'WaveshareS3ETH', esp32s3: 'ESP32S3', fpvgateaio: 'FPVGateAIO', fpvgatesolo: 'FPVGateSolo', fpvgatec5mkaio: 'FPVGateC5MKAIO' },
         ['xiaos3plus', 'esp32s3supermini', 'esp32c3', 'lilygo', 'wavesharelcd2', 'novablade']);
@@ -368,4 +368,45 @@ test('cleanup closes the port even when disconnecting a vanished USB device fail
     assert.equal(flasher.port, null);
     assert.equal(flasher.transport, null);
     assert.equal(flasher.esploader, null);
+});
+
+
+test('Alpha-6 offers six boards with five verified image URLs in either version selector', () => {
+    const tag = 'v1.9.0-alpha-6';
+    const index = JSON.parse(fs.readFileSync(path.join(root, 'preRelease/index.json'), 'utf8'));
+    assert.equal(index.versions[0].tag, tag);
+    const shipping = { esp32s3: 'ESP32S3', fpvgateaio: 'FPVGateAIO', fpvgatec5mkaio: 'FPVGateC5MKAIO',
+        fpvgatesolo: 'FPVGateSolo', seeedxiaos3: 'SeeedXIAOESP32S3', waveshares3eth: 'WaveshareS3ETH' };
+    const context = flasherContext();
+    for (const local of [false, true]) for (const [id, directory] of Object.entries(shipping)) {
+        vm.runInContext(`selectedBoard = '${id}'; selectedVersion = { tag_name: '${tag}', prerelease: true, isLocalPreRelease: ${local} };`, context);
+        assert.equal(vm.runInContext('updateFlashInfo()', context), true);
+        const parts = vm.runInContext('generateManifest()', context).builds[0].parts;
+        assert.deepEqual(Array.from(parts, part => part.offset), [0, 0x8000, 0xe000, 0x10000, id === 'waveshares3eth' ? 0x610000 : 0x410000]);
+        for (const part of parts) {
+            const url = new URL(part.path);
+            assert.equal(url.origin, 'https://fpvgate.xyz');
+            assert.equal(path.posix.dirname(url.pathname), part.offset === 0xe000 ? `/preRelease/${tag}` : `/preRelease/${tag}/${directory}`);
+            assert.ok(fs.statSync(path.join(root, url.pathname)).size > 0);
+        }
+        const base = path.join(root, 'preRelease', tag, directory);
+        const table = fs.readFileSync(path.join(base, 'partitions.bin'));
+        let filesystem;
+        let appSize;
+        for (let offset = 0; offset + 32 <= table.length && table.readUInt16LE(offset) === 0x50aa; offset += 32) {
+            if (table[offset + 2] === 1 && table[offset + 3] === 0x82) filesystem = { offset: table.readUInt32LE(offset + 4), size: table.readUInt32LE(offset + 8) };
+            if (table[offset + 2] === 0 && table[offset + 3] === 0x10) appSize = table.readUInt32LE(offset + 8);
+        }
+        assert.ok(filesystem && appSize);
+        assert.equal(parts[4].offset, filesystem.offset);
+        assert.equal(fs.statSync(path.join(base, 'littlefs.bin')).size, filesystem.size);
+        const firmware = fs.readFileSync(path.join(base, 'firmware.bin'));
+        assert.ok(firmware.length <= appSize);
+        assert.ok(firmware.includes(Buffer.from('1.9.0\0')));
+        assert.ok(firmware.includes(Buffer.from('alpha-6\0')));
+    }
+    for (const id of ['xiaos3plus', 'esp32s3supermini', 'esp32c3', 'lilygo', 'wavesharelcd2', 'novablade']) {
+        vm.runInContext(`selectedBoard = '${id}'; selectedVersion = { tag_name: '${tag}', isLocalPreRelease: true }; updateFlashSection();`, context);
+        assert.equal(context.document.getElementById('flash-section').style.display, 'none');
+    }
 });

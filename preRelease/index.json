@@ -1,6 +1,11 @@
 {
     "versions": [
         {
+            "tag": "v1.9.0-alpha-6",
+            "date": "2026-11-12",
+            "notes": "Alpha 6 combines the current RC firmware with queued Wi-Fi file transfers: a two-segment TCP window, one active file response with headers and body deferred while queued, cancellation-safe admission, bounded file staging and deferred-poll credit accounting. Includes RC race-history/import, diagnostic logging, localization, ELRS Backpack race control and C5MK shared-median fixes. Six S3 board builds. Short hardware tests cover one C5MK AIO; other boards are build checked. Update both S3 firmware and filesystem from Alpha 5. Separate C5 receiver firmware is unchanged. Testing prerelease: long network soak, RF accuracy and Ethernet/SD recovery qualification remain open."
+        },
+        {
             "tag": "v1.9.0-alpha-5",
             "date": "2026-10-24",
             "notes": "Refreshed Alpha 5: all six S3 timer boards (XIAO S3, S3-ETH, DevKitC-1 8MB, FPVGate AIO, Solo and C5MK AIO). Merges consecutive 2-/3-lap announcer fixes and C5 gate-side max-lap/heat stopping plus history saving, retaining the RH peak timing fixes. Reinstall both firmware and filesystem even if already on Alpha 5; BUILD_INFO.json identifies this refresh. 118 frontend/config tests, native race-control checks and 16 RH plugin regressions pass. Events results/next heat and non-C5 completion still require a browser. Physical six-board flash, closed-browser/storage, camera and multi-transmitter qualification remain pending. For RH through FPVGate pair with plugin v2.3.2-rc.1; C5 receiver firmware is separate."
