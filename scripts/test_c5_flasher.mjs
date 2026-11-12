@@ -35,11 +35,17 @@ for (const [key, build] of Object.entries(manifest.builds)) {
     }
     assert.ok(appPartition && app.data.length <= appPartition, `Application must fit its partition at 0x${app.address.toString(16)}`);
     if (build.mode === 'uart') {
-        const tag = 'v1.2.6';
+        const tag = key.startsWith('mkpre-') ? 'v1.3.0-pre-1' : 'v1.2.6';
         assert.equal(build.version, tag.slice(1));
         assert.equal(build.tag, tag);
         assert.equal(build.usb_timing, true);
+        if (key.startsWith('mkpre-')) {
+            assert.equal(build.prerelease, true);
+            assert.match(build.qualification, /soak.*NOT PASSED/);
+            assert.match(build.commit, /^[0-9a-f]{40}$/);
+        } else {
         assert.equal(build.commit, 'a8ad2ae8259a2e13e0934e7e90f9d07c7c9f6bca', 'Published source tag');
+        }
         assert.equal(otaSlots, 2, 'MK needs two app slots for updates through FPVGate');
         assert.equal(otaData, files[2].address, 'OTA data must be written where the partition table puts it');
         const version = Buffer.from(app.data.subarray(48, 80)).toString('latin1').split('\0')[0];

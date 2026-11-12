@@ -15,7 +15,7 @@ const escape = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;
 
 async function loadCatalog() {
     if (catalog) return catalog;
-    if (!loading) loading = fetch('firmware/c5/manifest.json?v=c5mk-1.2.6-stable', { cache: 'no-cache' })
+    if (!loading) loading = fetch('firmware/c5/manifest.json?v=c5mk-1.3.0-pre-1', { cache: 'no-cache' })
         .then(response => {
             if (!response.ok) throw new Error('C5 firmware could not be loaded. Check your connection and reselect your board to retry.');
             return response.json();
@@ -59,7 +59,7 @@ const BOARDS = {
 
 function pendingNote(build) {
     const pins = BOARDS[build.board] || {};
-    const note = (build.mode === 'spi' && pins.spiPending) || pins.pending;
+    const note = build.qualification || (build.mode === 'spi' && pins.spiPending) || pins.pending;
     return note ? ` · ${escape(note)}` : '';
 }
 
@@ -107,6 +107,9 @@ async function selectBuild() {
     button.disabled = true;
     firmware.disabled = busy || !board.value;
     firmware.options[0].textContent = board.value ? 'Choose firmware...' : 'Choose a board first...';
+    const pre = Array.from(firmware.options).find(option => option.value === 'mkpre');
+    if (pre) pre.disabled = !['xiao', 'zero'].includes(board.value);
+    if (firmware.value === 'mkpre' && pre?.disabled) firmware.value = '';
     for (const id of ['c5-release', 'c5-wiring', 'c5-error', 'c5-complete', 'c5-progress', 'c5-log-panel']) byId(id).hidden = true;
     if (!board.value) { status.textContent = 'Select your board, then the firmware, to see wiring.'; return; }
     if (!firmware.value) { status.textContent = 'Now select the firmware: single pilot (SPI) or multi pilot (UART / USB).'; return; }
@@ -118,6 +121,7 @@ async function selectBuild() {
         if (!build) throw new Error('Firmware is not available for this board yet.');
         trackC5('build_selected', build);
         byId('c5-release').innerHTML = `<strong>${escape(build.project)} · ${escape(build.version)}</strong><small>${build.usb_timing ? 'UART / USB' : escape(build.mode.toUpperCase())} mode · ESP32-C5 · <a href="https://github.com/LouisHitchcock/${build.project}/commit/${build.commit}" target="_blank" rel="noopener">Source ${escape(build.commit.slice(0, 7))}</a></small><small>${build.tag ? `Release <a href="https://github.com/LouisHitchcock/${build.project}/releases/tag/${escape(build.tag)}" target="_blank" rel="noopener">${escape(build.tag)}</a>` : 'Pinned alpha build'} · ${escape(build.environment)}${pendingNote(build)}</small>`;
+        if (build.prerelease) byId('c5-release').innerHTML += `<p><strong>Testing prerelease:</strong> ${escape(build.qualification)} <a href="https://github.com/LouisHitchcock/${build.project}/releases/tag/${escape(build.tag)}" target="_blank" rel="noopener">Read validation limits</a>. For matching AIO filtering, use FPVGate 1.9.0-alpha-6 on the S3.</p>`;
         byId('c5-release').hidden = false;
         showWiring(build);
         const supported = 'serial' in navigator && window.isSecureContext;

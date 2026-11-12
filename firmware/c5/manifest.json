@@ -279,6 +279,82 @@
           "sha256": "0d52b83e7bd966f96c83ed7bb213c11e739e82912e20abddceb2648f08bc0fd8"
         }
       ]
+    },
+    "mkpre-xiao": {
+      "project": "FPVGateC5MK",
+      "commit": "8fbd4078f508d1c96af3394522b325039c320249",
+      "tag": "v1.3.0-pre-1",
+      "environment": "xiaoc5",
+      "board": "xiao",
+      "mode": "uart",
+      "usb_timing": true,
+      "version": "1.3.0-pre-1",
+      "prerelease": true,
+      "qualification": "USB soak NOT PASSED; moderate-noise timing worse than stock; video pass validation pending. RC-source hardware evidence; new version-labelled image build checked.",
+      "parts": [
+        {
+          "path": "firmware/c5/c5mk-v1.3.0-pre-1/mk-xiao/bootloader.bin",
+          "offset": 8192,
+          "size": 19904,
+          "sha256": "2e09cc4ead1b0f36b74b183d4e29c838f2be86d46dec275c977dae25bfd24876"
+        },
+        {
+          "path": "firmware/c5/c5mk-v1.3.0-pre-1/mk-xiao/partitions.bin",
+          "offset": 32768,
+          "size": 3072,
+          "sha256": "1b86379629900670bd43147c3a873a424695a67765fd1bdb28b1bffc21be137a"
+        },
+        {
+          "path": "firmware/c5/c5mk-v1.3.0-pre-1/mk-xiao/ota_data_initial.bin",
+          "offset": 61440,
+          "size": 8192,
+          "sha256": "7d2c7ac4888bfd75cd5f56e8d61f69595121183afc81556c876732fd3782c62f"
+        },
+        {
+          "path": "firmware/c5/c5mk-v1.3.0-pre-1/mk-xiao/firmware.bin",
+          "offset": 131072,
+          "size": 819968,
+          "sha256": "55b5e54f9d14e271c8951828f4d67e4b91426a8d05844cfb80812547d632b15b"
+        }
+      ]
+    },
+    "mkpre-zero": {
+      "project": "FPVGateC5MK",
+      "commit": "8fbd4078f508d1c96af3394522b325039c320249",
+      "tag": "v1.3.0-pre-1",
+      "environment": "c5zero",
+      "board": "zero",
+      "mode": "uart",
+      "usb_timing": true,
+      "version": "1.3.0-pre-1",
+      "prerelease": true,
+      "qualification": "USB soak NOT PASSED; moderate-noise timing worse than stock; video pass validation pending. C5-Zero receiver: build only.",
+      "parts": [
+        {
+          "path": "firmware/c5/c5mk-v1.3.0-pre-1/mk-zero/bootloader.bin",
+          "offset": 8192,
+          "size": 19904,
+          "sha256": "bd55aa058ab30c0003a1463d06f1b9b2731d76974ec322c9c220d3cc7f3bebb1"
+        },
+        {
+          "path": "firmware/c5/c5mk-v1.3.0-pre-1/mk-zero/partitions.bin",
+          "offset": 32768,
+          "size": 3072,
+          "sha256": "1b86379629900670bd43147c3a873a424695a67765fd1bdb28b1bffc21be137a"
+        },
+        {
+          "path": "firmware/c5/c5mk-v1.3.0-pre-1/mk-zero/ota_data_initial.bin",
+          "offset": 61440,
+          "size": 8192,
+          "sha256": "7d2c7ac4888bfd75cd5f56e8d61f69595121183afc81556c876732fd3782c62f"
+        },
+        {
+          "path": "firmware/c5/c5mk-v1.3.0-pre-1/mk-zero/firmware.bin",
+          "offset": 131072,
+          "size": 832736,
+          "sha256": "e216ce3b85b6b8cf6af477d337e7b8e12d9bf9ee77b18f872d21af4cf09fd260"
+        }
+      ]
     }
   }
 }
