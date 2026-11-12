@@ -35,7 +35,7 @@ const catalog = require('../firmware/c5/manifest.json');
         for (const [id, build] of Object.entries(catalog.builds)) {
             const expectedPin = build.mode === 'spi'
                 ? (build.board === 'xiao' ? 'D0 / GPIO1' : build.board === 'mini' ? 'GPIO1' : 'GPIO6')
-                : (build.board === 'xiao' ? 'D4 / GPIO23 (RX)' : 'GPIO4 (RX)');
+                : (build.uart ? build.uart.rx + ' (RX)' : build.board === 'xiao' ? 'D4 / GPIO23 (RX)' : 'GPIO4 (RX)');
             await selectBuild(id);
             await page.waitForFunction(() => !document.getElementById('c5-flash').disabled);
             assert.match(await page.locator('#c5-release').innerText(), new RegExp(build.project));

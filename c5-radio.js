@@ -15,7 +15,7 @@ const escape = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;
 
 async function loadCatalog() {
     if (catalog) return catalog;
-    if (!loading) loading = fetch('firmware/c5/manifest.json?v=c5mk-1.3.0-pre-1', { cache: 'no-cache' })
+    if (!loading) loading = fetch('firmware/c5/manifest.json?v=c5mk-1.3.0-pre-1-d6d7', { cache: 'no-cache' })
         .then(response => {
             if (!response.ok) throw new Error('C5 firmware could not be loaded. Check your connection and reselect your board to retry.');
             return response.json();
@@ -34,6 +34,10 @@ const BOARDS = {
         spiNote: 'XIAO alpha pin map: this build uses CLK 23, DATA 24, SEL 1 and RSSI 10. These differ from the Waveshare defaults in the upstream guide. This XIAO SPI build still needs a hardware test.',
         spiPending: 'XIAO pin adaptation, hardware validation pending',
         uartPending: 'Physical XIAO USB validation is pending.',
+        uartNote: {
+            d6d7: 'the standard C5 link from 1.3.0-pre-1. Use this only when the S3 link is wired to C5 D6 / GPIO11 (TX) and D7 / GPIO12 (RX). If your board is wired to D4/D5, choose Legacy instead. This image is build checked only.',
+            legacy: 'for existing boards with the S3 link on C5 D4 / GPIO23 (RX) and D5 / GPIO24 (TX), including factory-wired C5MK AIO boards. Supported for now; new builds should use D6/D7 UART1.',
+        },
     },
     zero: {
         name: 'Waveshare ESP32-C5-Zero',
@@ -68,16 +72,18 @@ function showWiring(build) {
     const usb = build.usb_timing === true;
     const pins = BOARDS[build.board] || BOARDS.zero;
     const radio = pins.name;
+    const uart = build.uart || pins.uart;
     const rows = spi ? [
         ['CLK', 'D3 / GPIO4', pins.spi.clk],
         ['DATA (bidirectional)', 'D4 / GPIO5', pins.spi.data + ' via 330 Ω'],
         ['SEL', 'D5 / GPIO6', pins.spi.sel],
         ['Analog RSSI', 'D2 / GPIO3', 'Filter junction below'],
     ] : [
-        ['Host TX → radio RX', 'D3 / GPIO4 (TX)', pins.uart.rx + ' (RX)'],
-        ['Host RX ← radio TX', 'D4 / GPIO5 (RX)', pins.uart.tx + ' (TX)'],
+        ['Host TX → radio RX', 'D3 / GPIO4 (TX)', uart.rx + ' (RX)'],
+        ['Host RX ← radio TX', 'D4 / GPIO5 (RX)', uart.tx + ' (TX)'],
     ];
     const boardNote = spi ? pins.spiNote : null;
+    const wiringNote = !spi && build.wiring && pins.uartNote?.[build.wiring];
     const sharedNote = pins.sharedNote && !(spi && build.board === 'mini') ? pins.sharedNote : null;
     rows.push(['Power', '5V / VUSB', '5V / VUSB'], ['Ground', 'GND', 'GND']);
     const source = `https://github.com/LouisHitchcock/${build.project}/blob/${build.commit}/docs/${spi ? 'HARDWARE.md' : 'INTEGRATION_GUIDE.md'}`;
@@ -85,6 +91,7 @@ function showWiring(build) {
         <h3>${spi ? 'SPI Wiring' : usb ? 'USB / UART Setup' : 'UART Wiring'} · ${escape(radio)}</h3>
         ${usb ? `<h4>Direct USB to RotorHazard</h4><p>The same firmware supports eight native RH receivers over USB, with no S3 or FPVGate plugin required. Close RH and any serial monitors before flashing, then power cycle and connect the C5 directly to the RH computer.</p><p>Add its port under <strong>Advanced Settings → Hardware → Serial Ports</strong>, restart RH, select pilot channels and calibrate in Sensor Tuning. RH selects USB timing automatically; no separate USB image is needed. Do not let an S3 and USB RH control the same receiver simultaneously.</p><p><a href="https://github.com/LouisHitchcock/${build.project}/blob/${build.commit}/docs/USB_ROTORHAZARD.md" target="_blank" rel="noopener">USB setup guide ↗</a>${pins.uartPending ? ` · ${escape(pins.uartPending)}` : ''}</p><h4>Optional S3/UART connection</h4>` : ''}
         ${sharedNote ? `<p><strong>${escape(radio)}:</strong> ${escape(sharedNote)}</p>` : ''}
+        ${wiringNote ? `<p><strong>${build.wiring === 'd6d7' ? 'D6/D7 UART1 wiring' : 'Legacy D4/D5 wiring'}</strong> is ${escape(wiringNote)}</p>` : ''}
         <p>For an FPVGate timer built on a <strong>XIAO ESP32-S3</strong>. Disconnect power before wiring. Other timer boards use their configured receiver pins.</p>
         <div class="c5-table-wrap"><table><thead><tr><th>Signal</th><th>FPVGate · XIAO S3</th><th>${escape(radio)}</th></tr></thead><tbody>${rows.map(row => `<tr>${row.map(cell => `<td>${escape(cell)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
         <p><strong>3.3 V logic only.</strong> Supply the C5 through its 5V input so it uses its own regulator; the S3's 3V3 supply may not handle radio startup. Use one power source, or separate USB supplies with a shared ground and the 5V link disconnected. Never apply 5 V to a signal pin.</p>
@@ -107,9 +114,14 @@ async function selectBuild() {
     button.disabled = true;
     firmware.disabled = busy || !board.value;
     firmware.options[0].textContent = board.value ? 'Choose firmware...' : 'Choose a board first...';
-    const pre = Array.from(firmware.options).find(option => option.value === 'mkpre');
-    if (pre) pre.disabled = !['xiao', 'zero'].includes(board.value);
-    if (firmware.value === 'mkpre' && pre?.disabled) firmware.value = '';
+    // Only offer builds this board has; on the XIAO the label names the wiring.
+    for (const option of firmware.options) {
+        const boards = option.dataset?.boards?.split(' ');
+        if (boards) option.disabled = !boards.includes(board.value);
+        const label = option.dataset?.[board.value === 'xiao' ? 'xiaoLabel' : 'label'];
+        if (label) option.textContent = label;
+        if (option.value === firmware.value && option.disabled) firmware.value = '';
+    }
     for (const id of ['c5-release', 'c5-wiring', 'c5-error', 'c5-complete', 'c5-progress', 'c5-log-panel']) byId(id).hidden = true;
     if (!board.value) { status.textContent = 'Select your board, then the firmware, to see wiring.'; return; }
     if (!firmware.value) { status.textContent = 'Now select the firmware: single pilot (SPI) or multi pilot (UART / USB).'; return; }

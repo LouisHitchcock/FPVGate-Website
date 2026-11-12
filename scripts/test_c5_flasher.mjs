@@ -35,11 +35,12 @@ for (const [key, build] of Object.entries(manifest.builds)) {
     }
     assert.ok(appPartition && app.data.length <= appPartition, `Application must fit its partition at 0x${app.address.toString(16)}`);
     if (build.mode === 'uart') {
-        const tag = key.startsWith('mkpre-') ? 'v1.3.0-pre-1' : 'v1.2.6';
+        const pre = /^mkpre(legacy)?-/.test(key);
+        const tag = pre ? 'v1.3.0-pre-1' : 'v1.2.6';
         assert.equal(build.version, tag.slice(1));
         assert.equal(build.tag, tag);
         assert.equal(build.usb_timing, true);
-        if (key.startsWith('mkpre-')) {
+        if (pre) {
             assert.equal(build.prerelease, true);
             assert.match(build.qualification, /soak.*NOT PASSED/);
             assert.match(build.commit, /^[0-9a-f]{40}$/);
@@ -49,7 +50,7 @@ for (const [key, build] of Object.entries(manifest.builds)) {
         assert.equal(otaSlots, 2, 'MK needs two app slots for updates through FPVGate');
         assert.equal(otaData, files[2].address, 'OTA data must be written where the partition table puts it');
         const version = Buffer.from(app.data.subarray(48, 80)).toString('latin1').split('\0')[0];
-        assert.equal(version, `${build.version}+${build.environment}`, 'Image must be for this board');
+        assert.equal(version, build.app_version || `${build.version}+${build.environment}`, 'Image must be for this board');
     }
     console.log(`PASS ${key}: binary sizes, SHA-256 and offsets`);
 }
