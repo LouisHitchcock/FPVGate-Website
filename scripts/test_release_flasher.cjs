@@ -222,7 +222,7 @@ test('SD ZIP and refreshed flasher script references are present', () => {
     const zip = fs.readFileSync(path.join(root, 'firmware/v1.8.3/SD_Card.zip'));
     assert.equal(zip.readUInt32LE(0), 0x04034b50);
     assert.ok(zip.includes(Buffer.from('voice_default_en')));
-    assert.match(fs.readFileSync(path.join(root, 'flasher.html'), 'utf8'), /flasher\.js\?v=1\.9\.0-alpha-5-integrated/);
+    assert.match(fs.readFileSync(path.join(root, 'flasher.html'), 'utf8'), /flasher\.js\?v=1\.9\.0-alpha-6/);
     assert.match(fs.readFileSync(path.join(root, 'flasher.js'), 'utf8'), /import\('\.\/esp-flasher\.js\?v=1\.9\.0-alpha-5-integrated'\)/);
 });
 
