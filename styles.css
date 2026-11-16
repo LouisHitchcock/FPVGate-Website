@@ -68,6 +68,11 @@
     --font-body:    'IBM Plex Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
     --font-mono:    'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
 
+    /* Product photography is normalised onto a white 4:3 canvas at upload,
+       so the display stage matches the padding and no seam is visible. */
+    --product-ratio: 4 / 3;
+    --product-stage: #FFFFFF;
+
     /* Geometry — tight radii, no pills */
     --r-sm: 3px;
     --r:    5px;
@@ -2429,9 +2434,9 @@ footer .container {
 
 .product-image {
     width: 100%;
-    aspect-ratio: 16 / 10;
+    aspect-ratio: var(--product-ratio);
     overflow: hidden;
-    background: var(--dark-bg);
+    background: var(--product-stage);
     position: relative;
 }
 
@@ -2655,10 +2660,23 @@ footer .container {
     border-right: 1px solid var(--rule);
     border-radius: var(--r-lg) 0 0 var(--r-lg);
     overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.product-modal-image .carousel {
-    height: 100%;
+/* The photo sits on its own white 4:3 stage rather than filling the column,
+   so a normalised image fills it edge to edge with nothing left over. */
+.product-modal-image > .carousel,
+.product-modal-image > img,
+.product-modal-image > .product-image-placeholder {
+    width: 100%;
+    max-height: 100%;
+    aspect-ratio: var(--product-ratio);
+    height: auto;
+    background: var(--product-stage);
+    border-radius: var(--r-sm);
+    overflow: hidden;
 }
 
 .product-modal-image .carousel-btn {
@@ -2719,24 +2737,6 @@ footer .container {
     margin-bottom: 1rem;
 }
 
-.product-modal-body .modal-actions {
-    display: flex;
-    gap: 1rem;
-    padding-top: 1.25rem;
-    border-top: 1px solid var(--rule);
-}
-
-.product-modal-body .modal-actions .btn {
-    flex: 1;
-    text-align: center;
-}
-
-/* Product Details - Rich Description in Modal */
-.modal-product-details {
-    color: var(--text-secondary);
-    line-height: 1.8;
-}
-
 /* Pre-order disclosure. Deliberately loud: buyers must not miss that the
    item ships later than a normal order. */
 .preorder-notice {
@@ -2778,6 +2778,24 @@ footer .container {
     font-weight: 600;
     color: var(--warn);
     margin-top: 2px;
+}
+
+.product-modal-body .modal-actions {
+    display: flex;
+    gap: 1rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--rule);
+}
+
+.product-modal-body .modal-actions .btn {
+    flex: 1;
+    text-align: center;
+}
+
+/* Product Details - Rich Description in Modal */
+.modal-product-details {
+    color: var(--text-secondary);
+    line-height: 1.8;
 }
 
 .modal-product-details h2 {
@@ -3068,9 +3086,9 @@ footer .container {
 
 .strip-card-img {
     width: 100%;
-    aspect-ratio: 16 / 10;
+    aspect-ratio: var(--product-ratio);
     overflow: hidden;
-    background: var(--dark-bg);
+    background: var(--product-stage);
 }
 
 .strip-card-img img {
@@ -3818,3 +3836,16 @@ footer .container {
         grid-template-columns: 1fr;
     }
 }
+
+.product-variant-select { width:100%; padding:12px; margin-bottom:12px; border:1px solid var(--rule, #ccc); background:var(--surface, #fff); color:var(--ink, #111); border-radius:6px; font:inherit; }
+
+/* The admin's featured selection leads the store homepage. */
+.store-featured[hidden] { display: none; }
+.store-featured-layout { display: grid; grid-template-columns: 1.15fr 1fr; gap: clamp(24px, 5vw, 72px); align-items: center; }
+.store-featured-image { display: flex; align-items: center; justify-content: center; width: 100%; aspect-ratio: 4 / 3; padding: clamp(16px, 3vw, 40px); background: var(--card-bg); border: 1px solid var(--rule); border-radius: var(--r-lg); cursor: pointer; color: var(--ink); }
+.store-featured-image img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.store-featured-copy h2 { font-size: clamp(1.8rem, 4vw, 3rem); line-height: 1.1; margin: 16px 0; }
+.store-featured-copy > p:not(.section-label) { color: var(--text-secondary); margin-bottom: 20px; }
+.store-featured-copy .product-price { margin-bottom: 16px; }
+.store-featured-copy .btn { margin-top: 20px; }
+@media (max-width: 700px) { .store-featured-layout { grid-template-columns: 1fr; } }

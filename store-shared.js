@@ -1,5 +1,26 @@
 const STORE_API = 'https://fpvgate-store.fpvgate-analytics.workers.dev';
 
+
+// Preview credentials stay in this tab and are sent only to the store API.
+const previewFragment = new URLSearchParams(location.hash.slice(1)).get('store-preview');
+if (previewFragment) {
+ sessionStorage.setItem('fpvgate_preview_token', previewFragment);
+ history.replaceState(null, '', location.pathname + location.search);
+}
+const storePreview = new URLSearchParams(location.search).get('preview') === '1';
+async function storeFetch(input) {
+ const url = new URL(input);const headers = {};
+ if (storePreview) {url.searchParams.set('preview', '1');headers.Authorization = 'Bearer ' + (sessionStorage.getItem('fpvgate_preview_token') || '');}
+ const response = await fetch(url.toString(), { headers, cache: 'no-store' });
+ if (!response.ok) throw new Error(storePreview ? 'Open preview again from the admin product editor.' : 'Could not load products');
+ return response;
+}
+if (storePreview) {
+ const banner=document.createElement('div');banner.style.cssText='position:sticky;top:0;z-index:99999;padding:14px;background:#ffe08a;color:#111;text-align:center';
+ banner.textContent='Admin preview - includes drafts and scheduled releases. Purchases are disabled. ';
+ const exit=document.createElement('a');exit.href=location.pathname;exit.textContent='Exit preview';exit.onclick=()=>sessionStorage.removeItem('fpvgate_preview_token');banner.append(exit);document.body.prepend(banner);
+}
+
 const CATEGORY_LABELS = {
     'fpvgate': 'FPVGate Hardware',
     'components': 'Components',
@@ -56,17 +77,19 @@ function updateCartUI() {
 }
 
 function addToCart(product) {
+ if (storePreview) return;
+ if (product.variants?.length && !product.variantId) {window._variantProduct=[product];openProductModal(0,'_variantProduct');return;}
     const cart = getCart();
     const maxQuantity = Math.min(product.maxQuantity || 5, availableQty(product));
-    if (maxQuantity <= 0) return;
-    const existing = cart.find(i => i.id === product.id);
+    if (maxQuantity <= 0 || cart.filter(i => i.id === product.id).reduce((sum,i) => sum+i.quantity,0) >= maxQuantity) return;
+    const existing = cart.find(i => i.id === product.id && (i.variantId || null) === (product.variantId || null));
     if (existing) {
         existing.maxQuantity = maxQuantity;
         existing.inStock = product.stock;
         existing.preorderShipDate = product.preorderShipDate || null;
         if (existing.quantity < maxQuantity) existing.quantity++;
     } else {
-        cart.push({ id: product.id, name: product.name, price: product.price, quantity: 1, image: product.image || '', maxQuantity, inStock: product.stock, preorderShipDate: product.preorderShipDate || null });
+        cart.push({ id: product.id, variantId: product.variantId || null, name: product.name, price: product.price, quantity: 1, image: product.image || '', maxQuantity, inStock: product.stock, preorderShipDate: product.preorderShipDate || null });
     }
     saveCart(cart);
     if (window.fpvgateAnalytics) window.fpvgateAnalytics.track('cart_add', { product_id: product.id, product_name: product.name, price: product.price, category: product.category || '' });
@@ -79,7 +102,8 @@ function removeFromCart(idx) {
 
 function changeQty(idx, dir) {
     const cart = getCart();
-    cart[idx].quantity += dir;
+    const remaining = Math.max(0, cart[idx].maxQuantity - cart.reduce((sum,item,i) => sum + (i !== idx && item.id === cart[idx].id ? item.quantity : 0), 0));
+    cart[idx].quantity = Math.min(cart[idx].quantity + dir, remaining);
     if (cart[idx].quantity <= 0) cart.splice(idx, 1);
     else if (cart[idx].quantity > cart[idx].maxQuantity) cart[idx].quantity = cart[idx].maxQuantity;
     saveCart(cart);
@@ -121,7 +145,7 @@ function renderRecentlyViewed() {
             </div>
             <div class="strip-card-info">
                 <span class="strip-card-name">${escHtml(p.name)}</span>
-                <span class="strip-card-price">&pound;${p.price.toFixed(2)}</span>
+                <span class="strip-card-price">${p.variants?.length ? 'From ' : ''}&pound;${p.price.toFixed(2)}</span>
             </div>
         </div>
     `).join('');
@@ -129,7 +153,7 @@ function renderRecentlyViewed() {
 
 function viewRecentProduct(id, category) {
     const page = CATEGORY_LINKS[category] || 'shop-fpvgate.html';
-    window.location.href = page + '?id=' + encodeURIComponent(id);
+    window.location.href = page + (storePreview ? '?preview=1&id=' : '?id=') + encodeURIComponent(id);
 }
 
 // --- Search ---
@@ -162,7 +186,7 @@ async function performSearch(q) {
     if (defaultGrid) defaultGrid.style.display = 'none';
 
     try {
-        const resp = await fetch(STORE_API + '/products?q=' + encodeURIComponent(q));
+        const resp = await storeFetch(STORE_API + '/products?q=' + encodeURIComponent(q));
         const products = await resp.json();
         if (!products.length) {
             resultsEl.innerHTML = '<div class="search-empty">No products found for "' + escHtml(q) + '".</div>';
@@ -193,7 +217,7 @@ function hideSearchResults() {
 // left. Buyers must see the dispatch date before they commit.
 function availableQty(p) { return p.available !== undefined ? p.available : p.stock; }
 function isPreorder(p) { return p.stock <= 0 && !!p.preorderShipDate && availableQty(p) > 0; }
-function buyButtonLabel(p) { return isPreorder(p) ? 'Pre-order' : availableQty(p) <= 0 ? 'Out of Stock' : 'Add to Cart'; }
+function buyButtonLabel(p) { if (p.variants?.length) return availableQty(p) <= 0 ? 'Out of Stock' : 'Choose variant'; return isPreorder(p) ? 'Pre-order' : availableQty(p) <= 0 ? 'Out of Stock' : 'Add to Cart'; }
 
 function cartLinePreorderQty(item) {
     if (!item.preorderShipDate) return 0;
@@ -222,6 +246,32 @@ function renderStockNotice(p) {
         </div>`;
     }
     return '';
+}
+
+// The API orders featured products by most recently updated. Only explicitly
+// featured products qualify; an empty selection leaves the normal shop header.
+function renderFeaturedHero(products) {
+    const section = document.getElementById('store-featured');
+    if (!section) return;
+    const product = products.find(p => p.featured === true);
+    section.hidden = !product;
+    window._heroProducts = product ? [product] : [];
+    if (!product) return;
+    document.getElementById('featured-product-name').textContent = product.name;
+    document.getElementById('featured-product-description').textContent = product.shortDescription || product.description || '';
+    document.getElementById('featured-product-price').textContent = (product.variants?.length ? 'From ' : '') + '\u00a3' + product.price.toFixed(2);
+    document.getElementById('featured-product-stock').innerHTML = renderStockNotice(product);
+    const imageButton = document.getElementById('featured-product-image');
+    imageButton.replaceChildren();
+    if (product.image) {
+        const image = document.createElement('img');
+        image.src = product.image;image.alt = product.name;image.fetchPriority = 'high';
+        imageButton.append(image);
+    } else {
+        const placeholder = document.createElement('span');placeholder.textContent = 'No image available';imageButton.append(placeholder);
+    }
+    imageButton.setAttribute('aria-label', 'View ' + product.name);
+    imageButton.onclick = document.getElementById('featured-product-view').onclick = () => openProductModal(0, '_heroProducts');
 }
 
 // --- Product Rendering ---
@@ -256,7 +306,7 @@ function renderProductCard(p, pi) {
                 ? `<p class="preorder-flag">Pre-order: ships ${formatShipDate(p.preorderShipDate)}</p>`
                 : availableQty(p) <= 0 ? '<p style="color:var(--error-color);font-weight:600;margin-top:8px;">Out of Stock</p>' : ''}
             <div class="product-price-row">
-                <span class="product-price">&pound;${p.price.toFixed(2)}</span>
+                <span class="product-price">${p.variants?.length ? 'From ' : ''}&pound;${p.price.toFixed(2)}</span>
                 <button class="btn btn-primary" onclick="event.stopPropagation();addToCart(window._products[${pi}])"
                     ${availableQty(p) <= 0 ? 'disabled' : ''}>
                     ${buyButtonLabel(p)}
@@ -346,7 +396,7 @@ async function openProductFromUrl() {
     if (!id) return;
     try {
         if (!linkedProductsPromise) {
-            linkedProductsPromise = fetch(STORE_API + '/products').then(response => {
+            linkedProductsPromise = storeFetch(STORE_API + '/products').then(response => {
                 if (!response.ok) throw new Error('Could not load products');
                 return response.json();
             }).catch(error => { linkedProductsPromise = null; throw error; });
@@ -375,8 +425,7 @@ function openProductModal(pi, sourceArray, updateUrl = true) {
     activeProductLink = productShareUrl(p.id);
     document.getElementById('product-link-message')?.remove();
 
-    addRecentlyViewed(p);
-    renderRecentlyViewed();
+    if (!storePreview) { addRecentlyViewed(p); renderRecentlyViewed(); }
 
     if (window.fpvgateAnalytics) {
         window.fpvgateAnalytics.track('product_view', {
@@ -415,6 +464,16 @@ function openProductModal(pi, sourceArray, updateUrl = true) {
         </button>
         <button type="button" class="btn btn-secondary" onclick="copyProductLink(this)">Copy link</button>`;
 
+    if (p.variants?.length) {
+        window._selectedVariantProduct=null;
+        const select=document.createElement('select');select.id='product-variant';select.setAttribute('aria-label','Product variant');select.className='product-variant-select';
+        const placeholder=document.createElement('option');placeholder.value='';placeholder.textContent='Choose a variant';select.append(placeholder);
+        p.variants.forEach(v=>{const option=document.createElement('option');option.value=v.id;option.textContent=v.name+' - \u00a3'+v.price.toFixed(2);select.append(option)});
+        const buy=document.querySelector('#modal-actions .btn-primary');buy.disabled=true;buy.removeAttribute('onclick');buy.onclick=()=>{if(window._selectedVariantProduct)addToCart(window._selectedVariantProduct)};
+        select.onchange=()=>{const v=p.variants.find(v=>v.id===select.value);window._selectedVariantProduct=v?{...p,variantId:v.id,name:p.name+' - '+v.name,price:v.price}:null;buy.disabled=storePreview||!v||availableQty(p)<=0;buy.textContent=v?buyButtonLabel({...p,variants:[]}):'Choose variant';document.getElementById('modal-price').textContent='\u00a3'+(v?v.price:p.price).toFixed(2)};
+        document.getElementById('modal-actions').prepend(select);
+    }
+    if(storePreview){const buy=document.querySelector('#modal-actions .btn-primary');if(buy)buy.disabled=true;}
     const descEl = document.getElementById('modal-description');
     if (p.longDescription) {
         descEl.innerHTML = '<div class="modal-product-details">' + p.longDescription + '</div>';
@@ -453,3 +512,5 @@ renderRecentlyViewed();
 initSearch();
 loadProductPreviewLinks();
 openProductFromUrl();
+
+if(storePreview)document.querySelectorAll('a[href]').forEach(link=>{const url=new URL(link.href,location.href);if(url.origin===location.origin&&/\/shop(?:-[a-z]+)?\.html$/.test(url.pathname)){url.searchParams.set('preview','1');link.href=url.toString()}});

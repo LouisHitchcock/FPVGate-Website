@@ -370,6 +370,10 @@
 <label>Product Name</label><input type="text" id="new-product-name" placeholder="e.g. FPVGate AIO V3">
 <label>SKU (optional)</label><input type="text" id="new-product-sku" placeholder="e.g. FPVG-AIO-V3">
 <label>Price (GBP)</label><input type="number" id="new-product-price" step="0.01" min="0" placeholder="e.g. 29.99">
+<label>Publication</label><select id="new-product-publication"><option value="published">Published now</option><option value="draft">Draft (preview only)</option><option value="scheduled">Scheduled release</option></select>
+<label>Release date and time (your local timezone)</label><input type="datetime-local" id="new-product-release"><p>Save changes before previewing. Scheduled releases become public automatically.</p>
+<label><input type="checkbox" id="new-product-variants-enabled" onchange="document.getElementById('new-variant-fields').hidden=!this.checked"> Enable variants</label>
+<div id="new-variant-fields" hidden><p>Variants have separate prices and share product stock.</p><div id="new-variant-rows"></div><button type="button" class="btn btn-secondary" onclick="addVariantRow('new')">Add variant</button></div>
 <label>Short Description <span style="color:#a0aec0;font-weight:normal">(shown on shop card)</span></label><textarea id="new-product-short-desc" rows="2" placeholder="Brief product tagline for the shop grid"></textarea>
 <label>Long Description <span style="color:#a0aec0;font-weight:normal">(HTML, shown on product page)</span></label><textarea id="new-product-long-desc" rows="6" placeholder="Detailed HTML product description"></textarea>
 <label>Description <span style="color:#a0aec0;font-weight:normal">(legacy/Stripe)</span></label><input type="text" id="new-product-desc" placeholder="Fallback description">
@@ -377,7 +381,7 @@
 <label>Product Images <span id="new-img-count" style="color:#a0aec0">(0/8)</span></label>
 <div id="new-img-gallery" style="display:flex;flex-wrap:wrap;gap:8px;margin:8px 0"></div>
 <input type="file" id="new-img-file" accept="image/*" multiple onchange="selectNewProductImages()">
-<div style="font-size:12px;color:#718096;margin:6px 0 14px">Choose up to 8 images. They will upload when you add the product. The first image is the main image.</div>
+<div style="font-size:12px;color:#718096;margin:6px 0 14px">Choose up to 8 images. They will upload when you add the product. Use Make main to choose the main image.</div>
 <label>Manufacture Cost (GBP) <span style="color:#a0aec0;font-weight:normal">(cost to produce per unit)</span></label><input type="number" id="new-product-unit-cost" value="0" step="0.01" min="0">
 <label>Initial Stock</label><input type="number" id="new-product-stock" value="0" min="0">
 <label>Low Stock Threshold</label><input type="number" id="new-product-threshold" value="5" min="0">
@@ -399,6 +403,10 @@
 <label>Product Name</label><input type="text" id="edit-product-name">
 <label>SKU</label><input type="text" id="edit-product-sku">
 <label>Price (GBP)</label><input type="number" id="edit-product-price" step="0.01" min="0">
+<label>Publication</label><select id="edit-product-publication"><option value="published">Published now</option><option value="draft">Draft (preview only)</option><option value="scheduled">Scheduled release</option></select>
+<label>Release date and time (your local timezone)</label><input type="datetime-local" id="edit-product-release"><p>Save changes before previewing. Scheduled releases become public automatically.</p>
+<label><input type="checkbox" id="edit-product-variants-enabled" onchange="document.getElementById('edit-variant-fields').hidden=!this.checked"> Enable variants</label>
+<div id="edit-variant-fields" hidden><p>Variants have separate prices and share product stock.</p><div id="edit-variant-rows"></div><button type="button" class="btn btn-secondary" onclick="addVariantRow('edit')">Add variant</button></div>
 <label>Short Description <span style="color:#a0aec0;font-weight:normal">(shown on shop card)</span></label><textarea id="edit-product-short-desc" rows="2"></textarea>
 <label>Long Description <span style="color:#a0aec0;font-weight:normal">(HTML, shown on product page)</span></label><textarea id="edit-product-long-desc" rows="6"></textarea>
 <label>Description <span style="color:#a0aec0;font-weight:normal">(legacy/Stripe)</span></label><input type="text" id="edit-product-desc">
@@ -425,10 +433,10 @@
 <span id="edit-img-status" style="font-size:12px;color:#a0aec0"></span>
 </div>
 </div>
-<div id="edit-product-error" class="error-text" style="margin-bottom:8px"></div>
+<button type="button" class="btn btn-secondary" onclick="previewStore()">Preview storefront (saved content)</button><div id="edit-product-error" class="error-text" style="margin-bottom:8px"></div>
 <div class="modal-actions"><button class="btn btn-secondary" onclick="closeEditProductModal()">Cancel</button><button class="btn btn-primary" onclick="saveEditProduct()">Save Changes</button></div>
 </div></div>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="script.js?v=20261102-c5"></script>
+<script src="script.js?v=20261116-store"></script>
 </body>
 </html>

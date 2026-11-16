@@ -204,9 +204,14 @@
     function applyPreorderInfo(liveProducts) {
         const byId = {};
         (liveProducts || []).forEach(p => { byId[p.id] = p; });
+        const usedStock = {};
         cartItems.forEach(item => {
             const live = byId[item.id];
-            const inStock = live ? live.stock : (item.inStock || 0);
+            const inStock = Math.max(0, (live ? live.stock : (item.inStock || 0)) - (usedStock[item.id] || 0));
+            usedStock[item.id] = (usedStock[item.id] || 0) + item.quantity;
+            const variant = live?.variants?.find(v => v.id === item.variantId);
+            if (variant) { item.price = variant.price; item.name = live.name + " - " + variant.name; }
+            else if (live && !live.variants?.length) item.price = live.price;
             const shipDate = live ? live.preorderShipDate : item.preorderShipDate;
             item.preorderQty = shipDate ? Math.max(0, item.quantity - inStock) : 0;
             item.preorderShipDate = item.preorderQty > 0 ? shipDate : null;
@@ -402,7 +407,7 @@
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    items: cart.map(i => ({ id: i.id, quantity: i.quantity })),
+                    items: cart.map(i => ({ id: i.id, variantId: i.variantId || null, quantity: i.quantity })),
                     preorderAcknowledged,
                     shipping,
                     selectedShippingRate: {

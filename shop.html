@@ -33,7 +33,7 @@
     document.documentElement.setAttribute('data-theme','dark');}
     document.documentElement.classList.add('js');})();
     </script>
-    <link rel="stylesheet" href="styles.css?v=20261018seo">
+    <link rel="stylesheet" href="styles.css?v=20261116b">
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -95,6 +95,21 @@
 
     <div id="search-results" style="display:none"><div class="container"></div></div>
     <div id="search-default-content">
+    <section class="store-section store-featured" id="store-featured" hidden aria-labelledby="featured-product-name">
+        <div class="container">
+            <div class="store-featured-layout">
+                <button type="button" class="store-featured-image" id="featured-product-image" aria-label="View featured product"></button>
+                <div class="store-featured-copy">
+                    <p class="section-label">Featured product</p>
+                    <h2 id="featured-product-name"></h2>
+                    <p id="featured-product-description"></p>
+                    <div class="product-price" id="featured-product-price"></div>
+                    <div id="featured-product-stock"></div>
+                    <button type="button" class="btn btn-primary" id="featured-product-view">View product</button>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <section class="store-section" id="section-fpvgate">
         <div class="container">
@@ -211,35 +226,27 @@
         </div>
     </div>
 
-    <script src="store-shared.js?v=20261024c"></script>
+    <script src="store-shared.js?v=20261116b"></script>
     <script>
     (async function() {
         try {
-            const [featuredResp, fpvgateResp, componentsResp] = await Promise.all([
-                fetch(STORE_API + '/products?sort=featured'),
-                fetch(STORE_API + '/products?category=fpvgate'),
-                fetch(STORE_API + '/products?category=components')
+            const [featuredResp, fpvgateResp, componentsResp, newestResp] = await Promise.all([
+                storeFetch(STORE_API + '/products?featured=1&sort=newest'),
+                storeFetch(STORE_API + '/products?category=fpvgate'),
+                storeFetch(STORE_API + '/products?category=components'),
+                storeFetch(STORE_API + '/products?sort=newest')
             ]);
 
-            var featured = await featuredResp.json();
+            renderFeaturedHero(await featuredResp.json());
+            var newest = await newestResp.json();
             var featuredStrip = document.getElementById('featured-strip');
-            if (featured.length) {
-                window._featured = featured;
-                featuredStrip.innerHTML = featured.map(function(p, pi) {
-                    return '<div class="strip-card" onclick="openProductModal(' + pi + ', \'_featured\')" style="cursor:pointer"><div class="strip-card-img">' + (p.image ? '<img src="' + p.image + '" alt="' + escHtml(p.name) + '">' : '<div class="strip-card-placeholder"><span>No Image</span></div>') + '</div><div class="strip-card-info"><span class="strip-card-name">' + escHtml(p.name) + '</span><span class="strip-card-price">&pound;' + p.price.toFixed(2) + '</span></div></div>';
+            window._featured = newest.slice(0, 8);
+            if (window._featured.length) {
+                featuredStrip.innerHTML = window._featured.map(function(p, pi) {
+                    return '<div class="strip-card" onclick="openProductModal(' + pi + ', \'_featured\')" style="cursor:pointer"><div class="strip-card-img">' + (p.image ? '<img src="' + p.image + '" alt="' + escHtml(p.name) + '">' : '<div class="strip-card-placeholder"><span>No Image</span></div>') + '</div><div class="strip-card-info"><span class="strip-card-name">' + escHtml(p.name) + '</span><span class="strip-card-price">' + (p.variants?.length ? 'From ' : '') + '&pound;' + p.price.toFixed(2) + '</span></div></div>';
                 }).join('');
             } else {
-                var newest = [];
-                try {
-                    var newestResp = await fetch(STORE_API + '/products?sort=newest');
-                    newest = await newestResp.json();
-                } catch(e) {}
-                if (newest.length) {
-                    window._featured = newest;
-                    featuredStrip.innerHTML = newest.slice(0, 8).map(function(p, pi) {
-                        return '<div class="strip-card" onclick="openProductModal(' + pi + ', \'_featured\')" style="cursor:pointer"><div class="strip-card-img">' + (p.image ? '<img src="' + p.image + '" alt="' + escHtml(p.name) + '">' : '<div class="strip-card-placeholder"><span>No Image</span></div>') + '</div><div class="strip-card-info"><span class="strip-card-name">' + escHtml(p.name) + '</span><span class="strip-card-price">&pound;' + p.price.toFixed(2) + '</span></div></div>';
-                    }).join('');
-                }
+                document.getElementById('section-featured').hidden = true;
             }
 
             function attachCards(grid, key) {

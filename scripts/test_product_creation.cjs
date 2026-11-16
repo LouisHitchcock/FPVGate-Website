@@ -10,7 +10,7 @@ const handler = worker.slice(worker.indexOf('async function handleAddInventoryPr
 async function createProduct(extra = {}) {
     const writes = [];
     const context = vm.createContext({ jsonResponse: (body, headers, status = 200) => ({ body, status }) });
-    vm.runInContext(handler, context);
+    vm.runInContext(handler + worker.slice(worker.indexOf('function validateProductRelease(')), context);
     const env = { DB: { prepare(sql) { return { bind(...values) { return { async run() { writes.push({ sql, values }); } }; } }; } } };
     const response = await context.handleAddInventoryProduct({ json: async () => ({ product_id: 'new-gate', product_name: 'New Gate', price: 20, ...extra }) }, env, {});
     return { response, writes };
@@ -20,13 +20,13 @@ test('new products persist pre-order settings at creation', async () => {
     const { response, writes } = await createProduct({ preorder_enabled: true, preorder_ship_date: '2027-01-15', preorder_limit: 25 });
     assert.equal(response.status, 200);
     assert.match(writes[0].sql, /preorder_enabled, preorder_ship_date, preorder_limit/);
-    assert.deepEqual(writes[0].values.slice(-3), [1, '2027-01-15', 25]);
+    assert.deepEqual(writes[0].values.slice(13,16), [1, '2027-01-15', 25]);
 });
 
 test('ordinary products default to pre-orders disabled', async () => {
     const { response, writes } = await createProduct();
     assert.equal(response.status, 200);
-    assert.deepEqual(writes[0].values.slice(-3), [0, null, 0]);
+    assert.deepEqual(writes[0].values.slice(13,16), [0, null, 0]);
 });
 
 test('invalid pre-orders are rejected before writing a product', async () => {
@@ -48,13 +48,13 @@ function editor() {
     const end = source.indexOf('let flasherCharts=', start);
     const elements = new Map();
     const el = id => {
-        if (!elements.has(id)) elements.set(id, { value: '', checked: false, disabled: false, classList: { remove() {} } });
+        if (!elements.has(id)) elements.set(id, { value: '', checked: false, disabled: false, replaceChildren() {}, classList: { remove() {} } });
         return elements.get(id);
     };
     const creates = [], uploads = [];
     const context = vm.createContext({
-        document: { getElementById: el, querySelectorAll: () => [...elements.values()], body: { classList: { remove() {} } } },
-        exampleReadOnly: () => false,
+        document: { getElementById: el, querySelectorAll: () => [...elements.values()], body: { replaceChildren() {}, classList: { remove() {} } } },
+        exampleReadOnly: () => false, validateReleaseFields: () => true, readReleaseFields: () => ({}),
         storeApi: async (url, method, body) => { creates.push(body); return { success: true }; },
         loadInventory() {}, URL: { revokeObjectURL() {} },
     });

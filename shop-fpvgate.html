@@ -208,12 +208,12 @@
         </div>
     </div>
 
-    <script src="store-shared.js?v=20261024c"></script>
+    <script src="store-shared.js?v=20261116a"></script>
     <script>
     (async function() {
         const grid = document.getElementById('product-grid');
         try {
-            const resp = await fetch(STORE_API + '/products?category=fpvgate');
+            const resp = await storeFetch(STORE_API + '/products?category=fpvgate');
             const products = await resp.json();
             if (!products.length) {
                 grid.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-secondary);">No products in this category yet.</div>';

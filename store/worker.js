@@ -71,7 +71,7 @@ export default {
 
             if (url.pathname === '/products/categories' && request.method === 'GET') {
                 const result = await env.DB.prepare(
-                    'SELECT category, COUNT(*) as count FROM inventory WHERE active = 1 GROUP BY category ORDER BY category ASC'
+                    "SELECT category, COUNT(*) as count FROM inventory WHERE active = 1 AND publication_status != 'draft' AND (publication_status != 'scheduled' OR julianday(release_at) <= julianday('now')) GROUP BY category ORDER BY category ASC"
                 ).all();
                 const categories = (result.results || []).map(r => ({
                     slug: r.category,
@@ -680,20 +680,28 @@ async function handleCheckout(request, env, corsHeaders) {
 
     const lineItems = [];
     const orderItems = [];
-    // [product_id, pre-ordered quantity, ship date] for each line that dips into pre-order stock
+    // [product_id, pre-ordered quantity, ship date, optional variant ID] for each line that dips into pre-order stock
     const preorderLines = [];
 
+    const requested = new Map();
     for (const item of items) {
         const product = await env.DB.prepare(
-            'SELECT product_id, product_name, price, description, image_url, images, stock_quantity, weight, max_quantity, preorder_enabled, preorder_ship_date, preorder_limit FROM inventory WHERE product_id = ? AND active = 1'
+            "SELECT * FROM inventory WHERE product_id = ? AND active = 1 AND publication_status != 'draft' AND (publication_status != 'scheduled' OR julianday(release_at) <= julianday('now'))"
         ).bind(item.id).first();
 
         if (!product) {
             return jsonResponse({ error: `Product not found: ${item.id}` }, corsHeaders, 400);
         }
 
-        const qty = Math.min(item.quantity || 1, product.max_quantity || 5);
-        const availability = getAvailability(product);
+        const variants = JSON.parse(product.variants || '[]');
+        const variant = variants.find(v => v.id === item.variantId);
+        if ((variants.length && !variant) || (!variants.length && item.variantId)) return jsonResponse({ error: 'Please select a valid product variant' }, corsHeaders, 400);
+        if (variant) { product.price = variant.price; product.product_name += ' - ' + variant.name; }
+        const qty = Number(item.quantity);
+        const totalQty = (requested.get(item.id) || 0) + qty;
+        if (!Number.isInteger(qty) || qty < 1 || totalQty > (product.max_quantity || 5)) return jsonResponse({ error: 'Invalid product quantity' }, corsHeaders, 400);
+        const availability = getAvailability({ ...product, stock_quantity: product.stock_quantity - (requested.get(item.id) || 0) });
+        requested.set(item.id, totalQty);
         if (availability.available < qty) {
             if (availability.available > 0) {
                 return jsonResponse({ error: `Only ${availability.available} of ${product.product_name} left. Please reduce the quantity in your cart.` }, corsHeaders, 400);
@@ -702,7 +710,7 @@ async function handleCheckout(request, env, corsHeaders) {
         }
 
         const preorderQty = Math.max(0, qty - availability.inStock);
-        if (preorderQty > 0) preorderLines.push([product.product_id, preorderQty, availability.preorderShipDate]);
+        if (preorderQty > 0) preorderLines.push([product.product_id, preorderQty, availability.preorderShipDate, variant?.id || null]);
 
         const imgs = JSON.parse(product.images || '[]');
         const imageUrl = resolveStripeProductImageUrl(request.url, imgs, product.image_url);
@@ -725,6 +733,7 @@ async function handleCheckout(request, env, corsHeaders) {
 
         orderItems.push({
             id: product.product_id,
+            ...(variant ? { variantId: variant.id } : {}),
             name: product.product_name,
             price: product.price,
             quantity: qty,
@@ -847,8 +856,8 @@ async function processCompletedCheckout(session, env) {
     const shippingAddress = tryParseJson(metadata.shipping_address) || {};
 
     const preorderLines = tryParseJson(metadata.preorder_items) || [];
-    for (const [productId, quantity, shipDate] of preorderLines) {
-        const item = items.find(i => i.id === productId);
+    for (const [productId, quantity, shipDate, variantId] of preorderLines) {
+        const item = items.find(i => i.id === productId && (!variantId || i.variantId === variantId));
         if (item) {
             item.preorderQuantity = quantity;
             item.preorderShipDate = shipDate;
@@ -1853,8 +1862,11 @@ async function handleUpdateInventory(productId, request, env, corsHeaders) {
     const existing = await env.DB.prepare('SELECT * FROM inventory WHERE product_id = ?').bind(productId).first();
     if (!existing) return jsonResponse({ error: 'Product not found' }, corsHeaders, 404);
 
-    const updates = [];
-    const params = [];
+    let release;
+    try { release = validateProductRelease({ ...existing, ...body }); }
+    catch (e) { return jsonResponse({ error: e.message }, corsHeaders, 400); }
+    const updates = ['publication_status = ?', 'release_at = ?', 'variants = ?'];
+    const params = [release.status, release.at, JSON.stringify(release.variants)];
 
     if (preorder_enabled !== undefined || preorder_ship_date !== undefined || preorder_limit !== undefined) {
         const enabled = preorder_enabled !== undefined ? !!preorder_enabled : existing.preorder_enabled === 1;
@@ -1905,6 +1917,8 @@ async function handleAddInventoryProduct(request, env, corsHeaders) {
     if (!product_id || !product_name) return jsonResponse({ error: 'product_id and product_name are required' }, corsHeaders, 400);
     if (!price) return jsonResponse({ error: 'Price is required' }, corsHeaders, 400);
 
+    let release;
+    try { release = validateProductRelease(body); } catch (e) { return jsonResponse({ error: e.message }, corsHeaders, 400); }
     const enabled = !!preorder_enabled;
     const shipDate = preorder_ship_date || null;
     const limit = parseInt(preorder_limit, 10) || 0;
@@ -1915,8 +1929,8 @@ async function handleAddInventoryProduct(request, env, corsHeaders) {
 
     try {
         await env.DB.prepare(
-            'INSERT INTO inventory (product_id, product_name, sku, stock_quantity, low_stock_threshold, price, description, short_description, long_description, image_url, unit_cost, category, featured, preorder_enabled, preorder_ship_date, preorder_limit) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-        ).bind(product_id, product_name, sku || null, stock_quantity || 0, low_stock_threshold || 5, price || 0, description || null, short_description || null, long_description || null, image_url || null, unit_cost || 0, category || 'fpvgate', featured ? 1 : 0, enabled ? 1 : 0, shipDate, limit).run();
+            'INSERT INTO inventory (product_id, product_name, sku, stock_quantity, low_stock_threshold, price, description, short_description, long_description, image_url, unit_cost, category, featured, preorder_enabled, preorder_ship_date, preorder_limit, publication_status, release_at, variants) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        ).bind(product_id, product_name, sku || null, stock_quantity || 0, low_stock_threshold || 5, price || 0, description || null, short_description || null, long_description || null, image_url || null, unit_cost || 0, category || 'fpvgate', featured ? 1 : 0, enabled ? 1 : 0, shipDate, limit, release.status, release.at, JSON.stringify(release.variants)).run();
 
         if (stock_quantity && stock_quantity > 0) {
             await env.DB.prepare('INSERT INTO inventory_log (product_id, change_amount, reason) VALUES (?, ?, ?)').bind(product_id, stock_quantity, 'Initial stock').run();
@@ -1979,7 +1993,7 @@ async function handleImageReorder(productId, request, env, corsHeaders) {
 
     const images = JSON.parse(product.images || '[]');
     const { order } = await request.json();
-    if (!Array.isArray(order) || order.length !== images.length) return jsonResponse({ error: 'Invalid order array' }, corsHeaders, 400);
+    if (!Array.isArray(order) || order.length !== images.length || new Set(order).size !== images.length || order.some(i => !Number.isInteger(i) || i < 0 || i >= images.length)) return jsonResponse({ error: 'Invalid order array' }, corsHeaders, 400);
 
     const reordered = order.map(i => images[i]);
     await env.DB.prepare('UPDATE inventory SET images = ?, updated_at = datetime(\'now\') WHERE product_id = ?').bind(JSON.stringify(reordered), productId).run();
@@ -2251,7 +2265,11 @@ async function handleProducts(request, env, corsHeaders) {
     const featured = url.searchParams.get('featured');
     const sort = url.searchParams.get('sort');
 
+    const preview = url.searchParams.get('preview') === '1';
+    if (preview && await validateAdminAuth(request, env)) return jsonResponse({ error: 'Admin access required' }, corsHeaders, 401);
+    corsHeaders = { ...corsHeaders, 'Cache-Control': 'no-store' };
     const conditions = ['active = 1'];
+    if (!preview) conditions.push("publication_status != 'draft' AND (publication_status != 'scheduled' OR julianday(release_at) <= julianday('now'))");
     const params = [];
 
     if (category) {
@@ -2271,11 +2289,13 @@ async function handleProducts(request, env, corsHeaders) {
 
     let orderBy = 'product_name ASC';
     if (sort === 'newest') orderBy = 'updated_at DESC';
-    else if (sort === 'price_asc') orderBy = 'price ASC';
-    else if (sort === 'price_desc') orderBy = 'price DESC';
+    else if (sort === 'price_asc' || sort === 'price_desc') {
+        const effectivePrice = "CASE WHEN json_array_length(variants) > 0 THEN (SELECT MIN(CAST(json_extract(value, '$.price') AS REAL)) FROM json_each(inventory.variants)) ELSE price END";
+        orderBy = effectivePrice + (sort === 'price_asc' ? ' ASC' : ' DESC');
+    }
     else if (sort === 'featured') orderBy = 'featured DESC, updated_at DESC';
 
-    const query = `SELECT product_id, product_name, price, description, short_description, long_description, image_url, images, weight, max_quantity, stock_quantity, low_stock_threshold, active, category, featured, preorder_enabled, preorder_ship_date, preorder_limit FROM inventory WHERE ${conditions.join(' AND ')} ORDER BY ${orderBy}`;
+    const query = `SELECT * FROM inventory WHERE ${conditions.join(' AND ')} ORDER BY ${orderBy}`;
 
     const result = await env.DB.prepare(query).bind(...params).all();
 
@@ -2286,7 +2306,8 @@ async function handleProducts(request, env, corsHeaders) {
         return {
             id: p.product_id,
             name: p.product_name,
-            price: p.price,
+            price: JSON.parse(p.variants || '[]').length ? Math.min(...JSON.parse(p.variants).map(v => v.price)) : p.price,
+            variants: JSON.parse(p.variants || '[]'),
             url: '/products',
             description: p.description || '',
             shortDescription: p.short_description || p.description || '',
@@ -2351,4 +2372,21 @@ function jsonResponse(data, corsHeaders, status = 200) {
         status,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
+}
+
+// Release dates are stored in UTC; public visibility is evaluated on each request.
+function validateProductRelease(body) {
+    const status = body.publication_status || 'published';
+    if (!['published', 'draft', 'scheduled'].includes(status)) throw new Error('Invalid publication status');
+    const at = body.release_at ? new Date(body.release_at) : null;
+    if (at && !Number.isFinite(at.getTime())) throw new Error('Invalid release date');
+    if (status === 'scheduled' && !at) throw new Error('Choose a release date and time');
+    const variants = typeof body.variants === 'string' ? JSON.parse(body.variants) : (body.variants || []);
+    if (!Array.isArray(variants) || variants.length > 30) throw new Error('Use up to 30 variants');
+    const ids = new Set();
+    for (const v of variants) {
+        if (!v || typeof v.id !== 'string' || !/^[a-zA-Z0-9_-]{1,80}$/.test(v.id) || ids.has(v.id) || typeof v.name !== 'string' || !v.name.trim() || v.name.length > 100 || typeof v.price !== 'number' || !Number.isFinite(v.price) || v.price <= 0 || Math.abs(Math.round(v.price * 100) - v.price * 100) > 0.000001) throw new Error('Each variant needs a unique ID, name and positive price with up to two decimal places');
+        ids.add(v.id);
+    }
+    return { status, at: at ? at.toISOString() : null, variants: variants.map(v => ({ id: v.id, name: v.name.trim(), price: v.price })) };
 }

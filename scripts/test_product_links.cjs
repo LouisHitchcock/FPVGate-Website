@@ -12,6 +12,7 @@ function store(href = 'https://fpvgate.xyz/shop.html', products = [product]) {
     const makeElement = () => ({
         textContent: '', innerHTML: '', style: {}, children: [],
         classList: { active: false, add() { this.active = true; }, remove() { this.active = false; } },
+        append(child) { this.children.push(child); if(child.id) elements.set(child.id,child); }, prepend(child) { this.children.unshift(child); if(child.id) elements.set(child.id,child); }, removeAttribute() {},
         setAttribute() {}, addEventListener(type, fn) { this[type] = fn; },
         appendChild(child) { this.children.push(child); if (child.id) elements.set(child.id, child); },
         remove() { elements.delete(this.id); },
@@ -26,7 +27,7 @@ function store(href = 'https://fpvgate.xyz/shop.html', products = [product]) {
     };
     const hero = makeElement();
     const context = vm.createContext({
-        window, URL, STORE_API: 'https://store.example',
+        window, URL, storePreview: false, storeFetch: (...args) => context.fetch(...args), STORE_API: 'https://store.example',
         document: { getElementById: id => elements.get(id), createElement: makeElement, querySelector: () => hero, addEventListener() {}, body: { style: {} } },
         navigator: { clipboard: { async writeText(text) { copied.push(text); } } },
         fetch: async () => ({ ok: true, json: async () => products }),
@@ -140,4 +141,14 @@ test('preview lookup failure does not prevent copying a working product link', a
     context.openProductModal(0);
     await context.copyProductLink({});
     assert.equal(new URL(copied[0]).searchParams.get('id'), product.id);
+});
+
+test('variants require a selection and update the modal price and cart item', () => {
+ const variantProduct={...product,stock:10,variants:[{id:'kit',name:'DIY Kit',price:20},{id:'built',name:'Pre assembled',price:35}]};
+ const s=store('https://fpvgate.xyz/shop.html',[variantProduct]);let added;
+ s.context.addToCart=p=>{added=p};s.context.openProductModal(0);
+ const select=s.elements.get('product-variant');assert.ok(select);assert.equal(select.children.length,3);
+ select.value='built';select.onchange();assert.match(s.elements.get('modal-price').textContent,/35.00/);
+ const selected=s.window._selectedVariantProduct;assert.equal(selected.variantId,'built');assert.equal(selected.price,35);assert.match(selected.name,/Pre assembled/);
+ select.value='';select.onchange();assert.equal(s.window._selectedVariantProduct,null);
 });
