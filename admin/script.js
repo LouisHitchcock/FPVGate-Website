@@ -609,15 +609,6 @@ ${o.label_url?'<div class="label-page"><iframe src="'+esc(o.label_url)+'#toolbar
     }catch(e){alert('Failed to generate invoice: '+e.message)}
 }
 
-async function loadC5Stats(){
- const summary=document.getElementById('c5-stats-summary'),body=document.getElementById('c5-stats-rows');summary.textContent='Loading...';body.replaceChildren();
- try{const data=await analyticsApi('/stats/c5?days='+document.getElementById('c5-stats-days').value);if(!Array.isArray(data.rows))throw new Error('Deploy the updated analytics Worker.');
- const count=name=>data.rows.filter(r=>r.event_name==='c5_'+name).reduce((n,r)=>n+Number(r.count),0),ok=count('flash_complete'),failed=count('flash_failed');
- summary.textContent=`Started: ${count('flash_started')} | Successful: ${ok} | Failed: ${failed} | Cancelled: ${count('connection_cancelled')} | Success rate: ${ok+failed?Math.round(ok/(ok+failed)*100)+'%':'?'}`;
- for(const r of data.rows){const tr=document.createElement('tr');for(const v of [r.event_name.replace('c5_',''),r.board,r.version,r.error_message,r.count]){const td=document.createElement('td');td.textContent=v??'?';tr.append(td)}body.append(tr)}
- if(!data.rows.length)summary.textContent='No C5 events recorded for this period.';
- }catch(e){summary.textContent='Unable to load C5 analytics: '+e.message}
-}
 
 function addVariantRow(prefix,v={}) {
  const row=document.createElement('div');row.className='variant-row';row.style.cssText='display:flex;gap:8px;margin:8px 0';row.dataset.variantId=v.id||('v_'+crypto.randomUUID().replaceAll('-',''));

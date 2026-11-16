@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FPVGate Admin</title>
 <meta name="robots" content="noindex, nofollow">
-<link rel="stylesheet" href="styles.css?v=20260925c">
+<link rel="stylesheet" href="styles.css?v=20261116-c5">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://unpkg.com/chartjs-chart-geo@4.3.1"></script>
 </head>
@@ -146,7 +146,43 @@
 </div>
 </div>
 
-<div id="section-c5stats" class="section"><div class="page-header"><h2>C5 Flasher</h2><p>Selections, flash outcomes and errors. Tracking starts after deployment.</p></div><div class="controls"><select id="c5-stats-days" onchange="loadC5Stats()"><option value="7">7 Days</option><option value="30" selected>30 Days</option><option value="90">90 Days</option><option value="365">1 Year</option></select><button class="refresh-btn" onclick="loadC5Stats()">Refresh</button></div><div class="card"><h2>Estimated Historical C5 Interest</h2><p><strong>103?199 GitHub visitors</strong> across C5MK and C5RX, October 19?November 1, 2026. This range assumes complete overlap at the low end and no overlap at the high end.</p><p>GitHub reported 103 unique visitors for C5MK and 96 for C5RX. C5MK release assets recorded 21 firmware-image downloads across releases when checked November 2, 2026; repeat and automated downloads may be included.</p><p>The website recorded onward page views from the C5 page associated with 34 distinct IP hashes when checked November 2. This is an indirect interest signal, not a count of C5 page visitors.</p><p>Main website page views increased 27% and timer flash starts increased 28% between October 3?17 and October 18?November 1. These changes cannot be attributed solely to C5.</p><p>These are historical interest indicators, not estimated successful flashes or installed devices. Recorded flash totals and success rates below use tracked events only. GitHub and website visitors may overlap; do not add these counts together.</p></div><p id="c5-stats-summary"></p><div class="card table-responsive"><table><thead><tr><th>Event</th><th>Board</th><th>Version</th><th>Error</th><th>Count</th></tr></thead><tbody id="c5-stats-rows"></tbody></table></div></div>
+<div id="section-c5stats" class="section">
+<div class="page-header"><h2>C5 Flasher</h2><p>C5 firmware flasher analytics and usage data</p></div>
+<div class="controls"><div class="status-filters">
+<button class="filter-btn active" onclick="setC5DateFilter(7,this)">7 Days</button>
+<button class="filter-btn" onclick="setC5DateFilter(30,this)">30 Days</button>
+<button class="filter-btn" onclick="setC5DateFilter(90,this)">90 Days</button>
+<button class="filter-btn" onclick="setC5DateFilter(365,this)">1 Year</button>
+<button class="filter-btn" onclick="setC5DateFilter('all',this)">All Time</button>
+</div><button class="refresh-btn" onclick="loadC5Stats()">Refresh</button></div>
+<div id="c5-loading" class="loading" role="status"><div class="spinner"></div>Loading C5 analytics...</div>
+<div id="c5-error" class="card error-text" role="alert" hidden><p id="c5-error-message"></p><button class="btn btn-secondary" onclick="loadC5Stats()">Try again</button></div>
+<div id="c5-content" style="display:none">
+<p id="c5-stats-summary" class="c5-period-note" aria-live="polite"></p>
+<div id="c5-empty" class="card" hidden>No C5 events recorded for this period. Choose a wider date range to check earlier activity.</div>
+<div class="metrics-grid">
+<div class="metric-card" style="border-left-color:#4299e1"><h3>Total Events</h3><div class="metric-value" id="c5-total-events">-</div><div class="metric-sub">Tracked C5 events</div></div>
+<div class="metric-card" style="border-left-color:#48bb78"><h3>Flash Success Rate</h3><div class="metric-value" id="c5-success-rate">-</div><div class="metric-sub">Completed / (completed + failed)</div></div>
+<div class="metric-card" style="border-left-color:#9f7aea"><h3>Unique Users</h3><div class="metric-value" id="c5-unique-users">-</div><div class="metric-sub">Distinct anonymised IP hashes</div></div>
+<div class="metric-card" style="border-left-color:#ed8936"><h3>Flash Starts</h3><div class="metric-value" id="c5-started">-</div><div class="metric-sub">Includes cancelled connections</div></div>
+<div class="metric-card" style="border-left-color:#38b2ac"><h3>Successful Flashes</h3><div class="metric-value" id="c5-completed">-</div><div class="metric-sub">Reported flash completions</div></div>
+<div class="metric-card" style="border-left-color:#f56565"><h3>Failed Flashes</h3><div class="metric-value" id="c5-failed">-</div><div class="metric-sub">Excludes cancelled connections</div></div>
+</div>
+<div class="card"><h2>Geographic Distribution</h2><p class="c5-panel-note">Unique users by country. A user may appear in more than one country.</p><div class="c5-map-layout"><div id="c5-map-stage" class="c5-map-stage"><canvas id="c5-world-map"></canvas></div><div class="table-responsive c5-country-list"><table><thead><tr><th>Country</th><th>Users</th></tr></thead><tbody id="c5-country-rows"></tbody></table></div></div></div>
+<div class="card"><h2>Activity Over Time</h2><p class="c5-panel-note">Flash attempts and outcomes by UTC date. Quiet days are included.</p><div class="c5-chart-stage"><canvas id="c5-activity-chart"></canvas></div></div>
+<div class="c5-chart-grid">
+<div class="card"><h2>Board Popularity</h2><p class="c5-panel-note">Counted from flash starts.</p><div class="c5-chart-stage"><canvas id="c5-board-chart"></canvas></div><p id="c5-board-empty" class="c5-panel-note" hidden>No flash starts in this period.</p></div>
+<div class="card"><h2>Firmware Versions</h2><p class="c5-panel-note">Counted from flash starts.</p><div class="c5-chart-stage"><canvas id="c5-version-chart"></canvas></div><p id="c5-version-empty" class="c5-panel-note" hidden>No flash starts in this period.</p></div>
+</div>
+<div class="c5-chart-grid">
+<div class="card"><h2>Flash Events</h2><p class="c5-panel-note">Cancelled connections are shown separately and excluded from the success rate.</p><div class="c5-chart-stage"><canvas id="c5-flash-chart"></canvas></div></div>
+<div class="card"><h2>User Activity Recency</h2><p class="c5-panel-note">Most recent C5 activity for users in the selected period.</p><div class="c5-chart-stage"><canvas id="c5-recency-chart"></canvas></div></div>
+</div>
+<div class="card"><h2>Common Errors</h2><div class="table-responsive"><table><thead><tr><th>Error Message</th><th>Board</th><th>Version</th><th>Count</th><th>Last Occurred</th></tr></thead><tbody id="c5-error-rows"></tbody></table></div></div>
+<details class="card c5-reference"><summary>Event breakdown</summary><div class="table-responsive"><table><thead><tr><th>Event</th><th>Board</th><th>Version</th><th>Error</th><th>Count</th></tr></thead><tbody id="c5-stats-rows"></tbody></table></div></details>
+</div>
+<details class="card c5-reference"><summary>Historical C5 interest (October-November 2026)</summary><div><p><strong>103&ndash;199 GitHub visitors</strong> across C5MK and C5RX, October 19&ndash;November 1, 2026. This range assumes complete overlap at the low end and no overlap at the high end.</p><p>GitHub reported 103 unique visitors for C5MK and 96 for C5RX. C5MK release assets recorded 21 firmware-image downloads across releases when checked November 2, 2026; repeat and automated downloads may be included.</p><p>The website recorded onward page views from the C5 page associated with 34 distinct IP hashes when checked November 2. This is an indirect interest signal, not a count of C5 page visitors.</p><p>Main website page views increased 27% and timer flash starts increased 28% between October 3&ndash;17 and October 18&ndash;November 1. These changes cannot be attributed solely to C5.</p><p>These are historical interest indicators, not estimated successful flashes or installed devices. Recorded flash totals and success rates below use tracked events only. GitHub and website visitors may overlap; do not add these counts together.</p></div></details>
+</div>
 <div id="section-analytics" class="section">
 <div class="page-header"><h2>Analytics</h2><p>Revenue, profit, forecasting and shipping insights</p></div>
 <div class="controls">
@@ -437,6 +473,7 @@
 <div class="modal-actions"><button class="btn btn-secondary" onclick="closeEditProductModal()">Cancel</button><button class="btn btn-primary" onclick="saveEditProduct()">Save Changes</button></div>
 </div></div>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="script.js?v=20261116-store"></script>
+<script src="script.js?v=20261116-c5"></script>
+<script src="c5-analytics.js?v=20261116-c5"></script>
 </body>
 </html>

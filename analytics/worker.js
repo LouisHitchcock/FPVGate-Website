@@ -74,10 +74,13 @@ export default {
       }
 
       if (url.pathname === '/stats/c5' && request.method === 'GET') {
-        const days = Math.min(Math.max(parseInt(url.searchParams.get('days')) || 30, 1), 3650);
-        const since = new Date(Date.now() - days * 86400000).toISOString();
-        const rows = await env.DB.prepare(`SELECT event_name, board, version, error_message, COUNT(*) as count FROM analytics_events WHERE event_name GLOB 'c5_*' AND timestamp >= ? GROUP BY event_name, board, version, error_message ORDER BY count DESC`).bind(since).all();
-        return new Response(JSON.stringify({rows: rows.results}), {headers: {...corsHeaders, 'Content-Type': 'application/json'}});
+        const value = url.searchParams.get('days');
+        const days = value === 'all' ? null : value === null ? 30 : Number(value);
+        if (days !== null && (!Number.isInteger(days) || days < 1 || days > 3650)) {
+          return new Response(JSON.stringify({error: 'days must be all or an integer from 1 to 3650'}), {status: 400, headers: {...corsHeaders, 'Content-Type': 'application/json'}});
+        }
+        const stats = await getC5Stats(env.DB, days);
+        return new Response(JSON.stringify(stats), {headers: {...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'no-store'}});
       }
       // GET /stats - Get analytics statistics
       if (url.pathname === '/stats' && request.method === 'GET') {
@@ -657,4 +660,56 @@ async function getDetailedStats(db, days = null) {
   stats.users_by_recency = usersByRecency.results;
 
   return stats;
+}
+
+// C5 analytics are isolated from timer and shop events. One UTC cutoff is shared
+// by every query so all dashboard panels represent exactly the same period.
+async function getC5Stats(db, days = 30, now = new Date()) {
+  const since = days === null ? null : new Date(now.getTime() - days * 86400000).toISOString();
+  const scope = "event_name GLOB 'c5_*' AND julianday(timestamp) <= julianday(?)" + (since ? ' AND julianday(timestamp) >= julianday(?)' : '');
+  const params = [now.toISOString(), ...(since ? [since] : [])];
+  const query = (sql) => db.prepare(sql).bind(...params).all().then(r => r.results || []);
+  const [rows, countries, activity, boards, versions, errors, recency] = await Promise.all([
+    query(`SELECT event_name, board, version, error_message, COUNT(*) AS count FROM analytics_events WHERE ${scope} GROUP BY event_name, board, version, error_message ORDER BY count DESC`),
+    query(`SELECT COALESCE(NULLIF(country, ''), 'Unknown') AS country, COUNT(DISTINCT ip_hash) AS count FROM analytics_events WHERE ${scope} AND ip_hash IS NOT NULL AND ip_hash != '' GROUP BY COALESCE(NULLIF(country, ''), 'Unknown') ORDER BY count DESC`),
+    query(`SELECT DATE(timestamp) AS date, COUNT(*) AS count,
+      SUM(event_name = 'c5_flash_started') AS started,
+      SUM(event_name = 'c5_flash_complete') AS completed,
+      SUM(event_name = 'c5_flash_failed') AS failed,
+      SUM(event_name = 'c5_connection_cancelled') AS cancelled
+      FROM analytics_events WHERE ${scope} GROUP BY DATE(timestamp) ORDER BY date`),
+    query(`SELECT COALESCE(NULLIF(board, ''), 'Unknown') AS board, COUNT(*) AS count FROM analytics_events WHERE ${scope} AND event_name = 'c5_flash_started' GROUP BY COALESCE(NULLIF(board, ''), 'Unknown') ORDER BY count DESC`),
+    query(`SELECT COALESCE(NULLIF(version, ''), 'Unknown') AS version, COUNT(*) AS count FROM analytics_events WHERE ${scope} AND event_name = 'c5_flash_started' GROUP BY COALESCE(NULLIF(version, ''), 'Unknown') ORDER BY count DESC`),
+    query(`SELECT COALESCE(NULLIF(error_message, ''), 'Unknown error') AS error_message, board, version, COUNT(*) AS count, MAX(timestamp) AS last_occurred FROM analytics_events WHERE ${scope} AND event_name = 'c5_flash_failed' GROUP BY COALESCE(NULLIF(error_message, ''), 'Unknown error'), board, version ORDER BY count DESC LIMIT 20`),
+    query(`SELECT ip_hash, MAX(timestamp) AS last_seen FROM analytics_events WHERE ${scope} AND ip_hash IS NOT NULL AND ip_hash != '' GROUP BY ip_hash`)
+  ]);
+  const count = event => rows.filter(row => row.event_name === 'c5_' + event).reduce((total, row) => total + Number(row.count), 0);
+  const successes = count('flash_complete'), failures = count('flash_failed');
+  const buckets = {last_day: 0, last_week: 0, last_month: 0, older: 0};
+  for (const user of recency) {
+    const age = now.getTime() - new Date(user.last_seen).getTime();
+    buckets[age <= 86400000 ? 'last_day' : age <= 7 * 86400000 ? 'last_week' : age <= 30 * 86400000 ? 'last_month' : 'older']++;
+  }
+  // Fill missing UTC dates so quiet days do not disappear from the timeline.
+  const activityByDate = new Map(activity.map(row => [row.date, row]));
+  const firstDay = since || activity[0]?.date;
+  const timeline = [];
+  if (firstDay) {
+    const cursor = new Date(firstDay.slice(0, 10) + 'T00:00:00Z');
+    while (cursor <= now) {
+      const date = cursor.toISOString().slice(0, 10);
+      timeline.push(activityByDate.get(date) || {date, count: 0, started: 0, completed: 0, failed: 0, cancelled: 0});
+      cursor.setUTCDate(cursor.getUTCDate() + 1);
+    }
+  }
+  return {
+    days, since, generated_at: now.toISOString(), rows,
+    total_events: rows.reduce((total, row) => total + Number(row.count), 0),
+    unique_users: recency.length,
+    success_rate: {successes, failures, rate: successes + failures ? (successes / (successes + failures) * 100).toFixed(2) + '%' : null},
+    flash_started: count('flash_started'), connection_cancelled: count('connection_cancelled'),
+    country_stats: countries, recent_activity: timeline, board_stats: boards, version_stats: versions,
+    flash_events: ['flash_started', 'flash_complete', 'flash_failed', 'connection_cancelled'].map(event => ({event_name: 'c5_' + event, count: count(event)})),
+    users_by_recency: Object.entries(buckets).map(([recency, count]) => ({recency, count})), common_errors: errors
+  };
 }

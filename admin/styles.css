@@ -431,3 +431,23 @@ canvas { max-width: 100%; height: auto !important; }
     .card canvas { max-height: 220px; }
     div[style*="height:400px"] { height: 250px !important; }
 }
+
+/* C5 analytics uses the same dashboard cards and controls as Flasher Stats. */
+#section-c5stats [hidden] { display: none !important; }
+.c5-period-note { color:#718096; font-size:13px; margin-bottom:16px; }
+.c5-panel-note { color:#718096; font-size:13px; margin:-6px 0 16px; }
+.c5-chart-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; }
+.c5-chart-grid > .card { min-width:0; }
+.c5-chart-stage { position:relative; height:300px; }
+.c5-map-layout { display:grid; grid-template-columns:minmax(0,2fr) minmax(180px,1fr); gap:20px; }
+.c5-map-stage { position:relative; height:360px; min-width:0; display:grid; align-items:center; }
+.c5-country-list { max-height:360px; }
+.c5-reference summary { cursor:pointer; font-weight:600; color:#1a202c; }
+.c5-reference[open] summary { margin-bottom:16px; }
+.c5-reference p { font-size:13px; color:#718096; line-height:1.6; margin:8px 0; }
+@media(max-width:900px) { .c5-chart-grid,.c5-map-layout { grid-template-columns:1fr; } .c5-map-stage { height:280px; } }
+
+#section-c5stats .metrics-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+@media(min-width:1600px) { #section-c5stats .metrics-grid { grid-template-columns:repeat(6,minmax(0,1fr)); } }
+@media(max-width:768px) { #section-c5stats { padding-top:20px; } #section-c5stats .metrics-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:400px) { #section-c5stats .metrics-grid { grid-template-columns:1fr; } }
