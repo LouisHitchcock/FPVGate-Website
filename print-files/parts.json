@@ -77,6 +77,26 @@
             "name": "LED upper",
             "build": "ESP32-S3 DevKitC-1 + RX5808",
             "file": "devkitc1-rx5808/devkitc1-rx5808-led-upper.stl"
+        },
+        {
+            "id": "aio-20mm-gate-mount",
+            "name": "AIO 20 mm gate mount",
+            "build": "Gate mounts",
+            "file": "gate-mounts/aio-20mm-gate-mount.stl",
+            "description": "Mount an FPVGate AIO timer with a Novacore or C5MK receiver to a 20 mm gate tube.",
+            "compatibility": "FPVGate AIO (Novacore / C5MK); 20 mm gate tubes",
+            "hardware": "1 × M5 × 30 mm bolt; 1 × M5 washer; 1 × M5 nut per mount.",
+            "quantity": 1
+        },
+        {
+            "id": "mini-20mm-gate-mount",
+            "name": "Mini 20 mm gate mount",
+            "build": "Gate mounts",
+            "file": "gate-mounts/mini-20mm-gate-mount.stl",
+            "description": "Mount an FPVGate Mini Gate timer to a 20 mm gate tube.",
+            "compatibility": "FPVGate Mini Gate; 20 mm gate tubes",
+            "hardware": "1 × M5 × 30 mm bolt; 1 × M5 washer; 1 × M5 nut per mount.",
+            "quantity": 1
         }
     ]
 }

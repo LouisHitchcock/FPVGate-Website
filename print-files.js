@@ -213,6 +213,8 @@ function renderDetails(part) {
     els.description.hidden = !part.description;
 
     const rows = [['Quantity', String(part.quantity || 1)]];
+    if (part.compatibility) rows.push(['Compatibility', part.compatibility]);
+    if (part.hardware) rows.push(['Additional hardware', part.hardware]);
     for (const [key, label] of Object.entries(PRINT_LABELS)) {
         if (part.print && part.print[key]) rows.push([label, part.print[key]]);
     }

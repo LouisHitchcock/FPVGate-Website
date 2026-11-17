@@ -40,6 +40,8 @@ entry.
 | `build`       | yes      | Parts are grouped under this heading. Keep the spelling consistent.   |
 | `file`        | yes      | Path relative to this folder.                                         |
 | `description` | no       | One or two sentences: what it is, orientation, anything unusual.      |
+| `compatibility` | no | Supported timers and gate tube size. |
+| `hardware` | no | Additional non-printed hardware required per mount. |
 | `quantity`    | no       | How many to print. Defaults to 1.                                     |
 | `print`       | no       | Any of `material`, `layerHeight`, `infill`, `supports`, `notes`.      |
 
@@ -47,3 +49,10 @@ entry.
    `http://localhost:8000/print-files.html`. The viewer assumes the STL is in
    millimetres with Z up, which is the default for most CAD exports; the dimensions shown
    under the viewer are a quick way to spot a model exported in the wrong units.
+
+## Gate mounts
+
+The AIO (Novacore/C5MK) and Mini Gate mounts both fit 20 mm gate tubes.
+Each requires one M5 × 30 mm bolt, one M5 washer and one M5 nut.
+The supplied STL files are kept unchanged. Material, layer height, infill and supports
+are not specified until confirmed by the designer.
