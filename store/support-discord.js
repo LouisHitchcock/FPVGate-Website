@@ -32,7 +32,7 @@ export async function notifyTicketDiscord(env, ticketId) {
         let response;
         try {
             response = await fetch(webhook.toString(), {
-                method:'POST',redirect:'error',signal:controller.signal,
+                method:'POST',redirect:'manual',signal:controller.signal,
                 headers:{'Content-Type':'application/json'},
                 body:JSON.stringify({
                     ...(role ? {content:'<@&'+role+'>'} : {}),
