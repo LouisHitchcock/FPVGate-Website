@@ -1142,7 +1142,20 @@ async function handleCreateTestOrder(request, env, corsHeaders) {
 
     const order = await env.DB.prepare('SELECT * FROM orders WHERE invoice_number = ?').bind(invoiceNumber).first();
 
-    return jsonResponse({ success: true, order: parseOrderJson(order) }, corsHeaders);
+    let discordStatus = 'not_configured';
+    if (env.DISCORD_WEBHOOK_URL) {
+        try {
+            await sendDiscordNotification(env.DISCORD_WEBHOOK_URL, {
+                invoiceNumber, items, total, currency: 'gbp', shippingAddress, customerEmail,
+                orderKind: labels.includes('test') ? 'Test Order' : zeroValue ? 'Review Order' : 'Manual Order'
+            });
+            discordStatus = 'sent';
+        } catch {
+            discordStatus = 'failed';
+            console.error('Manual order saved; Discord notification failed:', invoiceNumber);
+        }
+    }
+    return jsonResponse({ success: true, order: parseOrderJson(order), discord_notification_status: discordStatus }, corsHeaders);
 }
 
 // --- Admin: Orders ---
@@ -2232,7 +2245,7 @@ async function handleAnalytics(request, env, corsHeaders) {
 // --- Helpers ---
 
 async function sendDiscordNotification(webhookUrl, orderData) {
-    const { invoiceNumber, items, total, currency, shippingAddress, customerEmail } = orderData;
+    const { invoiceNumber, items, total, currency, shippingAddress, customerEmail, orderKind } = orderData;
     const currencyUpper = (currency || 'GBP').toUpperCase();
     const itemList = items.map(item => `${item.name} x${item.quantity}${item.preorderQuantity ? ` (${item.preorderQuantity} pre-order, ships ${formatShipDate(item.preorderShipDate)})` : ''}`).join(', ');
 
@@ -2242,24 +2255,37 @@ async function sendDiscordNotification(webhookUrl, orderData) {
         shippingAddress.postalCode, shippingAddress.country
     ].filter(Boolean).join(', ');
 
-    await fetch(webhookUrl, {
+    const target = new URL(webhookUrl);
+    target.searchParams.set('wait', 'true');
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+    try {
+    const response = await fetch(target.toString(), {
         method: 'POST',
+        redirect: 'manual',
+        signal: controller.signal,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+            allowed_mentions: { parse: [] },
             embeds: [{
-                title: items.some(i => i.preorderQuantity) ? `New Pre-order #${invoiceNumber}` : `New Order #${invoiceNumber}`,
+                title: orderKind ? `${orderKind} #${invoiceNumber}` : items.some(i => i.preorderQuantity) ? `New Pre-order #${invoiceNumber}` : `New Order #${invoiceNumber}`,
                 color: 0x48bb78,
                 fields: [
-                    { name: 'Customer', value: shippingAddress.name || customerEmail, inline: true },
+                    { name: 'Customer', value: (shippingAddress.name || customerEmail || 'Not provided').slice(0, 1024), inline: true },
                     { name: 'Total', value: `${currencyUpper} ${parseFloat(total).toFixed(2)}`, inline: true },
-                    { name: 'Items', value: itemList, inline: false },
-                    { name: 'Ship To', value: address, inline: false }
+                    { name: 'Items', value: (itemList || 'No items').slice(0, 1024), inline: false },
+                    { name: 'Ship To', value: (address || 'Not provided').slice(0, 1024), inline: false }
                 ],
                 footer: { text: 'FPVGate Shop' },
                 timestamp: new Date().toISOString()
             }]
         })
     });
+    if (!response.ok) throw new Error('Discord delivery was not accepted');
+    const result = await response.json();
+    if (!/^\d+$/.test(result.id || '')) throw new Error('Discord delivery was not confirmed');
+    return result.id;
+    } finally { clearTimeout(timeout); }
 }
 
 function parseOrderJson(order) {
