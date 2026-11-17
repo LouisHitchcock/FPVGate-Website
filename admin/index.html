@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FPVGate Admin</title>
 <meta name="robots" content="noindex, nofollow">
-<link rel="stylesheet" href="styles.css?v=20261116-c5">
+<link rel="stylesheet" href="styles.css?v=20261117-admin-review">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://unpkg.com/chartjs-chart-geo@4.3.1"></script>
 </head>
@@ -24,6 +24,7 @@
 <button class="nav-item" onclick="switchSection('flasherstats',this)"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/></svg>Flasher Stats</button>
 <button class="nav-item" onclick="switchSection('c5stats',this)">C5 Flasher</button>
 <button class="nav-item" onclick="switchSection('analytics',this)"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>Analytics</button>
+<button class="nav-item" onclick="switchSection('tickets',this)">Enquiries &amp; Support<span class="nav-badge" id="ticket-new-badge" hidden></span></button>
 <button class="nav-item" onclick="switchSection('emails',this)"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>Sent Emails</button>
 <button class="nav-item" onclick="switchSection('users',this)"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>Users</button>
 <button class="nav-item" onclick="switchSection('tools',this)"><svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>Tools</button>
@@ -241,6 +242,26 @@
 <div id="users-loading" class="loading"><div class="spinner"></div>Loading users...</div>
 <div id="users-empty" class="empty-state" style="display:none">No additional users added yet</div>
 <div class="table-responsive"><table id="users-table" style="display:none"><thead><tr><th>Email</th><th>Name</th><th>Added</th><th>Actions</th></tr></thead><tbody id="users-body"></tbody></table></div>
+</div>
+</div>
+
+<div id="section-tickets" class="section">
+<div class="page-header"><h2>Enquiries &amp; Support</h2><p>Distributor applications and customer support tickets</p></div>
+<p id="ticket-feedback" role="status" aria-live="polite"></p>
+<div id="ticket-inbox">
+<div class="metrics-grid" id="ticket-counts"></div>
+<form id="ticket-filters" class="controls ticket-controls"><label>Status<select id="ticket-status-filter"><option value="">All statuses</option><option value="new">New</option><option value="open">Open</option><option value="waiting">Waiting for customer</option><option value="resolved">Resolved</option></select></label><label>Type<select id="ticket-type-filter"><option value="">All types</option><option value="distributor">Distributor</option><option value="support">Support</option></select></label><label>Search<input type="search" id="ticket-search" placeholder="Reference, name, email or subject"></label><button class="btn btn-primary" type="submit">Search / Refresh</button></form>
+<details class="card" id="ticket-create"><summary>Create a support ticket</summary><p class="ticket-help">Record an enquiry received by email or another channel. Creating a ticket does not send an email.</p><form id="ticket-create-form" class="ticket-form"><label>Customer name<input name="contact" maxlength="120" required></label><label>Email<input name="email" type="email" maxlength="254" required></label><label>Subject<input name="subject" maxlength="200" required></label><label>Message<textarea name="message" maxlength="8000" rows="4" required></textarea></label><button class="btn btn-primary" type="submit">Create ticket</button></form></details>
+<div class="card table-responsive"><table><thead><tr><th>Reference / Subject</th><th>Contact</th><th>Type</th><th>Status</th><th>Updated</th></tr></thead><tbody id="ticket-list"></tbody></table></div>
+<div class="ticket-pagination"><button type="button" class="btn btn-secondary" id="ticket-prev">Previous</button><span id="ticket-page"></span><button type="button" class="btn btn-secondary" id="ticket-next">Next</button></div>
+</div>
+<div id="ticket-detail" hidden>
+<button type="button" class="btn btn-secondary" id="ticket-back">Back to inbox</button>
+<div class="card ticket-heading"><p id="ticket-reference" class="ticket-help"></p><h2 id="ticket-subject"></h2><p id="ticket-contact"></p><p id="ticket-notification" class="ticket-help"></p><form id="ticket-status-form" class="ticket-controls"><label>Status<select id="ticket-detail-status"><option value="new">New</option><option value="open">Open</option><option value="waiting">Waiting for customer</option><option value="resolved">Resolved</option></select></label><button class="btn btn-secondary" type="submit">Save status</button></form></div>
+<div class="card" id="ticket-order"><h2>Order &amp; faulty-device return</h2><p class="ticket-help">Link only after checking the customer's checkout email and order reference. Publicly supplied references are not treated as proof of ownership.</p><form id="ticket-order-form" class="ticket-controls"><label>Order reference<input id="ticket-order-reference" maxlength="100" placeholder="Invoice reference or order ID" required></label><button type="submit" class="btn btn-secondary">Verify &amp; link order</button></form><p id="ticket-linked-order" class="ticket-help"></p><div id="ticket-return-tools" hidden><button type="button" class="btn btn-secondary" id="ticket-manage-order">Manage order / return postage</button><form id="ticket-return-form" class="ticket-controls"><label>Item to return<select id="ticket-return-product" required></select></label><label>Quantity<input id="ticket-return-quantity" type="number" min="1" value="1" required></label><button type="submit" class="btn btn-primary">Start faulty-device replacement return</button></form><p class="ticket-help">This starts a return after troubleshooting. Buying postage is a separate, explicit action in the order panel. The replacement is dispatched after the faulty device is received.</p></div></div>
+<div id="ticket-application" class="card" hidden><h2 id="ticket-application-title">Enquiry details</h2><dl id="ticket-application-fields"></dl></div>
+<div class="card"><h2>Ticket history</h2><div id="ticket-messages"></div></div>
+<div class="card"><h2>Add a message</h2><form id="ticket-message-form" class="ticket-form"><label>Message type<select id="ticket-message-kind"><option value="note">Internal note (not emailed)</option><option value="reply">Email reply to customer</option></select></label><label>Message<textarea id="ticket-message-text" rows="6" maxlength="8000" required></textarea></label><p class="ticket-help">Email replies are sent to the ticket's contact address. Incoming replies arrive at shop.fpvgate@gmail.com; they are not automatically added to this history. You can record them as internal notes.</p><button class="btn btn-primary" type="submit" id="ticket-message-submit">Save internal note</button></form></div>
 </div>
 </div>
 
@@ -473,7 +494,9 @@
 <div class="modal-actions"><button class="btn btn-secondary" onclick="closeEditProductModal()">Cancel</button><button class="btn btn-primary" onclick="saveEditProduct()">Save Changes</button></div>
 </div></div>
 <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
-<script src="script.js?v=20261116-c5"></script>
+<script src="script.js?v=20261117-admin-review"></script>
 <script src="c5-analytics.js?v=20261116-c5"></script>
+<script src="support.js?v=20261117-admin-review"></script>
+<script src="returns.js?v=20261117-admin-review"></script>
 </body>
 </html>

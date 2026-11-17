@@ -451,3 +451,27 @@ canvas { max-width: 100%; height: auto !important; }
 @media(min-width:1600px) { #section-c5stats .metrics-grid { grid-template-columns:repeat(6,minmax(0,1fr)); } }
 @media(max-width:768px) { #section-c5stats { padding-top:20px; } #section-c5stats .metrics-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:400px) { #section-c5stats .metrics-grid { grid-template-columns:1fr; } }
+
+#section-tickets [hidden] { display:none !important; }
+#ticket-feedback { margin:0 0 16px; line-height:1.6; overflow-wrap:anywhere; }
+#ticket-feedback[data-error=true] { color:#c53030; }
+.ticket-controls { display:flex; flex-wrap:wrap; align-items:end; gap:12px; }
+.ticket-controls label { display:grid; gap:6px; font-size:13px; }
+.ticket-controls input,.ticket-controls select,.ticket-form input,.ticket-form textarea,.ticket-form select { padding:10px; border:1px solid #cbd5e0; border-radius:6px; font:inherit; width:100%; min-width:0; background:white; color:#1a202c; }
+.ticket-form { display:grid; gap:16px; margin-top:16px; }
+.ticket-form label { display:grid; gap:6px; font-size:14px; }
+.ticket-form textarea { resize:vertical; }
+.ticket-form .btn { justify-self:start; }
+.ticket-help { font-size:13px; line-height:1.6; color:#718096; margin:10px 0; overflow-wrap:anywhere; }
+.ticket-heading { margin-top:20px; overflow-wrap:anywhere; }
+.ticket-heading form { margin-top:20px; }
+.ticket-pagination { display:flex; flex-wrap:wrap; gap:16px; align-items:center; margin-bottom:20px; }
+.ticket-open { border:0; background:none; padding:0; color:#2b6cb0; cursor:pointer; font:inherit; text-align:left; overflow-wrap:anywhere; }
+.ticket-message { border:1px solid #e2e8f0; border-left:3px solid #4299e1; padding:16px; margin-bottom:14px; border-radius:6px; }
+.ticket-message[data-kind=note] { border-left-color:#d69e2e; background:#fffff0; }
+.ticket-message[data-kind=status] { border-left-color:#a0aec0; }
+.ticket-message-body { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.6; }
+#ticket-application-fields { display:grid; grid-template-columns:minmax(100px,160px) minmax(0,1fr); gap:12px; }
+#ticket-application-fields dt { font-weight:600; }
+#ticket-application-fields dd { white-space:pre-wrap; overflow-wrap:anywhere; margin:0; }
+@media(max-width:576px) { .ticket-controls label { width:100%; } #ticket-application-fields { grid-template-columns:1fr; gap:6px; } #ticket-application-fields dd { margin-bottom:12px; } }

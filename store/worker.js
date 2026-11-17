@@ -1,6 +1,8 @@
 // Cloudflare Worker - FPVGate Shop API
 // Handles Stripe Checkout, webhooks, Shippo shipping, and admin API
 
+import { handleSupportAdmin } from './support.js';
+
 import {
     getShippingRates,
     getReturnRates,
@@ -194,6 +196,10 @@ export default {
                         status: 401,
                         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
                     });
+                }
+
+                if (url.pathname === '/api/tickets' || url.pathname.startsWith('/api/tickets/')) {
+                    return await handleSupportAdmin(request, env, corsHeaders);
                 }
 
                 // GET /api/orders
@@ -1522,19 +1528,30 @@ async function handleCreateReturn(orderId, request, env, corsHeaders) {
     if (!order) return jsonResponse({ error: 'Order not found' }, corsHeaders, 404);
 
     // Check no active return already exists
-    const existing = await env.DB.prepare("SELECT id FROM returns WHERE order_id = ? AND status NOT IN ('cancelled', 'refunded')").bind(orderId).first();
+    const existing = await env.DB.prepare("SELECT id FROM returns WHERE order_id = ? AND status NOT IN ('cancelled', 'refunded', 'replaced')").bind(orderId).first();
     if (existing) return jsonResponse({ error: 'An active return already exists for this order' }, corsHeaders, 400);
 
     const body = await request.json();
     const { reason, items } = body;
 
     const orderItems = tryParseJson(order.items) || [];
-    const returnItems = items && items.length > 0 ? items : orderItems;
-    const refundAmount = returnItems.reduce((s, i) => s + (i.totalPrice || i.price * (i.quantity || 1)), 0);
-
+    const resolution = body.resolution || 'refund';
+    if (!['refund','replacement'].includes(resolution)) return jsonResponse({error:'Invalid return resolution'},corsHeaders,400);
+    const requestedItems = items === undefined ? orderItems : items;
+    if (!Array.isArray(requestedItems) || !requestedItems.length) return jsonResponse({error:'Select the items being returned'},corsHeaders,400);
+    const seen = new Set(), returnItems = [];
+    for (const selected of requestedItems) {
+        const original = orderItems.find(item => item.id === selected.id && (item.variantId || null) === (selected.variantId || null));
+        const quantity = Number(selected.quantity);
+        const key = JSON.stringify([selected.id,selected.variantId || null]);
+        if (!original || seen.has(key) || !Number.isInteger(quantity) || quantity <= 0 || quantity > Number(original.quantity)) return jsonResponse({error:'Invalid return item or quantity'},corsHeaders,400);
+        seen.add(key);
+        returnItems.push({...original, quantity, totalPrice:Number(original.price) * quantity});
+    }
+    const refundAmount = resolution === 'refund' ? returnItems.reduce((total,item)=>total+item.totalPrice,0) : 0;
     await env.DB.prepare(
-        'INSERT INTO returns (order_id, reason, items, refund_amount) VALUES (?, ?, ?, ?)'
-    ).bind(orderId, reason || '', JSON.stringify(returnItems), refundAmount).run();
+        'INSERT INTO returns (order_id, reason, items, refund_amount, resolution) VALUES (?, ?, ?, ?, ?)'
+    ).bind(orderId, String(reason || '').slice(0,4000), JSON.stringify(returnItems), refundAmount, resolution).run();
 
     const ret = await env.DB.prepare('SELECT * FROM returns WHERE order_id = ? ORDER BY id DESC LIMIT 1').bind(orderId).first();
     return jsonResponse({ success: true, return: ret }, corsHeaders);
@@ -1600,6 +1617,7 @@ async function handleCreateReturnLabel(orderId, request, env, corsHeaders) {
         `).bind(label.trackingNumber, label.transactionId, label.labelUrl, ret.id).run();
 
         // Email the customer with the return label
+        let emailSent = false;
         try {
             if (order.customer_email) {
                 const shippingAddress = tryParseJson(order.shipping_address) || {};
@@ -1614,13 +1632,13 @@ async function handleCreateReturnLabel(orderId, request, env, corsHeaders) {
                     labelUrl: label.labelUrl
                 };
                 const email = returnLabelEmail(emailData);
-                await sendEmail(env, order.customer_email, email.subject, email.html, { type: 'return_label', orderId, invoiceNumber: order.invoice_number });
+                emailSent = await sendEmail(env, order.customer_email, email.subject, email.html, { type: 'return_label', orderId, invoiceNumber: order.invoice_number });
             }
         } catch (e) {
             console.error('Return label email failed:', e.message);
         }
 
-        return jsonResponse({ success: true, trackingNumber: label.trackingNumber, labelUrl: label.labelUrl, labelFileType: label.labelFileType }, corsHeaders);
+        return jsonResponse({ success: true, trackingNumber: label.trackingNumber, labelUrl: label.labelUrl, labelFileType: label.labelFileType, emailSent }, corsHeaders);
     } catch (error) {
         return jsonResponse({ error: `Return label creation failed: ${error.message}` }, corsHeaders, 500);
     }
@@ -1633,9 +1651,20 @@ async function handleUpdateReturnStatus(orderId, request, env, corsHeaders) {
     const body = await request.json();
     const { status } = body;
 
-    const validStatuses = ['requested', 'label_created', 'in_transit', 'received', 'refunded', 'cancelled'];
-    if (!validStatuses.includes(status)) {
-        return jsonResponse({ error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` }, corsHeaders, 400);
+    const transitions = {requested:['in_transit','cancelled'],label_created:['in_transit','received','cancelled'],in_transit:['received'],received:[ret.resolution === 'replacement' ? 'replaced' : 'refunded'],refunded:[],replaced:[],cancelled:[]};
+    if (status === ret.status) return jsonResponse({success:true,status},corsHeaders);
+    if (!transitions[ret.status]?.includes(status)) return jsonResponse({error:'This return cannot move from '+ret.status+' to '+status},corsHeaders,400);
+    if (ret.status === 'requested' && status === 'in_transit') {
+        const note = typeof body.postageNote === 'string' ? body.postageNote.trim() : '';
+        const cost = body.postageCost === null || body.postageCost === undefined ? null : Number(body.postageCost);
+        if (body.postagePaid !== true || !note || note.length > 2000 || (cost !== null && (!Number.isFinite(cost) || cost < 0 || cost > 10000))) return jsonResponse({error:'Record the agreed FPVGate-paid return postage arrangement'},corsHeaders,400);
+        await env.DB.prepare('UPDATE returns SET return_postage_note = ?, return_postage_cost = ?, tracking_number = COALESCE(?,tracking_number) WHERE id = ?').bind(note,cost,String(body.trackingNumber || '').trim().slice(0,200) || null,ret.id).run();
+    }
+    if (status === 'replaced') {
+        const tracking = typeof body.replacementTrackingNumber === 'string' ? body.replacementTrackingNumber.trim() : '';
+        if (!tracking || tracking.length > 200) return jsonResponse({error:'Enter the replacement tracking number'},corsHeaders,400);
+        await env.DB.prepare("UPDATE returns SET replacement_tracking_number = ?, replacement_dispatched_at = datetime('now'), status = 'replaced', updated_at = datetime('now') WHERE id = ? AND status = 'received'").bind(tracking,ret.id).run();
+        return jsonResponse({success:true,status},corsHeaders);
     }
 
     // If marking as refunded, process the refund + restore inventory

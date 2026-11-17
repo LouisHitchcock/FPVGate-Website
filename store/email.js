@@ -62,7 +62,7 @@ export async function sendEmail(env, to, subject, html, meta = {}) {
                 'Authorization': `Bearer ${env.RESEND_API_KEY}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ from, to, subject, html })
+            body: JSON.stringify({ from, to, subject, html, ...(meta.replyTo ? { reply_to: meta.replyTo } : {}) })
         });
 
         if (!res.ok) {
