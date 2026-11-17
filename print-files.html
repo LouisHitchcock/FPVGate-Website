@@ -35,7 +35,7 @@
     document.documentElement.setAttribute('data-theme','dark');}
     document.documentElement.classList.add('js');})();
     </script>
-    <link rel="stylesheet" href="styles.css?v=20261018seo">
+    <link rel="stylesheet" href="styles.css?v=20261117-full">
     <link rel="stylesheet" href="print-files.css?v=20260925a">
 
     <script type="importmap">
@@ -157,23 +157,45 @@
         </div>
     </section>
 
-    <footer>
-        <div class="container">
-            <div class="footer-meta">
-                <p>Built for the FPV community.</p>
-                <p>Licensed under CC BY-NC-SA 4.0</p>
+    <footer class="site-footer" id="site-footer">
+    <div class="container">
+        <div class="site-footer-main">
+            <div class="site-footer-brand">
+                <a href="index.html" class="site-footer-logo" aria-label="FPVGate home"><img src="images/LogoAnimated.svg" alt="" class="nav-logo" width="28" height="28"><span>FPVGate</span></a>
+                <p>Lap timing for pilots, clubs and the FPV community.</p>
+                <div class="site-footer-support">
+                    <a href="https://ko-fi.com/louishitchcock" target="_blank" rel="noopener noreferrer" class="footer-kofi-button" aria-label="Support FPVGate on Ko-fi (opens in a new tab)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 7h13v7a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V7Z"/><path d="M17 8h2a3 3 0 0 1 0 6h-2M3 22h16M8 2v2m5-2v2"/></svg>
+                        <span>Support on Ko-fi</span><span aria-hidden="true">&#8599;</span>
+                    </a>
+                    <p>Help fund development, testing and future releases.</p>
+                </div>
             </div>
-            <div class="footer-links">
-                <a href="https://github.com/LouisHitchcock/FPVGate" target="_blank">GitHub</a>
-                <a href="https://discord.gg/XwammuWCCj" target="_blank">Discord</a>
-                <a href="docs.html">Documentation</a>
-                <a href="print-files.html">3D Print Files</a>
-                <a href="https://ko-fi.com/louishitchcock" target="_blank" class="kofi-link">Support on Ko-fi</a>
-            </div>
+            <nav class="site-footer-group" aria-label="Footer store">
+                <h2>Store</h2>
+                <ul><li><a href="shop.html">All products</a></li><li><a href="shop-fpvgate.html">FPVGate hardware</a></li><li><a href="shop-components.html">Components</a></li><li><a href="shop-misc.html">Tools &amp; accessories</a></li><li><a href="distributors.html">Become a distributor</a></li></ul>
+            </nav>
+            <nav class="site-footer-group" aria-label="Footer guides">
+                <h2>Guides</h2>
+                <ul><li><a href="quickstart.html">Getting started</a></li><li><a href="docs.html">Documentation</a></li><li><a href="flasher.html">Flash firmware</a></li><li><a href="c5.html">C5 Radio</a></li><li><a href="print-files.html">3D print files</a></li></ul>
+            </nav>
+            <nav class="site-footer-group" aria-label="Footer customer help">
+                <h2>Customer help</h2>
+                <ul><li><a href="help.html">Help centre</a></li><li><a href="support.html">Order support</a></li><li><a href="shipping.html">Shipping</a></li><li><a href="returns.html">Returns &amp; replacements</a></li></ul>
+            </nav>
+            <nav class="site-footer-group" aria-label="Footer community">
+                <h2>Community</h2>
+                <ul><li><a href="https://discord.gg/XwammuWCCj" target="_blank" rel="noopener noreferrer">Join Discord</a></li><li><a href="https://github.com/LouisHitchcock/FPVGate" target="_blank" rel="noopener noreferrer">GitHub</a></li><li><a href="https://github.com/LouisHitchcock/FPVGate/issues" target="_blank" rel="noopener noreferrer">Report a bug</a></li><li><a href="mailto:shop.fpvgate@gmail.com">Email FPVGate</a></li></ul>
+            </nav>
         </div>
-    </footer>
+        <div class="site-footer-bottom">
+            <p>Built for the FPV community.</p>
+            <nav aria-label="Footer privacy"><a href="privacy.html">Privacy policy</a><a href="data-collection.html">Data &amp; browser storage</a></nav>
+        </div>
+    </div>
+</footer>
 
-    <script src="analytics-tracker.js"></script>
+    <script src="analytics-tracker.js?v=20261117-full"></script>
     <script src="theme.js"></script>
     <script type="module" src="print-files.js"></script>
 </body>

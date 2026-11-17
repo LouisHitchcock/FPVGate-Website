@@ -24,3 +24,10 @@ SHIPPO_LABEL_FILE_TYPE = "PDF_4x6"
 # STRIPE_WEBHOOK_SECRET - Stripe webhook signing secret (whsec_...)
 # ADMIN_TOKEN - Token for admin portal authentication
 # RESEND_API_KEY - Resend API key for transactional emails (re_...)
+
+# DISCORD_SUPPORT_WEBHOOK_URL - dedicated Support & Enquiries channel webhook (secret)
+# DISCORD_SUPPORT_ROLE_ID - optional role ID to mention for enquiry alerts
+# DISCORD_WEBHOOK_URL - existing order alerts; kept separate
+
+[triggers]
+crons = ["17 3 * * *"]

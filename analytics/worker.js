@@ -1,7 +1,12 @@
 // Cloudflare Worker - Analytics API
 // This receives analytics events from the website and stores them in D1
 
+import { runAnalyticsRetention } from './retention.js';
+
 export default {
+  async scheduled(controller, env, context) {
+    context.waitUntil(runAnalyticsRetention(env.DB));
+  },
   async fetch(request, env) {
     // CORS headers for all responses
     const corsHeaders = {
@@ -270,6 +275,15 @@ async function getStats(db, days = null) {
   `).all();
   results.country_stats = countryStats.results;
 
+  if (days === null) {
+    const archive=await db.prepare('SELECT month,event_name,event_count FROM analytics_monthly_totals ORDER BY month').all();
+    results.anonymous_history=archive.results || [];
+    results.total_events+=results.anonymous_history.reduce((sum,row)=>sum+Number(row.event_count),0);
+    for (const row of results.anonymous_history.filter(row=>row.event_name.startsWith('flash_'))) {
+      const existing=results.flash_events.find(event=>event.event_name===row.event_name);
+      if(existing)existing.count+=Number(row.event_count);else results.flash_events.push({event_name:row.event_name,count:Number(row.event_count)});
+    }
+  }
   return results;
 }
 
@@ -683,6 +697,11 @@ async function getC5Stats(db, days = 30, now = new Date()) {
     query(`SELECT COALESCE(NULLIF(error_message, ''), 'Unknown error') AS error_message, board, version, COUNT(*) AS count, MAX(timestamp) AS last_occurred FROM analytics_events WHERE ${scope} AND event_name = 'c5_flash_failed' GROUP BY COALESCE(NULLIF(error_message, ''), 'Unknown error'), board, version ORDER BY count DESC LIMIT 20`),
     query(`SELECT ip_hash, MAX(timestamp) AS last_seen FROM analytics_events WHERE ${scope} AND ip_hash IS NOT NULL AND ip_hash != '' GROUP BY ip_hash`)
   ]);
+  let anonymousHistory=[];
+  if(days===null){
+    anonymousHistory=(await db.prepare("SELECT month,event_name,event_count FROM analytics_monthly_totals WHERE event_name GLOB 'c5_*' ORDER BY month").all()).results || [];
+    for(const row of anonymousHistory)rows.push({event_name:row.event_name,board:null,version:null,error_message:null,count:Number(row.event_count)});
+  }
   const count = event => rows.filter(row => row.event_name === 'c5_' + event).reduce((total, row) => total + Number(row.count), 0);
   const successes = count('flash_complete'), failures = count('flash_failed');
   const buckets = {last_day: 0, last_week: 0, last_month: 0, older: 0};
@@ -703,7 +722,7 @@ async function getC5Stats(db, days = 30, now = new Date()) {
     }
   }
   return {
-    days, since, generated_at: now.toISOString(), rows,
+    days, since, generated_at: now.toISOString(), rows, anonymous_history:anonymousHistory,
     total_events: rows.reduce((total, row) => total + Number(row.count), 0),
     unique_users: recency.length,
     success_rate: {successes, failures, rate: successes + failures ? (successes / (successes + failures) * 100).toFixed(2) + '%' : null},

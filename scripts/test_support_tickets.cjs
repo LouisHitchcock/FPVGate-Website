@@ -8,7 +8,7 @@ function setup(){
     db.exec('CREATE TABLE orders(id INTEGER PRIMARY KEY, invoice_number TEXT, customer_email TEXT, items TEXT); CREATE TABLE returns(id INTEGER PRIMARY KEY, order_id INTEGER, status TEXT)');
     db.exec(fs.readFileSync('store/migrations/0009_support_returns.sql','utf8'));
     const sent=[];
-    const context=vm.createContext({Request,Response,Headers,URL,crypto,console,sendEmail:async(...args)=>{sent.push(args);return true}});
+    const context=vm.createContext({notifyTicketDiscord:async()=>({status:"not_configured"}),Request,Response,Headers,URL,crypto,console,sendEmail:async(...args)=>{sent.push(args);return true}});
     vm.runInContext(fs.readFileSync('store/support.js','utf8').replace(/import[^;]+;/g,'').replace(/export /g,''),context);
     vm.runInContext(fs.readFileSync('store/worker.js','utf8').replace(/import\s*\{[\s\S]*?\}\s*from\s*'[^']+';/g,'').replace('export default {','const worker = {'),context);
     const DB={prepare(sql){const stmt=db.prepare(sql);const bind=(...args)=>({first:async()=>stmt.get(...args),all:async()=>({results:stmt.all(...args)}),run:async()=>({meta:stmt.run(...args)})});return {...bind(),bind}},async batch(statements){db.exec('BEGIN');try{const results=[];for(const statement of statements)results.push(await statement.run());db.exec('COMMIT');return results}catch(e){db.exec('ROLLBACK');throw e}}};
@@ -18,7 +18,7 @@ function setup(){
     return {call,create,db,env,context,sent};
 }
 test('all ticket routes require authentication, including lists, details and mutations',async()=>{
-    const s=setup();for(const [path,method,body]of [['/api/tickets','GET'],['/api/tickets','POST',{}],['/api/tickets/123','GET'],['/api/tickets/123','PUT',{status:'resolved'}],['/api/tickets/123/messages','POST',{kind:'reply',body:'Hi'}]])assert.equal((await s.call(path,method,body,'')).status,401);
+    const s=setup();for(const [path,method,body]of [['/api/tickets','GET'],['/api/tickets','POST',{}],['/api/tickets/123','GET'],['/api/tickets/123','PUT',{status:'resolved'}],['/api/tickets/123/messages','POST',{kind:'reply',body:'Hi'}],['/api/tickets/123/discord','POST',{}]])assert.equal((await s.call(path,method,body,'')).status,401);
 });
 test('manual tickets are searchable, filterable, paginated and never send an opening email',async()=>{
     const s=setup();const created=await s.create();assert.equal(created.status,200);assert.ok(created.body.reference);assert.equal(s.sent.length,0);
@@ -44,7 +44,7 @@ test('failed replies remain visible as failed, preserve status and missing mail 
 });
 test('distributor applications retain all fields privately; invalid mutations are rejected',async()=>{
     const s=setup();const ticket=await s.context.createSupportTicket(s.env,{type:'distributor',subject:'Store enquiry',contact:'Alex',email:'alex@example.com',application:{business:'FPV Shop',country:'Canada',quantity:'To discuss'}});
-    const detail=(await s.call('/api/tickets/'+ticket.id)).body;assert.equal(detail.ticket.application.country,'Canada');assert.equal(detail.ticket.notification_status,'pending');
+    const detail=(await s.call('/api/tickets/'+ticket.id)).body;assert.equal(detail.ticket.application.country,'Canada');assert.equal(detail.ticket.notification_status,'not_required');
     assert.equal((await s.call('/api/tickets/'+ticket.id,'PUT',{status:'invalid'})).status,400);
     assert.equal((await s.call('/api/tickets/'+ticket.id+'/messages','POST',{kind:'reply',body:''})).status,400);
     assert.equal((await s.call('/api/tickets/'+ticket.id+'/messages','POST',{kind:'note',body:'x'.repeat(8001)})).status,400);
@@ -59,4 +59,11 @@ test('linking orders requires admin authentication and a matching verified check
  assert.equal((await s.call('/api/tickets/'+id+'/order','PUT',{order_reference:'FPVG-123'})).status,200);
  assert.equal((await s.call('/api/tickets/'+id)).body.order.id,1);
  assert.equal((await s.call('/api/tickets/'+id+'/order','PUT',{order_reference:'FPVG-123'},'')).status,401);
+});
+
+test('category counts are separate and manual business enquiries retain their category',async()=>{
+ const s=setup();await s.create();await s.call('/api/tickets','POST',{type:'distributor',contact:'Alex',email:'alex@example.com',subject:'Stocking timers',message:'Bulk order enquiry'});
+ const support=(await s.call('/api/tickets?type=support')).body,business=(await s.call('/api/tickets?type=distributor')).body;
+ assert.equal(support.total,1);assert.equal(business.total,1);assert.equal(support.counts[0].count,1);assert.equal(business.counts[0].count,1);assert.equal(support.new_counts.length,2);assert.equal(business.tickets[0].type,'distributor');
+ const config=await s.call('/api/tickets/notifications');assert.equal(config.body.configured,false);assert.equal((await s.call('/api/tickets/notifications','GET',null,'')).status,401);
 });

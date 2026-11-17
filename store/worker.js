@@ -1,7 +1,10 @@
 // Cloudflare Worker - FPVGate Shop API
 // Handles Stripe Checkout, webhooks, Shippo shipping, and admin API
 
+import { handleDistributorEnquiry } from './distributors.js';
 import { handleSupportAdmin } from './support.js';
+import { allocateOrderNumber } from './order-numbers.js';
+import { runStoreRetention } from './retention.js';
 
 import {
     getShippingRates,
@@ -24,6 +27,9 @@ import {
 } from './email.js';
 
 export default {
+    async scheduled(controller, env, context) {
+        context.waitUntil(runStoreRetention(env.DB));
+    },
     async fetch(request, env) {
         const corsHeaders = {
             'Access-Control-Allow-Origin': '*',
@@ -38,6 +44,12 @@ export default {
         const url = new URL(request.url);
 
         try {
+            if (url.pathname === '/distributor-enquiry' && request.method === 'POST') {
+                return await handleDistributorEnquiry(request, env, corsHeaders);
+            }
+            if (url.pathname === '/support-enquiry' && request.method === 'POST') {
+                return await handleDistributorEnquiry(request, env, corsHeaders, 'support');
+            }
             // --- Public: Stripe Checkout ---
 
             if (url.pathname === '/checkout' && request.method === 'POST') {
@@ -831,8 +843,8 @@ async function handleStripeWebhook(request, env, corsHeaders) {
     const payload = await request.text();
     const sigHeader = request.headers.get('stripe-signature');
 
-    if (env.STRIPE_WEBHOOK_SECRET && sigHeader) {
-        const valid = await verifyStripeSignature(payload, sigHeader, env.STRIPE_WEBHOOK_SECRET);
+    if (env.STRIPE_WEBHOOK_SECRET) {
+        const valid = !!sigHeader && await verifyStripeSignature(payload, sigHeader, env.STRIPE_WEBHOOK_SECRET);
         if (!valid) {
             return new Response(JSON.stringify({ error: 'Invalid signature' }), {
                 status: 400,
@@ -845,7 +857,7 @@ async function handleStripeWebhook(request, env, corsHeaders) {
 
     if (event.type === 'checkout.session.completed') {
         try {
-            await processCompletedCheckout(event.data.object, env);
+            await processCompletedCheckout(event.data.object, env, event.created ? new Date(event.created * 1000) : new Date());
             console.log('Order processed successfully');
         } catch (e) {
             console.error('processCompletedCheckout FAILED:', e.message, e.stack);
@@ -856,7 +868,9 @@ async function handleStripeWebhook(request, env, corsHeaders) {
     return jsonResponse({ received: true }, corsHeaders);
 }
 
-async function processCompletedCheckout(session, env) {
+async function processCompletedCheckout(session, env, placedAt = new Date()) {
+    const existingOrder = await env.DB.prepare('SELECT id, invoice_number FROM orders WHERE stripe_session_id = ?').bind(session.id).first();
+    if (existingOrder) return;
     const metadata = session.metadata || {};
     const items = tryParseJson(metadata.order_items) || [];
     const shippingAddress = tryParseJson(metadata.shipping_address) || {};
@@ -877,11 +891,11 @@ async function processCompletedCheckout(session, env) {
     const subtotal = items.reduce((s, i) => s + (i.totalPrice || i.price * i.quantity), 0);
     const total = (session.amount_total || 0) / 100;
 
-    const countResult = await env.DB.prepare('SELECT COUNT(*) as c FROM orders').first();
-    const invoiceNumber = `FPVG-${String((countResult?.c || 0) + 1).padStart(4, '0')}`;
+    const invoiceNumber = await allocateOrderNumber(env.DB, session.id, placedAt);
 
     console.log('Processing checkout:', session.id, 'items:', items.length, 'total:', total);
 
+    try {
     await env.DB.prepare(`
         INSERT INTO orders
         (stripe_session_id, stripe_payment_intent, invoice_number, customer_name, customer_email,
@@ -904,6 +918,12 @@ async function processCompletedCheckout(session, env) {
         shippingMethod,
         JSON.stringify(labels)
     ).run();
+
+    } catch (error) {
+        const duplicate = await env.DB.prepare('SELECT id FROM orders WHERE stripe_session_id = ?').bind(session.id).first();
+        if (duplicate) return;
+        throw error;
+    }
 
     // Auto-decrement inventory. Pre-ordered units take stock below zero.
     try {
@@ -1093,8 +1113,8 @@ async function handleCreateTestOrder(request, env, corsHeaders) {
     const noteText = String(body.notes || '').trim();
     const notes = noteText ? `${notePrefix}: ${noteText}` : notePrefix;
 
-    const countResult = await env.DB.prepare('SELECT COUNT(*) as c FROM orders').first();
-    const invoiceNumber = `FPVG-${String((countResult?.c || 0) + 1).padStart(4, '0')}`;
+    const manualSessionId = 'manual_' + crypto.randomUUID();
+    const invoiceNumber = await allocateOrderNumber(env.DB, manualSessionId);
 
     await env.DB.prepare(`
         INSERT INTO orders
@@ -1103,7 +1123,7 @@ async function handleCreateTestOrder(request, env, corsHeaders) {
          total, currency, shipping_method, status, labels, notes)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new', ?, ?)
     `).bind(
-        'manual_' + Date.now() + '_' + Math.floor(Math.random() * 1000000),
+        manualSessionId,
         null,
         invoiceNumber,
         customerName,

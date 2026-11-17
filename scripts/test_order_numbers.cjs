@@ -1,0 +1,15 @@
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const {DatabaseSync}=require('node:sqlite');
+function setup(existing=[]){
+ const db=new DatabaseSync(':memory:');db.exec('CREATE TABLE orders(id INTEGER PRIMARY KEY, invoice_number TEXT)');for(const number of existing)db.prepare('INSERT INTO orders(invoice_number) VALUES(?)').run(number);
+ db.exec(fs.readFileSync('store/migrations/0011_date_order_numbers.sql','utf8'));
+ const context=vm.createContext({Date,Intl});vm.runInContext(fs.readFileSync('store/order-numbers.js','utf8').replace(/export /g,''),context);
+ let queue=Promise.resolve();
+ const DB={prepare(sql){const statement=db.prepare(sql);return {bind(...args){return {sql,statement,args}}}},batch(statements){const run=()=>{db.exec('BEGIN');try{const result=statements.map(({statement,args})=>({results:statement.columns().length?statement.all(...args):(statement.run(...args),[])}));db.exec('COMMIT');return result}catch(error){db.exec('ROLLBACK');throw error}};const result=queue.then(run);queue=result.catch(()=>{});return result}};
+ return {db,day:date=>context.orderNumberDay(new Date(date)),allocate:(key,date)=>context.allocateOrderNumber(DB,key,new Date(date))};
+}
+test('date references start at 01 and increment for the UK day',async()=>{const s=setup();assert.equal(await s.allocate('cs_first','2026-11-17T09:00:00Z'),'1711202601');assert.equal(await s.allocate('cs_second','2026-11-17T10:00:00Z'),'1711202602');assert.equal(await s.allocate('cs_nextday','2026-11-18T00:00:00Z'),'1811202601');});
+test('UK daylight-saving and midnight boundaries use Europe/London rather than UTC',async()=>{const s=setup();assert.equal(s.day('2026-07-16T23:30:00Z'),'17072026');assert.equal(s.day('2026-11-16T23:30:00Z'),'16112026');assert.equal(await s.allocate('a','2026-07-16T22:59:00Z'),'1607202601');assert.equal(await s.allocate('b','2026-07-16T23:00:00Z'),'1707202601');});
+test('retries retain their original number even on a later day',async()=>{const s=setup();const first=await s.allocate('cs_retry','2026-11-17T10:00:00Z');assert.equal(await s.allocate('cs_retry','2026-11-18T10:00:00Z'),first);assert.equal(await s.allocate('cs_new','2026-11-18T10:00:00Z'),'1811202601');});
+test('simultaneous orders allocate unique consecutive references',async()=>{const s=setup();const numbers=await Promise.all(Array.from({length:20},(_,i)=>s.allocate('cs_'+i,'2026-11-17T10:00:00Z')));assert.equal(new Set(numbers).size,20);assert.ok(numbers.includes('1711202620'));const same=await Promise.all([s.allocate('same','2026-11-17T10:00:00Z'),s.allocate('same','2026-11-17T10:00:00Z')]);assert.equal(same[0],same[1]);});
+test('sequences continue beyond 99 without truncation and historical references remain unchanged',async()=>{const s=setup(['FPVG-0030','1711202699']);assert.equal(await s.allocate('cs_100','2026-11-17T10:00:00Z'),'17112026100');assert.equal(s.db.prepare('SELECT invoice_number FROM orders WHERE id=1').get().invoice_number,'FPVG-0030');});

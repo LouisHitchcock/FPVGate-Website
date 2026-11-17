@@ -5,6 +5,7 @@ class AnalyticsTracker {
   constructor(apiEndpoint) {
     this.apiEndpoint = apiEndpoint;
     this.enabled = true;
+    try { this.enabled = localStorage.getItem('fpvgate_analytics_optout') !== '1'; } catch {}
     this.queue = [];
     this.isSending = false;
   }
@@ -70,6 +71,8 @@ class AnalyticsTracker {
    */
   disable() {
     this.enabled = false;
+    this.queue = [];
+    try { localStorage.setItem('fpvgate_analytics_optout', '1'); } catch {}
   }
 
   /**
@@ -77,6 +80,7 @@ class AnalyticsTracker {
    */
   enable() {
     this.enabled = true;
+    try { localStorage.removeItem('fpvgate_analytics_optout'); } catch {}
   }
 }
 
@@ -128,3 +132,5 @@ function initStoreTracking() {
   // triggered directly by the cart widget in shop.html and order-success.html
   // via window.fpvgateAnalytics.track() calls.
 }
+
+window.addEventListener('storage', event => { if (event.key === 'fpvgate_analytics_optout') { analytics.enabled = event.newValue !== '1'; if (!analytics.enabled) analytics.queue = []; } });

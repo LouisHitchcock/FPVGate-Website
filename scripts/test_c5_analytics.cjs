@@ -8,10 +8,10 @@ const now = new Date('2026-11-16T12:00:00Z');
 
 function setup() {
     const db = new DatabaseSync(':memory:');
-    db.exec(fs.readFileSync('analytics/schema.sql', 'utf8'));
+    db.exec(fs.readFileSync('analytics/schema.sql', 'utf8'));db.exec(fs.readFileSync('analytics/migration_retention.sql','utf8'));
     const context = vm.createContext({Date, Map, Request, Response, URL});
-    vm.runInContext(source.replace('export default {', 'const worker = {'), context);
-    const binding = {prepare(sql) { const statement = db.prepare(sql); return {bind(...values) {return {all: async () => ({results: statement.all(...values)})}}}}};
+    vm.runInContext(source.replace(/^import[^;]+;/gm,'').replace('export default {', 'const worker = {'), context);
+    const binding = {prepare(sql) { const statement = db.prepare(sql); return {all: async () => ({results: statement.all()}), bind(...values) {return {all: async () => ({results: statement.all(...values)})}}}}};
     const add = (event, date, user = 'one', extra = {}) => db.prepare('INSERT INTO analytics_events(event_name,timestamp,ip_hash,country,board,version,error_message) VALUES(?,?,?,?,?,?,?)').run(event, date, user, extra.country ?? 'GB', extra.board ?? 'xiao', extra.version ?? '1.3', extra.error ?? null);
     return {db, context, add, stats: days => context.getC5Stats(binding, days, now), call: async query => vm.runInContext('worker', context).fetch(new Request('https://analytics.test/stats/c5' + query), {DB: binding})};
 }

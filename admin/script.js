@@ -49,7 +49,7 @@ async function initAuth(){
     if(user.email){document.getElementById('user-email').textContent=user.email}
     if(user.picture){const av=document.getElementById('user-avatar');av.src=user.picture;av.style.display='block'}
     document.getElementById('sign-out-btn').style.display='block';
-    loadDashboard();
+    if (typeof openSupportLanding !== 'function' || !openSupportLanding()) loadDashboard();
   }catch(e){localStorage.removeItem('fpvgate_admin_token');sessionStorage.removeItem('fpvgate_admin_token');showAuthOverlay()}
 }
 function showAuthOverlay(){document.getElementById('auth-overlay').style.display='flex';document.getElementById('main-content').style.display='none'}

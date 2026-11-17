@@ -1,4 +1,5 @@
 import { sendEmail } from './email.js';
+import { notifyTicketDiscord } from './support-discord.js';
 
 const SUPPORT_EMAIL = 'shop.fpvgate@gmail.com';
 const supportEscape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]));
@@ -9,10 +10,12 @@ export async function createSupportTicket(env, {type = 'support', subject, conta
     const reference = 'FPV-' + id.replaceAll('-', '').slice(0, 12).toUpperCase();
     await env.DB.batch([
         env.DB.prepare('INSERT INTO support_tickets (id, reference, type, subject, contact_name, email, application, notification_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)')
-            .bind(id, reference, type, subject, contact, email, application ? JSON.stringify(application) : null, type === 'distributor' || notify ? 'pending' : 'not_required'),
+            .bind(id, reference, type, subject, contact, email, application ? JSON.stringify(application) : null, notify ? 'pending' : 'not_required'),
         env.DB.prepare('INSERT INTO support_messages (id, ticket_id, kind, body) VALUES (?, ?, ?, ?)')
             .bind(crypto.randomUUID(), id, 'application', message || 'Distributor application received.')
     ]);
+    // Save first; notification outages must never lose a customer's enquiry.
+    await notifyTicketDiscord(env, id);
     return {id, reference};
 }
 
@@ -20,7 +23,10 @@ export async function createSupportTicket(env, {type = 'support', subject, conta
 export async function handleSupportAdmin(request, env, corsHeaders) {
     const json = (data, status = 200) => new Response(JSON.stringify(data), {status, headers:{...corsHeaders, 'Content-Type':'application/json', 'Cache-Control':'no-store'}});
     const url = new URL(request.url);
-    const match = url.pathname.match(/^\/api\/tickets(?:\/([a-f0-9-]+)(?:\/(messages|order))?)?$/);
+    if (url.pathname === '/api/tickets/notifications' && request.method === 'GET') {
+        return json({configured:!!env.DISCORD_SUPPORT_WEBHOOK_URL,role_mentions_enabled:/^\d{15,22}$/.test(env.DISCORD_SUPPORT_ROLE_ID || '')});
+    }
+    const match = url.pathname.match(/^\/api\/tickets(?:\/([a-f0-9-]+)(?:\/(messages|order|discord))?)?$/);
     if (!match) return json({error:'Not found'}, 404);
     const [, id, action] = match;
     if (!id && request.method === 'GET') {
@@ -35,23 +41,30 @@ export async function handleSupportAdmin(request, env, corsHeaders) {
         if (type) {where.push('type = ?'); params.push(type);}
         if (search) {where.push('(subject LIKE ? OR contact_name LIKE ? OR email LIKE ? OR reference LIKE ?)'); params.push(...Array(4).fill('%' + search + '%'));}
         const clause = where.length ? ' WHERE ' + where.join(' AND ') : '';
-        const [tickets, total, counts] = await Promise.all([
+        const [tickets, total, counts, newCounts] = await Promise.all([
             env.DB.prepare('SELECT id, reference, type, status, subject, contact_name, email, notification_status, created_at, updated_at FROM support_tickets' + clause + ' ORDER BY updated_at DESC, id DESC LIMIT 50 OFFSET ?').bind(...params, offset).all(),
             env.DB.prepare('SELECT COUNT(*) AS count FROM support_tickets' + clause).bind(...params).first(),
-            env.DB.prepare('SELECT status, COUNT(*) AS count FROM support_tickets GROUP BY status').all()
+            env.DB.prepare('SELECT status, COUNT(*) AS count FROM support_tickets'+(type ? ' WHERE type = ?' : '')+' GROUP BY status').bind(...(type ? [type] : [])).all(),
+            env.DB.prepare("SELECT type, COUNT(*) AS count FROM support_tickets WHERE status = 'new' GROUP BY type").all()
         ]);
-        return json({tickets:tickets.results || [], total:total.count, counts:counts.results || [], offset});
+        return json({tickets:tickets.results || [], total:total.count, counts:counts.results || [], new_counts:newCounts.results || [], offset});
     }
     if (!id && request.method === 'POST') {
         const body = await request.json();
         const clean = name => typeof body[name] === 'string' ? body[name].trim() : '';
         const subject = clean('subject'), contact = clean('contact'), email = clean('email'), message = clean('message');
         if (!subject || subject.length > 200 || /[\r\n]/.test(subject) || !contact || contact.length > 120 || !/^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$/.test(email) || email.length > 254 || !message || message.length > 8000) return json({error:'Enter a name, valid email, subject and message (up to 8,000 characters).'},400);
-        return json(await createSupportTicket(env,{subject,contact,email,message}));
+        const type = body.type || 'support';
+        if (!['support','distributor'].includes(type)) return json({error:'Invalid ticket category'},400);
+        return json(await createSupportTicket(env,{subject,contact,email,message,type}));
     }
     if (!id) return json({error:'Method not allowed'},405);
     const ticket = await env.DB.prepare('SELECT * FROM support_tickets WHERE id = ?').bind(id).first();
     if (!ticket) return json({error:'Ticket not found'},404);
+    if (request.method === 'POST' && action === 'discord') {
+        const result = await notifyTicketDiscord(env,id);
+        return result.status === 'sent' ? json({success:true,status:result.status}) : json({error:result.status === 'not_configured' ? 'The support Discord webhook is not configured.' : result.status === 'sending' ? 'Delivery is already in progress or unconfirmed. Check Discord before retrying.' : 'Discord delivery failed. The ticket remains saved.',status:result.status},result.status === 'sending' ? 409 : 503);
+    }
     if (request.method === 'GET' && !action) {
         const messages = await env.DB.prepare('SELECT * FROM support_messages WHERE ticket_id = ? ORDER BY created_at ASC, rowid ASC').bind(id).all();
         const order = ticket.linked_order_id ? await env.DB.prepare('SELECT id, invoice_number, customer_email, items FROM orders WHERE id = ?').bind(ticket.linked_order_id).first() : null;
