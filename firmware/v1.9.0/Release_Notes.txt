@@ -4,9 +4,9 @@ FPVGate 1.9.0 adds multi-pilot timing with the ESP32-C5 receiver, gate-managed h
 
 ## Multi-pilot timing and race day
 
-- Time up to eight pilots on one ESP32-C5, including Raceband R8. Set channels, names, colours, thresholds and calibration per pilot, and follow live standings, lap tables and race statistics.
+- Time up to eight pilots on one ESP32-C5, including Raceband R8. Set channels, names, colours, thresholds and calibration per pilot, and follow live standings, lap tables and race statistics. Add a manual lap to a specific pilot from the race screen.
 - C5 heats can finish on max laps or heat time and save on the gate with every browser closed. Conventional receiver workflows still use the race browser for browser-managed automation and announcements.
-- Enable Event Mode in Settings → User Interface. Set up pilots, groups, rules and rounds with a guided wizard or the full-page editor. Guided, Club and Custom presets include schedule and single-heat layouts.
+- Enable Event Mode in Settings → User Interface. Set up pilots, groups, rules and rounds with a guided wizard or the full-page editor. Event setup supports import/export, automatic channel assignment, and Elo or best-lap seeding. Guided, Club and Custom presets include schedule and single-heat layouts.
 - The gate persists Event results and can prepare the next heat without starting it. Optional result review blocks another start until confirmed. Results retain pilot identity after corrections, skipped heats remain marked, and the gate can reconcile a saved result after a restart.
 - ELRS Backpack race control is a beta, disabled by default. Configure the TX backpack binding phrase and DVR Rec switch for race start, countdown and stop. C5 crossings also drive the gate LEDs.
 
@@ -19,16 +19,16 @@ FPVGate 1.9.0 adds multi-pilot timing with the ESP32-C5 receiver, gate-managed h
 
 ## Receivers, connectivity and diagnostics
 
-- RotorHazard plugin protocol 2 supports passes from every pilot, full-resolution live RSSI at 20 Hz and pass peaks for timing and Marshal. The separately maintained [RotorHazard plugin](https://github.com/LouisHitchcock/fpvgate-rh-plugin/releases) provides its own compatibility and installation notes.
+- RotorHazard plugin protocol 2 supports passes from every pilot, full-resolution live RSSI at 20 Hz and pass peaks for timing and Marshal. The plugin connects directly to the gate, replacing the legacy outbound RotorHazard role. A test-pass endpoint helps check a split-gate setup. The separately maintained [RotorHazard plugin](https://github.com/LouisHitchcock/fpvgate-rh-plugin/releases) provides its own compatibility and installation notes.
 - Update an online, compatible C5 receiver in Settings → System with its matching image. The gate observes the trial boot before declaring success. The standard C5MK AIO uses C5 GPIO11 TX / GPIO12 RX (XIAO D6/D7) and the 'c5mkaio' image. Legacy D4/D5 wiring uses 'xiaoc5'.
-- Waveshare ESP32-S3-ETH supports Ethernet DHCP and the direct-link fallback at 192.168.8.1. The Wi-Fi access point uses 20 MHz channels. Web asset transfers and PSRAM use were revised to reduce internal-memory pressure during concurrent loads.
+- Waveshare ESP32-S3-ETH supports Ethernet DHCP and the direct-link fallback at 192.168.8.1. Ethernet reconnect retries DHCP, and OTA uploads use the corrected Ethernet receive buffer. The Wi-Fi access point uses 20 MHz channels. Web asset transfers and PSRAM use were revised to reduce internal-memory pressure during concurrent loads.
 - Diagnostics include C5 receiver checks, a buzzer test, memory and connection details, downloadable crash-retained logs, optional SD log saving and core dumps. The interface includes English and Chinese localisation.
 
 ## Installing
 
 Use the [FPVGate flasher](https://fpvgate.xyz/flasher.html) and select your exact board. This package contains **FPVGate C5MK AIO, FPVGate Novacore AIO, Seeed XIAO ESP32S3, Waveshare ESP32-S3-ETH and ESP32-S3 DevKitC-1**. Solo and XIAO ESP32S3 Plus retain their existing 1.8.x releases.
 
-Back up settings, Event data and race history. From compatible 1.8.x or 1.9.0 alpha builds, update both app and filesystem for your board. From 1.7.x, use a full USB flash for the changed partition table. The S3 and C5 have separate images. Pair the AIO with [C5MK v1.3.0](https://github.com/LouisHitchcock/FPVGateC5MK/releases/tag/v1.3.0).
+Back up settings, Event data and race history. From compatible 1.8.x or 1.9.0 alpha builds, update both app and filesystem for your board. From 1.7.x, use a full USB flash for the changed partition table. Full USB packages include boot_app0.bin so a device previously updated over the air selects the newly flashed application. The S3 and C5 have separate images. Pair the AIO with [C5MK v1.3.0](https://github.com/LouisHitchcock/FPVGateC5MK/releases/tag/v1.3.0).
 
 ## Known limitations
 
