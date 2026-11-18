@@ -1,55 +1,52 @@
 # FPVGate v1.9.0
 
-**Eight pilots. One receiver. A race director built into the gate.**
+FPVGate 1.9.0 times up to eight pilots from a single ESP32-C5 receiver. It adds support for the C5MK AIO and lets race directors set up an event, run heats, and review results from the gate.
 
-FPVGate 1.9.0 brings multi-pilot timing to the ESP32-C5, introduces the C5MK AIO, and gives race directors one place to set up an event, run heats, and review results.
+## Multi-pilot racing
 
-## 🏁 Multi-pilot racing
+- Set names, colours, channels, and Enter/Exit thresholds per pilot. Live calibration shows each pilot's RSSI and the receiver status. Raceband R8 is supported.
+- Follow live standings and lap times. Add a manual lap for any pilot from the race screen.
+- C5 heats can stop at a lap target or time limit, then save the results even if every browser is closed.
+- The C5MK AIO uses a 95 ms median filter and receiver sample timestamps. Its crossing detector rejects short spikes and treats brief signal dips during a pass as part of the same crossing.
 
-- **Up to eight pilots on one ESP32-C5**, including Raceband R8. Set names, colours, channels, and Enter/Exit thresholds per pilot, and watch every pilot's RSSI and receiver status in live calibration.
-- **Live standings and lap times** show who’s leading and how each pilot is doing. Add a manual lap for a specific pilot right from the race screen.
-- **Heats finish and save on the gate.** C5 races can stop at the lap target or heat-time limit and record the result even with every browser closed.
-- **C5 crossing detection.** The C5MK AIO uses a shared 95 ms median filter, rejects short signal spikes, and merges brief dips within a pass. Crossing times use receiver sample timestamps.
+## Event Director
 
-## 📋 Event Director
+- Enter pilots in bulk, generate groups, assign channels, and preview the heat schedule. Seed by Elo or best lap, and import or export an event.
+- Choose Guided, Club, or Custom under Settings > User Interface. Use a schedule dashboard, a single-heat view, or the full-page editor. Each browser remembers its display settings.
+- Run Event, Pilots & Setup, and Results have their own views. The gate can prepare the next heat for you to start, and optional result review pauses progression until you confirm.
+- Corrections retain the original pilot identities. Skipped heats remain marked, and the gate can reconcile a saved result after a restart.
 
-- **Build your race day in one place.** Enter pilots in bulk, generate groups, and preview the schedule. Assign channels automatically and seed by Elo or best lap. Import or export the event when you need to move it.
-- **Choose your race-day layout.** Guided, Club, and Custom presets include a schedule dashboard, a single-heat view, and the original full-page editor. Enable Event Mode in **Settings → User Interface**.
-- **Get to the right controls quickly.** Run Event, Pilots & Setup, and Results have dedicated views, and each browser remembers its layout and display options.
-- **Review results and get the next heat ready.** The gate saves results, keeps pilot identities attached to corrections, and can load the next heat for the race director to start. Optional result review holds the schedule until you confirm. Skipped heats stay marked, and the gate can reconcile a saved result after a restart.
+## Race history and Visual Marshal
 
-## 📈 Race history and Visual Marshal
+- Record all eight RSSI traces to SD. In Visual Marshal, inspect individual passes and edit, remove, or merge laps.
+- Review fastest lap, fastest three consecutive laps, best three laps, and median. The race views include Results, Laps, Race Flow, and Consistency.
+- Browse history by day and session. Search, sort by title, filter by pilot, date, lap total, or import status, and export a complete backup.
+- Imports preserve timestamps. Bulk import and clear handle larger multi-pilot histories more reliably.
 
-- **Replay all eight RSSI traces** recorded to SD. Inspect passes pilot by pilot, then edit, remove, or merge laps in Visual Marshal.
-- **See more of each run.** Race analysis shows fastest lap, fastest three consecutive laps, best three laps, and median.
-- **Find and move races more easily.** Race History groups records by day and session, with Results, Laps, Race Flow, and Consistency views. Search, sort by title, filter by pilot, date, lap total, or import status, and export a complete backup. Large imports preserve timestamps, and bulk import and clear handle large multi-pilot histories more reliably.
+## Announcements, radio control, and settings
 
-## 🔊 Audio, radio control, and LEDs
+- Choose Beep Every Lap, Say Lap Time Too, or consecutive-lap announcements. Preview crossing sounds and download voice packs.
+- Start and stop races from a radio switch with the opt-in ELRS Backpack beta. Set up the TX backpack binding phrase and DVR Rec switch, choose the start position, and check the last command in Settings. Radio starts use the configured countdown.
+- C5 crossings flash the gate LEDs. Configuration uses a desktop sidebar and a compact menu on phones. The interface supports English, German, Spanish, French, and Simplified Chinese.
 
-- **Pick what the gate calls out.** Use Beep Every Lap, Say Lap Time Too, or consecutive-lap announcements. Preview different crossing beeps and download voice packs.
-- **Start and stop from your radio.** ELRS Backpack race control is available as an opt-in beta with a race-start countdown. Set it up with your TX backpack binding phrase and DVR Rec switch. Choose which switch position starts the race and see the latest command in Settings.
-- **See crossings on the gate.** C5 passes trigger the gate LEDs.
-- **Find settings faster.** Configuration has grouped settings, a sidebar on desktop, and a compact menu on phones. The interface is available in English, German, Spanish, French, and Simplified Chinese.
+## Receivers, RotorHazard, and networking
 
-## 🔌 C5MK AIO, RotorHazard, and connectivity
+- Standard C5MK AIO wiring uses the c5mkaio receiver image on D6/D7 (C5 TX GPIO11 and RX GPIO12). Legacy D4/D5 wiring uses xiaoc5. Pair the AIO with [C5MK v1.3.0](https://github.com/LouisHitchcock/FPVGateC5MK/releases/tag/v1.3.0).
+- Update an online C5 receiver with a matching image under Settings > System. The gate checks the receiver's trial boot before reporting success.
+- RotorHazard plugin protocol 2 sends passes from every pilot, full-resolution RSSI at 20 Hz, and pass peaks for Marshal. Use the test-pass endpoint to check a split-gate setup. [RotorHazard plugin downloads](https://github.com/LouisHitchcock/fpvgate-rh-plugin/releases)
+- Waveshare ESP32-S3-ETH supports DHCP and a direct Ethernet connection at 192.168.8.1. The Wi-Fi access point uses 20 MHz channels.
+- Diagnostics include C5 receiver checks, a buzzer test, memory and connection statistics, a downloadable 16 KB log that survives software resets, optional SD logging, and core dumps.
 
-- **Dedicated C5MK AIO support.** Pair it with [C5MK v1.3.0](https://github.com/LouisHitchcock/FPVGateC5MK/releases/tag/v1.3.0). Standard AIO D6/D7 wiring uses the 'c5mkaio' receiver image (C5 TX GPIO11 / RX GPIO12). Legacy D4/D5 wiring uses 'xiaoc5'.
-- **Update the C5 through the gate.** In **Settings → System**, install a matching image on an online, compatible receiver. The gate checks the receiver’s trial boot before reporting success.
-- **RotorHazard plugin protocol 2.** The plugin connects directly to the gate and receives every pilot’s passes, full-resolution RSSI at 20 Hz, and pass peaks for Marshal. A test-pass endpoint helps check split-gate setups. [RotorHazard plugin downloads](https://github.com/LouisHitchcock/fpvgate-rh-plugin/releases)
-- **More ways to connect and diagnose.** The Waveshare ESP32-S3-ETH supports wired DHCP and a direct-link fallback at '192.168.8.1'. Wi-Fi uses a 20 MHz access point. Diagnostics include a buzzer test, C5 receiver checks, memory and connection details, a downloadable 16 KB log that survives software resets, optional SD logging, and core dumps.
+## Install
 
-## ⬇️ Install FPVGate 1.9.0
+Choose your board in the [FPVGate web flasher](https://fpvgate.xyz/flasher.html).
 
-Open the [FPVGate web flasher](https://fpvgate.xyz/flasher.html) and select your exact board.
-
-| Board |
-| --- |
-| FPVGate C5MK AIO |
-| FPVGate Novacore AIO |
-| Seeed XIAO ESP32S3 |
-| Waveshare ESP32-S3-ETH |
-| ESP32-S3 DevKitC-1 |
+- FPVGate C5MK AIO
+- FPVGate Novacore AIO
+- Seeed XIAO ESP32S3
+- Waveshare ESP32-S3-ETH
+- ESP32-S3 DevKitC-1
 
 Solo and XIAO ESP32S3 Plus retain their existing 1.8.x releases.
 
-Back up your settings, Event data, and race history. For compatible 1.8.x and 1.9.0 alphas, update **both the app and filesystem**. From 1.7.x, use a full USB flash for the updated partition table. The full USB package includes 'boot_app0.bin' so a gate previously updated over the air starts the newly flashed app. Use your C5’s separate package when updating the receiver.
+Back up settings, Event data, and race history. For compatible 1.8.x and 1.9.0 alpha builds, update both the app and filesystem. From 1.7.x, use a full USB flash for the updated partition table. The USB package includes boot_app0.bin so a gate previously updated over the air starts the newly flashed app. Use the separate C5 package to update the receiver.
