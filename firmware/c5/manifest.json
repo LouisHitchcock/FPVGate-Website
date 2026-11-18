@@ -138,7 +138,7 @@
     },
     "mk-xiao": {
       "project": "FPVGateC5MK",
-      "commit": "e0b43c1e273cbfd62f361d86c831c637f6acbd81",
+      "commit": "8495de261cd3043eca690eed1c8131904e7240e9",
       "tag": "v1.3.0",
       "mode": "uart",
       "usb_timing": true,
@@ -181,7 +181,7 @@
     },
     "mk-zero": {
       "project": "FPVGateC5MK",
-      "commit": "e0b43c1e273cbfd62f361d86c831c637f6acbd81",
+      "commit": "8495de261cd3043eca690eed1c8131904e7240e9",
       "tag": "v1.3.0",
       "mode": "uart",
       "usb_timing": true,
@@ -219,7 +219,7 @@
     },
     "mk-devkit": {
       "project": "FPVGateC5MK",
-      "commit": "e0b43c1e273cbfd62f361d86c831c637f6acbd81",
+      "commit": "8495de261cd3043eca690eed1c8131904e7240e9",
       "tag": "v1.3.0",
       "mode": "uart",
       "usb_timing": true,
@@ -257,7 +257,7 @@
     },
     "mk-mini": {
       "project": "FPVGateC5MK",
-      "commit": "e0b43c1e273cbfd62f361d86c831c637f6acbd81",
+      "commit": "8495de261cd3043eca690eed1c8131904e7240e9",
       "tag": "v1.3.0",
       "mode": "uart",
       "usb_timing": true,
@@ -295,7 +295,7 @@
     },
     "mklegacy-xiao": {
       "project": "FPVGateC5MK",
-      "commit": "e0b43c1e273cbfd62f361d86c831c637f6acbd81",
+      "commit": "8495de261cd3043eca690eed1c8131904e7240e9",
       "tag": "v1.3.0",
       "mode": "uart",
       "usb_timing": true,
