@@ -138,268 +138,203 @@
     },
     "mk-xiao": {
       "project": "FPVGateC5MK",
-      "commit": "a8ad2ae8259a2e13e0934e7e90f9d07c7c9f6bca",
-      "tag": "v1.2.6",
-      "environment": "xiaoc5",
+      "commit": "e0b43c1e273cbfd62f361d86c831c637f6acbd81",
+      "tag": "v1.3.0",
+      "mode": "uart",
+      "usb_timing": true,
+      "version": "1.3.0",
+      "environment": "c5mkaio",
       "board": "xiao",
-      "mode": "uart",
-      "usb_timing": true,
-      "version": "1.2.6",
+      "wiring": "d6d7",
       "parts": [
         {
-          "path": "firmware/c5/c5mk-v1.2.6/mk-xiao/bootloader.bin",
-          "offset": 8192,
-          "size": 19904,
-          "sha256": "bcdb79344ed03c346e880babc2979e15cf77d5cc0bb2d0c0c82206db2cd17f66"
-        },
-        {
-          "path": "firmware/c5/c5mk-v1.2.6/mk-xiao/partitions.bin",
-          "offset": 32768,
-          "size": 3072,
-          "sha256": "1b86379629900670bd43147c3a873a424695a67765fd1bdb28b1bffc21be137a"
-        },
-        {
-          "path": "firmware/c5/c5mk-v1.2.6/mk-xiao/ota_data_initial.bin",
-          "offset": 61440,
-          "size": 8192,
-          "sha256": "7d2c7ac4888bfd75cd5f56e8d61f69595121183afc81556c876732fd3782c62f"
-        },
-        {
-          "path": "firmware/c5/c5mk-v1.2.6/mk-xiao/firmware.bin",
-          "offset": 131072,
-          "size": 817984,
-          "sha256": "5b24f77ea04ae5000e6a99939cd4025b659656c5c4c06ec50932c15ef9c478cd"
-        }
-      ]
-    },
-    "mk-zero": {
-      "project": "FPVGateC5MK",
-      "commit": "a8ad2ae8259a2e13e0934e7e90f9d07c7c9f6bca",
-      "tag": "v1.2.6",
-      "environment": "c5zero",
-      "board": "zero",
-      "mode": "uart",
-      "usb_timing": true,
-      "version": "1.2.6",
-      "parts": [
-        {
-          "path": "firmware/c5/c5mk-v1.2.6/mk-zero/bootloader.bin",
-          "offset": 8192,
-          "size": 19904,
-          "sha256": "fa7b831f4adc8c47c2e6c2b614ea477e01e67cc735ee38ed7eb11e62b52ac6e1"
-        },
-        {
-          "path": "firmware/c5/c5mk-v1.2.6/mk-zero/partitions.bin",
-          "offset": 32768,
-          "size": 3072,
-          "sha256": "1b86379629900670bd43147c3a873a424695a67765fd1bdb28b1bffc21be137a"
-        },
-        {
-          "path": "firmware/c5/c5mk-v1.2.6/mk-zero/ota_data_initial.bin",
-          "offset": 61440,
-          "size": 8192,
-          "sha256": "7d2c7ac4888bfd75cd5f56e8d61f69595121183afc81556c876732fd3782c62f"
-        },
-        {
-          "path": "firmware/c5/c5mk-v1.2.6/mk-zero/firmware.bin",
-          "offset": 131072,
-          "size": 830752,
-          "sha256": "0d52b83e7bd966f96c83ed7bb213c11e739e82912e20abddceb2648f08bc0fd8"
-        }
-      ]
-    },
-    "mk-devkit": {
-      "project": "FPVGateC5MK",
-      "commit": "a8ad2ae8259a2e13e0934e7e90f9d07c7c9f6bca",
-      "tag": "v1.2.6",
-      "environment": "c5zero",
-      "board": "devkit",
-      "mode": "uart",
-      "usb_timing": true,
-      "version": "1.2.6",
-      "parts": [
-        {
-          "path": "firmware/c5/c5mk-v1.2.6/mk-zero/bootloader.bin",
-          "offset": 8192,
-          "size": 19904,
-          "sha256": "fa7b831f4adc8c47c2e6c2b614ea477e01e67cc735ee38ed7eb11e62b52ac6e1"
-        },
-        {
-          "path": "firmware/c5/c5mk-v1.2.6/mk-zero/partitions.bin",
-          "offset": 32768,
-          "size": 3072,
-          "sha256": "1b86379629900670bd43147c3a873a424695a67765fd1bdb28b1bffc21be137a"
-        },
-        {
-          "path": "firmware/c5/c5mk-v1.2.6/mk-zero/ota_data_initial.bin",
-          "offset": 61440,
-          "size": 8192,
-          "sha256": "7d2c7ac4888bfd75cd5f56e8d61f69595121183afc81556c876732fd3782c62f"
-        },
-        {
-          "path": "firmware/c5/c5mk-v1.2.6/mk-zero/firmware.bin",
-          "offset": 131072,
-          "size": 830752,
-          "sha256": "0d52b83e7bd966f96c83ed7bb213c11e739e82912e20abddceb2648f08bc0fd8"
-        }
-      ]
-    },
-    "mk-mini": {
-      "project": "FPVGateC5MK",
-      "commit": "a8ad2ae8259a2e13e0934e7e90f9d07c7c9f6bca",
-      "tag": "v1.2.6",
-      "environment": "c5zero",
-      "board": "mini",
-      "mode": "uart",
-      "usb_timing": true,
-      "version": "1.2.6",
-      "parts": [
-        {
-          "path": "firmware/c5/c5mk-v1.2.6/mk-zero/bootloader.bin",
-          "offset": 8192,
-          "size": 19904,
-          "sha256": "fa7b831f4adc8c47c2e6c2b614ea477e01e67cc735ee38ed7eb11e62b52ac6e1"
-        },
-        {
-          "path": "firmware/c5/c5mk-v1.2.6/mk-zero/partitions.bin",
-          "offset": 32768,
-          "size": 3072,
-          "sha256": "1b86379629900670bd43147c3a873a424695a67765fd1bdb28b1bffc21be137a"
-        },
-        {
-          "path": "firmware/c5/c5mk-v1.2.6/mk-zero/ota_data_initial.bin",
-          "offset": 61440,
-          "size": 8192,
-          "sha256": "7d2c7ac4888bfd75cd5f56e8d61f69595121183afc81556c876732fd3782c62f"
-        },
-        {
-          "path": "firmware/c5/c5mk-v1.2.6/mk-zero/firmware.bin",
-          "offset": 131072,
-          "size": 830752,
-          "sha256": "0d52b83e7bd966f96c83ed7bb213c11e739e82912e20abddceb2648f08bc0fd8"
-        }
-      ]
-    },
-    "mkpre-xiao": {
-      "project": "FPVGateC5MK",
-      "commit": "8fbd4078f508d1c96af3394522b325039c320249",
-      "tag": "v1.3.0-pre-1",
-      "environment": "xiaoc5_uart1_d6d7",
-      "board": "xiao",
-      "mode": "uart",
-      "usb_timing": true,
-      "version": "1.3.0-pre-1",
-      "prerelease": true,
-      "qualification": "D6/D7 UART1 wiring. USB soak NOT PASSED; moderate-noise timing worse than stock; video pass validation pending. D6/D7 image: build only, no hardware qualification.",
-      "parts": [
-        {
-          "path": "firmware/c5/c5mk-v1.3.0-pre-1/mk-xiao-d6d7/bootloader.bin",
+          "path": "firmware/c5/c5mk-v1.3.0/mk-xiao-c5mkaio/bootloader.bin",
           "offset": 8192,
           "size": 19856,
-          "sha256": "89819d37adb7ff266b5e96c791df437fbd5b81c96e0f619a1f7fdece7dfb57b7"
+          "sha256": "dd2d6c35ed11e88ca1052d622f046f71096031d59aa70b005607f0ba7c5c387f"
         },
         {
-          "path": "firmware/c5/c5mk-v1.3.0-pre-1/mk-xiao-d6d7/partitions.bin",
+          "path": "firmware/c5/c5mk-v1.3.0/mk-xiao-c5mkaio/partitions.bin",
           "offset": 32768,
           "size": 3072,
           "sha256": "1b86379629900670bd43147c3a873a424695a67765fd1bdb28b1bffc21be137a"
         },
         {
-          "path": "firmware/c5/c5mk-v1.3.0-pre-1/mk-xiao-d6d7/ota_data_initial.bin",
+          "path": "firmware/c5/c5mk-v1.3.0/mk-xiao-c5mkaio/ota_data_initial.bin",
           "offset": 61440,
           "size": 8192,
           "sha256": "7d2c7ac4888bfd75cd5f56e8d61f69595121183afc81556c876732fd3782c62f"
         },
         {
-          "path": "firmware/c5/c5mk-v1.3.0-pre-1/mk-xiao-d6d7/firmware.bin",
+          "path": "firmware/c5/c5mk-v1.3.0/mk-xiao-c5mkaio/firmware.bin",
           "offset": 131072,
           "size": 810592,
-          "sha256": "1fc660e40dbd6a7689d603b49306f3a49c26863ef09a4aba73faf883cb06ce20"
+          "sha256": "52ce4d8b679ce6707d7732012b6d8b28d7f0b7c2b61fb10cfc20c402285153d9"
         }
       ],
-      "wiring": "d6d7",
-      "app_version": "1.3.0-pre-1-d6d7+xiaoc5",
+      "app_version": "1.3.0+c5mkaio",
       "uart": {
         "rx": "D7 / GPIO12",
         "tx": "D6 / GPIO11"
-      }
+      },
+      "qualification": "Standard C5MK AIO wiring (D6/D7 UART1). Link, gate updates and race start verified on a production C5MK AIO. USB soak and real analog-video validation are not complete; calibrate each installation."
     },
-    "mkpre-zero": {
+    "mk-zero": {
       "project": "FPVGateC5MK",
-      "commit": "8fbd4078f508d1c96af3394522b325039c320249",
-      "tag": "v1.3.0-pre-1",
+      "commit": "e0b43c1e273cbfd62f361d86c831c637f6acbd81",
+      "tag": "v1.3.0",
+      "mode": "uart",
+      "usb_timing": true,
+      "version": "1.3.0",
       "environment": "c5zero",
       "board": "zero",
-      "mode": "uart",
-      "usb_timing": true,
-      "version": "1.3.0-pre-1",
-      "prerelease": true,
-      "qualification": "USB soak NOT PASSED; moderate-noise timing worse than stock; video pass validation pending. C5-Zero receiver: build only.",
       "parts": [
         {
-          "path": "firmware/c5/c5mk-v1.3.0-pre-1/mk-zero/bootloader.bin",
+          "path": "firmware/c5/c5mk-v1.3.0/mk-zero/bootloader.bin",
           "offset": 8192,
           "size": 19904,
-          "sha256": "bd55aa058ab30c0003a1463d06f1b9b2731d76974ec322c9c220d3cc7f3bebb1"
+          "sha256": "53ef4ccdcae74ba0ca3cc816f9e2ca8dd6eba3c3c85673503eeae4c349a9a629"
         },
         {
-          "path": "firmware/c5/c5mk-v1.3.0-pre-1/mk-zero/partitions.bin",
+          "path": "firmware/c5/c5mk-v1.3.0/mk-zero/partitions.bin",
           "offset": 32768,
           "size": 3072,
           "sha256": "1b86379629900670bd43147c3a873a424695a67765fd1bdb28b1bffc21be137a"
         },
         {
-          "path": "firmware/c5/c5mk-v1.3.0-pre-1/mk-zero/ota_data_initial.bin",
+          "path": "firmware/c5/c5mk-v1.3.0/mk-zero/ota_data_initial.bin",
           "offset": 61440,
           "size": 8192,
           "sha256": "7d2c7ac4888bfd75cd5f56e8d61f69595121183afc81556c876732fd3782c62f"
         },
         {
-          "path": "firmware/c5/c5mk-v1.3.0-pre-1/mk-zero/firmware.bin",
+          "path": "firmware/c5/c5mk-v1.3.0/mk-zero/firmware.bin",
           "offset": 131072,
           "size": 832736,
-          "sha256": "e216ce3b85b6b8cf6af477d337e7b8e12d9bf9ee77b18f872d21af4cf09fd260"
+          "sha256": "556a22f193333ba73b6c0741da68670ed6562fda3022a9967c15e5c9b38e1603"
         }
-      ]
+      ],
+      "app_version": "1.3.0+c5zero",
+      "qualification": "Build checked; no C5-Zero receiver hardware test. USB soak and real analog-video validation are not complete; calibrate each installation."
     },
-    "mkprelegacy-xiao": {
+    "mk-devkit": {
       "project": "FPVGateC5MK",
-      "commit": "8fbd4078f508d1c96af3394522b325039c320249",
-      "tag": "v1.3.0-pre-1",
-      "environment": "xiaoc5",
-      "board": "xiao",
+      "commit": "e0b43c1e273cbfd62f361d86c831c637f6acbd81",
+      "tag": "v1.3.0",
       "mode": "uart",
       "usb_timing": true,
-      "version": "1.3.0-pre-1",
-      "prerelease": true,
-      "qualification": "Legacy D4/D5 wiring (existing factory-wired C5MK AIO). USB soak NOT PASSED; moderate-noise timing worse than stock; video pass validation pending. RC-source hardware evidence; new version-labelled image build checked.",
+      "version": "1.3.0",
+      "environment": "c5zero",
+      "board": "devkit",
       "parts": [
         {
-          "path": "firmware/c5/c5mk-v1.3.0-pre-1/mk-xiao/bootloader.bin",
+          "path": "firmware/c5/c5mk-v1.3.0/mk-zero/bootloader.bin",
           "offset": 8192,
           "size": 19904,
-          "sha256": "2e09cc4ead1b0f36b74b183d4e29c838f2be86d46dec275c977dae25bfd24876"
+          "sha256": "53ef4ccdcae74ba0ca3cc816f9e2ca8dd6eba3c3c85673503eeae4c349a9a629"
         },
         {
-          "path": "firmware/c5/c5mk-v1.3.0-pre-1/mk-xiao/partitions.bin",
+          "path": "firmware/c5/c5mk-v1.3.0/mk-zero/partitions.bin",
           "offset": 32768,
           "size": 3072,
           "sha256": "1b86379629900670bd43147c3a873a424695a67765fd1bdb28b1bffc21be137a"
         },
         {
-          "path": "firmware/c5/c5mk-v1.3.0-pre-1/mk-xiao/ota_data_initial.bin",
+          "path": "firmware/c5/c5mk-v1.3.0/mk-zero/ota_data_initial.bin",
           "offset": 61440,
           "size": 8192,
           "sha256": "7d2c7ac4888bfd75cd5f56e8d61f69595121183afc81556c876732fd3782c62f"
         },
         {
-          "path": "firmware/c5/c5mk-v1.3.0-pre-1/mk-xiao/firmware.bin",
+          "path": "firmware/c5/c5mk-v1.3.0/mk-zero/firmware.bin",
           "offset": 131072,
-          "size": 819968,
-          "sha256": "55b5e54f9d14e271c8951828f4d67e4b91426a8d05844cfb80812547d632b15b"
+          "size": 832736,
+          "sha256": "556a22f193333ba73b6c0741da68670ed6562fda3022a9967c15e5c9b38e1603"
         }
       ],
-      "wiring": "legacy"
+      "app_version": "1.3.0+c5zero",
+      "qualification": "Runs the C5-Zero image; not tested on this board. USB soak and real analog-video validation are not complete; calibrate each installation."
+    },
+    "mk-mini": {
+      "project": "FPVGateC5MK",
+      "commit": "e0b43c1e273cbfd62f361d86c831c637f6acbd81",
+      "tag": "v1.3.0",
+      "mode": "uart",
+      "usb_timing": true,
+      "version": "1.3.0",
+      "environment": "c5zero",
+      "board": "mini",
+      "parts": [
+        {
+          "path": "firmware/c5/c5mk-v1.3.0/mk-zero/bootloader.bin",
+          "offset": 8192,
+          "size": 19904,
+          "sha256": "53ef4ccdcae74ba0ca3cc816f9e2ca8dd6eba3c3c85673503eeae4c349a9a629"
+        },
+        {
+          "path": "firmware/c5/c5mk-v1.3.0/mk-zero/partitions.bin",
+          "offset": 32768,
+          "size": 3072,
+          "sha256": "1b86379629900670bd43147c3a873a424695a67765fd1bdb28b1bffc21be137a"
+        },
+        {
+          "path": "firmware/c5/c5mk-v1.3.0/mk-zero/ota_data_initial.bin",
+          "offset": 61440,
+          "size": 8192,
+          "sha256": "7d2c7ac4888bfd75cd5f56e8d61f69595121183afc81556c876732fd3782c62f"
+        },
+        {
+          "path": "firmware/c5/c5mk-v1.3.0/mk-zero/firmware.bin",
+          "offset": 131072,
+          "size": 832736,
+          "sha256": "556a22f193333ba73b6c0741da68670ed6562fda3022a9967c15e5c9b38e1603"
+        }
+      ],
+      "app_version": "1.3.0+c5zero",
+      "qualification": "Runs the C5-Zero image; not tested on this board. USB soak and real analog-video validation are not complete; calibrate each installation."
+    },
+    "mklegacy-xiao": {
+      "project": "FPVGateC5MK",
+      "commit": "e0b43c1e273cbfd62f361d86c831c637f6acbd81",
+      "tag": "v1.3.0",
+      "mode": "uart",
+      "usb_timing": true,
+      "version": "1.3.0",
+      "environment": "xiaoc5",
+      "board": "xiao",
+      "wiring": "legacy",
+      "parts": [
+        {
+          "path": "firmware/c5/c5mk-v1.3.0/mk-xiao-legacy/bootloader.bin",
+          "offset": 8192,
+          "size": 19904,
+          "sha256": "ac058a1a80c91abe81ba3d21a92a16938e5058d1652cb8ec02c0ffd11d408f19"
+        },
+        {
+          "path": "firmware/c5/c5mk-v1.3.0/mk-xiao-legacy/partitions.bin",
+          "offset": 32768,
+          "size": 3072,
+          "sha256": "1b86379629900670bd43147c3a873a424695a67765fd1bdb28b1bffc21be137a"
+        },
+        {
+          "path": "firmware/c5/c5mk-v1.3.0/mk-xiao-legacy/ota_data_initial.bin",
+          "offset": 61440,
+          "size": 8192,
+          "sha256": "7d2c7ac4888bfd75cd5f56e8d61f69595121183afc81556c876732fd3782c62f"
+        },
+        {
+          "path": "firmware/c5/c5mk-v1.3.0/mk-xiao-legacy/firmware.bin",
+          "offset": 131072,
+          "size": 819968,
+          "sha256": "8ffdf9346c424edf271b65cfde3af0f7c8ec0c6a0365e3a6c6162675eee623fa"
+        }
+      ],
+      "app_version": "1.3.0+xiaoc5",
+      "uart": {
+        "rx": "D4 / GPIO23",
+        "tx": "D5 / GPIO24"
+      },
+      "qualification": "Legacy D4/D5 wiring (early C5MK AIOs and DIY XIAO C5 receivers). Same receiver code as the D6/D7 image; build checked. USB soak and real analog-video validation are not complete; calibrate each installation."
     }
   }
 }

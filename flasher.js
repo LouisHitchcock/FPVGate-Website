@@ -192,8 +192,12 @@ const RELEASE_BOARDS = {
     'v1.9.0-Multi-Alpha-3': ['seeedxiaos3', 'waveshares3eth'],
     'v1.9.0-Alpha-4': ['seeedxiaos3', 'waveshares3eth'],
     'v1.9.0-alpha-5': ['seeedxiaos3', 'waveshares3eth', 'esp32s3', 'fpvgateaio', 'fpvgatesolo', 'fpvgatec5mkaio'],
-    'v1.9.0-alpha-6': ['seeedxiaos3', 'waveshares3eth', 'esp32s3', 'fpvgateaio', 'fpvgatesolo', 'fpvgatec5mkaio']
+    'v1.9.0-alpha-6': ['seeedxiaos3', 'waveshares3eth', 'esp32s3', 'fpvgateaio', 'fpvgatesolo', 'fpvgatec5mkaio'],
+    'v1.9.0': ['seeedxiaos3', 'waveshares3eth', 'esp32s3', 'fpvgateaio', 'fpvgatec5mkaio']
 };
+
+// Releases that ship boot_app0.bin (the OTA selector) next to app0.
+const BOOT_APP0_RELEASES = ['v1.9.0-alpha-6', 'v1.9.0'];
 
 // Fetch something that changes when a release is published, bypassing the
 // browser's HTTP cache.
@@ -423,7 +427,7 @@ function updateFlashInfo() {
     // This dedicated C5-only target first ships in Alpha 5. Unknown/older
     // releases must not fall back to another AIO's images.
     if (selectedBoard === 'fpvgatec5mkaio' && !RELEASE_BOARDS[selectedVersion.tag_name]?.includes(selectedBoard)) {
-        showError(`${selectedVersion.tag_name} has no build for ${boardConfig.name}. Enable Pre-Release Firmware and choose v1.9.0-alpha-5.`);
+        showError(`${selectedVersion.tag_name} has no build for ${boardConfig.name}. Choose v1.9.0 or later.`);
         document.getElementById('flash-section').style.display = 'none';
         return false;
     }
@@ -522,9 +526,9 @@ function generateManifest() {
         };
     });
     
-    // Alpha-6 ships an OTA selector as well as app0. Without it, keeping NVS
-    // on a board previously updated over the air can leave app1 selected.
-    if (version === 'v1.9.0-alpha-6') {
+    // Alpha-6 and later ship an OTA selector as well as app0. Without it, keeping
+    // NVS on a board previously updated over the air can leave app1 selected.
+    if (BOOT_APP0_RELEASES.includes(version)) {
         parts.splice(2, 0, {
             path: new URL(`${firmwareFolder}/${version}/boot_app0.bin`, baseUrl).href,
             offset: 0xe000

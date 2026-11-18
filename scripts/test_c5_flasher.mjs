@@ -14,7 +14,7 @@ assert.equal(calculateC5MD5(md5Input.subarray(1, 4)), '900150983cd24fb0d6963f7d2
 globalThis.location = new URL('http://localhost:8000/flasher.html');
 const manifest = JSON.parse(await readFile(new URL('../firmware/c5/manifest.json', import.meta.url)));
 for (const board of ['xiao', 'zero', 'devkit', 'mini']) {
-    assert.equal(manifest.builds[`mk-${board}`].tag, 'v1.2.6', 'Stable must point to published v1.2.6');
+    assert.equal(manifest.builds[`mk-${board}`].tag, 'v1.3.0', 'Stable must point to v1.3.0');
     assert.equal(manifest.builds[`mkrc-${board}`], undefined, 'Retired RC must not be offered');
 }
 const fetchFile = async url => new Response(await readFile(new URL(`..${url.pathname}`, import.meta.url)));
@@ -35,18 +35,12 @@ for (const [key, build] of Object.entries(manifest.builds)) {
     }
     assert.ok(appPartition && app.data.length <= appPartition, `Application must fit its partition at 0x${app.address.toString(16)}`);
     if (build.mode === 'uart') {
-        const pre = /^mkpre(legacy)?-/.test(key);
-        const tag = pre ? 'v1.3.0-pre-1' : 'v1.2.6';
+        const tag = 'v1.3.0';
         assert.equal(build.version, tag.slice(1));
         assert.equal(build.tag, tag);
         assert.equal(build.usb_timing, true);
-        if (pre) {
-            assert.equal(build.prerelease, true);
-            assert.match(build.qualification, /soak.*NOT PASSED/);
-            assert.match(build.commit, /^[0-9a-f]{40}$/);
-        } else {
-        assert.equal(build.commit, 'a8ad2ae8259a2e13e0934e7e90f9d07c7c9f6bca', 'Published source tag');
-        }
+        assert.notEqual(build.prerelease, true);
+        assert.equal(build.commit, 'e0b43c1e273cbfd62f361d86c831c637f6acbd81', 'C5MK v1.3.0 source commit');
         assert.equal(otaSlots, 2, 'MK needs two app slots for updates through FPVGate');
         assert.equal(otaData, files[2].address, 'OTA data must be written where the partition table puts it');
         const version = Buffer.from(app.data.subarray(48, 80)).toString('latin1').split('\0')[0];

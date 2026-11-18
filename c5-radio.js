@@ -15,7 +15,7 @@ const escape = value => String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;
 
 async function loadCatalog() {
     if (catalog) return catalog;
-    if (!loading) loading = fetch('firmware/c5/manifest.json?v=c5mk-1.3.0-pre-1-d6d7', { cache: 'no-cache' })
+    if (!loading) loading = fetch('firmware/c5/manifest.json?v=c5mk-1.3.0', { cache: 'no-cache' })
         .then(response => {
             if (!response.ok) throw new Error('C5 firmware could not be loaded. Check your connection and reselect your board to retry.');
             return response.json();
@@ -35,8 +35,8 @@ const BOARDS = {
         spiPending: 'XIAO pin adaptation, hardware validation pending',
         uartPending: 'Physical XIAO USB validation is pending.',
         uartNote: {
-            d6d7: 'the standard C5 link from 1.3.0-pre-1. Use this only when the S3 link is wired to C5 D6 / GPIO11 (TX) and D7 / GPIO12 (RX). If your board is wired to D4/D5, choose Legacy instead. This image is build checked only.',
-            legacy: 'for existing boards with the S3 link on C5 D4 / GPIO23 (RX) and D5 / GPIO24 (TX), including factory-wired C5MK AIO boards. Supported for now; new builds should use D6/D7 UART1.',
+            d6d7: 'the standard C5 link, as routed on the FPVGate C5MK AIO PCB. Use this when the S3 link is wired to C5 D6 / GPIO11 (TX) and D7 / GPIO12 (RX). If your board is wired to D4/D5, choose Legacy instead.',
+            legacy: 'for boards with the S3 link on C5 D4 / GPIO23 (RX) and D5 / GPIO24 (TX): early C5MK AIOs and DIY receivers. Supported; new builds should use D6/D7 UART1.',
         },
     },
     zero: {
