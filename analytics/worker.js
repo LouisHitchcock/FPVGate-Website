@@ -331,7 +331,7 @@ async function getLiveStats(db) {
   // Total active site viewers (any event in last 15 mins)
   const totalViewers = await db.prepare(`
     SELECT COUNT(DISTINCT ip_hash) as count
-    FROM analytics_events
+    FROM analytics_events INDEXED BY idx_timestamp
     WHERE timestamp >= datetime('now', '-15 minutes')
       AND ip_hash IS NOT NULL
   `).first();
