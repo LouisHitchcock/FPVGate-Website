@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Connect your FPVGate C5MK AIO over Wi-Fi or USB and set up your first multi-pilot race.">
+    <link rel="canonical" href="https://fpvgate.xyz/c5mk-quickstart.html">
+    <title>FPVGate C5MK AIO Quick Start</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .setup-guide { max-width: 780px; margin: 0 auto; padding: 3rem 1.25rem; }
+        .setup-guide section { margin-top: 2rem; }
+        .setup-guide h1 { line-height: 1.15; margin: .75rem 0; }
+        .setup-guide h2 { margin-bottom: .5rem; }
+        .setup-guide p, .setup-guide li { margin-bottom: .5rem; }
+        .setup-guide ol, .setup-guide ul { padding-left: 1.5rem; }
+        .setup-guide nav { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; margin-top: 1rem; }
+        .setup-guide a { text-decoration: underline; }
+    </style>
+</head>
+<body>
+<main class="setup-guide">
+    <p><a href="index.html">FPVGate</a> / <a href="docs.html">Documentation</a></p>
+    <h1>C5MK AIO quick start</h1>
+    <p>Connect to your gate, set the pilot channels, and check your first lap. The C5MK AIO can time up to eight pilots with one receiver.</p>
+    <nav aria-label="On this page">
+        <a href="#wifi">Connect over Wi-Fi</a>
+        <a href="#usb">Connect over USB</a>
+        <a href="#first-race">Run your first race</a>
+    </nav>
+
+    <section id="wifi">
+        <h2>Connect over Wi-Fi</h2>
+        <ol>
+            <li>With the gate off, insert the prepared microSD card if you use one. Connect USB-C power to the gate's <strong>S3</strong> port.</li>
+            <li>On your phone or computer, join <code>FPVGate_XXXX</code>. The last four characters identify your gate. The factory Wi-Fi password is <code>fpvgate1</code>.</li>
+            <li>Stay connected if your device says the network has no internet. Open <a href="http://192.168.4.1/">http://192.168.4.1</a> in your browser.</li>
+        </ol>
+    </section>
+
+    <section id="usb">
+        <h2>Connect over USB</h2>
+        <ol>
+            <li>Connect the gate's <strong>S3</strong> port to a Windows or Linux computer with a USB-C data cable.</li>
+            <li>Wait for the USB network adapter to appear, then open <a href="http://192.168.7.1/">http://192.168.7.1</a>. This connection supplies power and carries the gate's web interface.</li>
+        </ol>
+        <p>Use Wi-Fi on macOS. The C5 port is for the receiver's own USB connection, including <a href="c5.html#rotorhazard">direct USB to RotorHazard</a>. The gate's browser interface is on the S3.</p>
+    </section>
+
+    <section id="first-race">
+        <h2>Run your first race</h2>
+        <ol>
+            <li>Open <strong>Calibration</strong> and check that the C5 is online. Set the channel for each pilot to match their video transmitter.</li>
+            <li>Turn on a transmitter and walk the quad through the gate at race height. Check that the matching pilot's RSSI rises at the crossing. Set or calculate the Enter and Exit thresholds and wait for the settings to save.</li>
+            <li>On the race screen, select the pilots taking part and start a test heat. Walk through the gate again to check that the correct pilot records a lap. Stop the heat and check the result in Race History.</li>
+        </ol>
+        <p><a href="docs.html#c5-multipilot">Multi-pilot calibration and setup</a></p>
+    </section>
+
+    <section>
+        <h2>If you can't connect</h2>
+        <ul>
+            <li>For Wi-Fi, check that you're still on the gate's network and that the address starts with <code>http://</code>.</li>
+            <li>For USB, check the S3 port and try another cable that carries data. Connect one gate over USB networking at a time.</li>
+            <li>If the page opens but Calibration shows the C5 is offline, the timer is reachable but the receiver has not connected. <a href="support.html">Contact FPVGate support</a> if it stays offline after a restart.</li>
+        </ul>
+    </section>
+</main>
+</body>
+</html>

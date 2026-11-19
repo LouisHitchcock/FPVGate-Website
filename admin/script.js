@@ -510,17 +510,20 @@ async function printInvoice(id){
         const dt=new Date(o.created_at).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
         const invNum=o.invoice_number||o.id;
 
+        const isC5MKAIO=items.some(item=>item.id==='FPVGate C5MK AIO'||/^FPVGate C5MK AIO(?:$| - )/i.test(item.name||''));
+        const guideUrl=isC5MKAIO?'https://fpvgate.xyz/c5mk-quickstart.html':'https://fpvgate.xyz/quickstart.html';
         const qr=qrcode(0,'M');
-        qr.addData('https://fpvgate.xyz/quickstart.html');
+        qr.addData(guideUrl);
         qr.make();
         const qrCvs=document.createElement('canvas');
         const mc=qr.getModuleCount();
         const cs=3;
-        qrCvs.width=mc*cs;qrCvs.height=mc*cs;
+        const quiet=4;
+        qrCvs.width=(mc+quiet*2)*cs;qrCvs.height=(mc+quiet*2)*cs;
         const qx=qrCvs.getContext('2d');
-        qx.fillStyle='#fff';qx.fillRect(0,0,mc*cs,mc*cs);
+        qx.fillStyle='#fff';qx.fillRect(0,0,qrCvs.width,qrCvs.height);
         qx.fillStyle='#000';
-        for(let r=0;r<mc;r++)for(let c=0;c<mc;c++)if(qr.isDark(r,c))qx.fillRect(c*cs,r*cs,cs,cs);
+        for(let r=0;r<mc;r++)for(let c=0;c<mc;c++)if(qr.isDark(r,c))qx.fillRect((c+quiet)*cs,(r+quiet)*cs,cs,cs);
         const qrUrl=qrCvs.toDataURL('image/png');
 
         const esc=s=>{if(!s)return'';const d=document.createElement('div');d.textContent=s;return d.innerHTML};
@@ -590,13 +593,18 @@ table td{padding:3px 4px;font-size:9px;font-weight:600;border-bottom:0.5px solid
 <div class="qs-inner">
 <img src="${qrUrl}" alt="QR">
 <div>
-<ol>
+<ol>${isC5MKAIO?`
+<li>Power the gate through the <strong>S3 USB-C port</strong>.</li>
+<li>Wi-Fi: join <strong>FPVGate_XXXX</strong> (password <strong>fpvgate1</strong>), then open <strong>http://192.168.4.1</strong>.</li>
+<li>USB: use a data cable on Windows or Linux and open <strong>http://192.168.7.1</strong>.</li>
+<li>Open <strong>Calibration</strong> and set your pilot channels.</li>
+`:`
 <li>Insert <strong>SD card</strong>, connect <strong>USB-C</strong> power.</li>
 <li>Connect to WiFi: <div class="cred"><span>SSID:</span> FPVGate <span>Pass:</span> fpvgate1</div></li>
 <li>Open <strong>http://fpvgate.local</strong> or <strong>192.168.4.1</strong></li>
 <li>Set pilot name, voice & LEDs in <strong>Configuration</strong>.</li>
-</ol>
-<div class="qs-link">Full guide: <strong>fpvgate.xyz/quickstart</strong></div>
+`}</ol>
+<div class="qs-link">Full guide: <a href="${guideUrl}">${guideUrl.slice(8)}</a></div>
 </div>
 </div>
 </div>
