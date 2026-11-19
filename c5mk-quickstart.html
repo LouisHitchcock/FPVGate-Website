@@ -3,68 +3,233 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Connect your FPVGate C5MK AIO over Wi-Fi or USB and set up your first multi-pilot race.">
+    <meta name="description" content="Set up the FPVGate C5MK AIO over Wi-Fi or USB, calibrate each pilot, and run your first race.">
     <link rel="canonical" href="https://fpvgate.xyz/c5mk-quickstart.html">
     <title>FPVGate C5MK AIO Quick Start</title>
     <link rel="stylesheet" href="styles.css">
-    <style>
-        .setup-guide { max-width: 780px; margin: 0 auto; padding: 3rem 1.25rem; }
-        .setup-guide section { margin-top: 2rem; }
-        .setup-guide h1 { line-height: 1.15; margin: .75rem 0; }
-        .setup-guide h2 { margin-bottom: .5rem; }
-        .setup-guide p, .setup-guide li { margin-bottom: .5rem; }
-        .setup-guide ol, .setup-guide ul { padding-left: 1.5rem; }
-        .setup-guide nav { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; margin-top: 1rem; }
-        .setup-guide a { text-decoration: underline; }
-    </style>
 </head>
 <body>
-<main class="setup-guide">
-    <p><a href="index.html">FPVGate</a> / <a href="docs.html">Documentation</a></p>
-    <h1>C5MK AIO quick start</h1>
-    <p>Connect to your gate, set the pilot channels, and check your first lap. The C5MK AIO can time up to eight pilots with one receiver.</p>
-    <nav aria-label="On this page">
-        <a href="#wifi">Connect over Wi-Fi</a>
-        <a href="#usb">Connect over USB</a>
-        <a href="#first-race">Run your first race</a>
+    <nav class="navbar">
+        <div class="container">
+            <a class="nav-brand" href="index.html">
+                <img src="images/LogoAnimated.svg" alt="" class="nav-logo">
+                <span class="brand-name">FPVGate</span>
+            </a>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="shop.html">Shop</a>
+                <a href="docs.html">Documentation</a>
+                <a href="https://github.com/LouisHitchcock/FPVGate" target="_blank" rel="noopener">GitHub</a>
+                <a href="c5.html">C5 Radio</a>
+                <a href="flasher.html" class="btn-primary">Flash Firmware</a>
+            </div>
+            <div class="nav-actions">
+                <button class="theme-toggle" type="button" data-theme-toggle aria-label="Switch theme">
+                    <svg class="icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+                    <svg class="icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M4.6 4.6 6 6M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4 6 18M18 6l1.4-1.4"/></svg>
+                </button>
+                <button class="nav-toggle" type="button" data-nav-toggle aria-label="Toggle menu" aria-expanded="false">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </div>
     </nav>
+    <main>
+        <section class="qs-hero">
+            <div class="container">
+                <h1>FPVGate C5MK AIO Quick Start</h1>
+                <p class="subtitle">Connect your gate, calibrate each pilot, and run your first heat.</p>
+                <nav class="qs-progress" aria-label="Guide sections">
+                    <a class="qs-progress-step" href="#unboxing"><span class="qs-progress-num">1</span><span>Unboxing</span></a>
+                    <a class="qs-progress-step" href="#setup"><span class="qs-progress-num">2</span><span>Setup</span></a>
+                    <a class="qs-progress-step" href="#calibration"><span class="qs-progress-num">3</span><span>Calibration</span></a>
+                    <a class="qs-progress-step" href="#first-race"><span class="qs-progress-num">4</span><span>First race</span></a>
+                </nav>
+            </div>
+        </section>
 
-    <section id="wifi">
-        <h2>Connect over Wi-Fi</h2>
-        <ol>
-            <li>With the gate off, insert the prepared microSD card if you use one. Connect USB-C power to the gate's <strong>S3</strong> port.</li>
-            <li>On your phone or computer, join <code>FPVGate_XXXX</code>. The last four characters identify your gate. The factory Wi-Fi password is <code>fpvgate1</code>.</li>
-            <li>Stay connected if your device says the network has no internet. Open <a href="http://192.168.4.1/">http://192.168.4.1</a> in your browser.</li>
-        </ol>
-    </section>
+        <section class="qs-section" id="unboxing">
+            <div class="container">
+                <div class="qs-section-header"><div class="qs-section-num" aria-hidden="true">1</div><h2>Unboxing</h2></div>
+                <div class="qs-content">
+                    <p>The C5MK AIO is an assembled lap timer. Its S3 runs the timer and serves the web interface. The C5 receives the video signals used to time up to eight pilots.</p>
+                    <div class="qs-checklist">
+                        <h3>Before you power it on</h3>
+                        <ul>
+                            <li>Find the <strong>S3 USB-C port</strong>. Use this port to power the gate and connect to its browser interface over USB.</li>
+                            <li>Have a USB-C data cable ready if you plan to connect to a computer. A charge-only cable can power the gate for Wi-Fi setup.</li>
+                            <li>Check that the prepared microSD card is seated before powering on if you want to record RSSI traces for Visual Marshal.</li>
+                            <li>Have a quad with a working video transmitter and a way to check its exact channel.</li>
+                        </ul>
+                    </div>
+                    <div class="qs-note">
+                        <h4>Which USB port?</h4>
+                        <p>Use the <strong>S3</strong> port throughout this guide. The separate <strong>C5</strong> port is for receiver firmware and <a href="c5.html#rotorhazard">direct USB to RotorHazard</a>.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-    <section id="usb">
-        <h2>Connect over USB</h2>
-        <ol>
-            <li>Connect the gate's <strong>S3</strong> port to a Windows or Linux computer with a USB-C data cable.</li>
-            <li>Wait for the USB network adapter to appear, then open <a href="http://192.168.7.1/">http://192.168.7.1</a>. This connection supplies power and carries the gate's web interface.</li>
-        </ol>
-        <p>Use Wi-Fi on macOS. The C5 port is for the receiver's own USB connection, including <a href="c5.html#rotorhazard">direct USB to RotorHazard</a>. The gate's browser interface is on the S3.</p>
-    </section>
+        <section class="qs-section qs-section-alt" id="setup">
+            <div class="container">
+                <div class="qs-section-header"><div class="qs-section-num" aria-hidden="true">2</div><h2>Initial setup</h2></div>
+                <div class="qs-content">
+                    <h3 id="wifi">Connect over Wi-Fi</h3>
+                    <ol class="qs-steps">
+                        <li>Connect the S3 port to USB-C power and allow a few seconds for startup.</li>
+                        <li>On your phone, tablet, or computer, open Wi-Fi settings and pick the gate's network. The last four characters distinguish your gate from others nearby.</li>
+                        <li>Enter the factory password below. If your device warns that the network has no internet, choose to stay connected.</li>
+                    </ol>
+                    <div class="qs-credential">
+                        <div class="qs-credential-item"><span class="qs-credential-label">Network</span><span class="qs-credential-value">FPVGate_XXXX</span></div>
+                        <div class="qs-credential-item"><span class="qs-credential-label">Password</span><span class="qs-credential-value">fpvgate1</span></div>
+                    </div>
+                    <p>Open the gate in your browser. Include <code>http://</code> when typing the address.</p>
+                    <div class="qs-url-box"><a href="http://192.168.4.1/"><code>http://192.168.4.1</code></a><span class="qs-url-alt">or <a href="http://fpvgate.local/"><code>http://fpvgate.local</code></a></span></div>
+                    <p class="qs-hint">If the hostname doesn't resolve, use the IP address. On macOS, use this Wi-Fi connection.</p>
 
-    <section id="first-race">
-        <h2>Run your first race</h2>
-        <ol>
-            <li>Open <strong>Calibration</strong> and check that the C5 is online. Set the channel for each pilot to match their video transmitter.</li>
-            <li>Turn on a transmitter and walk the quad through the gate at race height. Check that the matching pilot's RSSI rises at the crossing. Set or calculate the Enter and Exit thresholds and wait for the settings to save.</li>
-            <li>On the race screen, select the pilots taking part and start a test heat. Walk through the gate again to check that the correct pilot records a lap. Stop the heat and check the result in Race History.</li>
-        </ol>
-        <p><a href="docs.html#c5-multipilot">Multi-pilot calibration and setup</a></p>
-    </section>
+                    <h3 id="usb">Connect over USB</h3>
+                    <ol class="qs-steps">
+                        <li>Connect the S3 port directly to a Windows or Linux computer with a USB-C data cable.</li>
+                        <li>Wait for the USB network adapter to appear. Your computer can stay on its usual Wi-Fi network.</li>
+                        <li>Open the address below. The same cable powers the gate and carries the browser connection.</li>
+                    </ol>
+                    <div class="qs-url-box"><a href="http://192.168.7.1/"><code>http://192.168.7.1</code></a></div>
+                    <p class="qs-hint">Connect one gate at a time over USB networking because they share this address. If the adapter doesn't appear, check the S3 port, reconnect the cable, or try a known data cable.</p>
 
-    <section>
-        <h2>If you can't connect</h2>
-        <ul>
-            <li>For Wi-Fi, check that you're still on the gate's network and that the address starts with <code>http://</code>.</li>
-            <li>For USB, check the S3 port and try another cable that carries data. Connect one gate over USB networking at a time.</li>
-            <li>If the page opens but Calibration shows the C5 is offline, the timer is reachable but the receiver has not connected. <a href="support.html">Contact FPVGate support</a> if it stays offline after a restart.</li>
-        </ul>
-    </section>
-</main>
+                    <h3>Check the receiver and your race settings</h3>
+                    <ol class="qs-steps">
+                        <li>Open <strong>Calibration</strong>. The status should show the C5 online and scanning. If the browser opens but the C5 stays offline, restart the gate and check again before trying to race.</li>
+                        <li>Open <strong>Configuration</strong> to set the race countdown, <strong>Minimum Lap Time</strong>, and announcements. Set the minimum below your fastest realistic lap but long enough to reject repeat detections from a single crossing. Try 3 to 5 seconds if that suits the track.</li>
+                        <li>Choose lap speech or a crossing beep and check media volume on the device you'll use during the race. Use <strong>Diagnostics &gt; Test buzzer</strong> to check the gate buzzer separately.</li>
+                    </ol>
+                    <figure>
+                        <img class="qs-screenshot" src="images/quickstart/c5mk-settings.png" alt="FPVGate configuration screen showing race and announcer settings" loading="lazy">
+                    </figure>
+                    <h3>Join your home Wi-Fi (optional)</h3>
+                    <p>In <strong>Configuration &gt; WiFi &amp; Connection</strong>, enter your network name and password in the station settings and save. After the gate reconnects, put your phone or computer on that network and open <code>http://fpvgate.local</code> or the IP address assigned by your router. At the field, reconnect to the gate's own hotspot if its saved network is unavailable.</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="qs-section" id="calibration">
+            <div class="container">
+                <div class="qs-section-header"><div class="qs-section-num" aria-hidden="true">3</div><h2>Placement and calibration</h2></div>
+                <div class="qs-content">
+                    <h3>Place the timer</h3>
+                    <p>Secure the gate timer near a lower corner of the start and finish gate, clear of the flight path. Keep the receiver facing the opening and away from large metal objects where practical. Calibrate with the gate in its final position.</p>
+                    <h3>Assign pilot channels</h3>
+                    <ol class="qs-steps">
+                        <li>Open <strong>Calibration</strong>. Each pilot card controls one receiver slot.</li>
+                        <li>Match each card's <strong>Channel</strong> to the pilot's video transmitter. Check the frequency in the goggles or transmitter setup if you're unsure. Raceband is a good starting point, with R1 at 5658 MHz.</li>
+                        <li>Set each pilot's name and colour. Use <strong>Spoken as</strong> if the announcer needs help pronouncing a callsign.</li>
+                        <li>Tick <strong>Race</strong> for every pilot who should record laps. Set unused channels to <strong>Off</strong>. A channel can still show RSSI with <strong>Race</strong> unticked.</li>
+                    </ol>
+                    <figure>
+                        <img class="qs-screenshot" src="images/quickstart/c5mk-calibration.png" alt="C5 multi-pilot calibration showing RSSI traces, pilot cards, and Enter and Exit thresholds" loading="lazy">
+                    </figure>
+
+                    <h3>Calibrate each pilot's RSSI</h3>
+                    <p>RSSI is the signal level the gate measures. A crossing begins above <strong>Enter</strong> and ends after the signal falls below <strong>Exit</strong>. The gate timestamps the strongest point in the pass.</p>
+                    <ol class="qs-steps">
+                        <li>Power on the video transmitter and keep the quad disarmed for walk-through tests. Leave the gate area clear long enough to see the signal away from the opening.</li>
+                        <li>Walk the powered quad through the gate three to five times at roughly flight height. Watch for a distinct peak on the assigned pilot's trace. Test each pilot's channel in turn.</li>
+                        <li>Select the pilot card. Set <strong>Enter</strong> above the level you see away from the opening and below the pass peaks. Set <strong>Exit</strong> a little lower than Enter. Use the chart lines or the threshold controls on the card.</li>
+                        <li>Alternatively, use <strong>Auto-calibrate</strong>. Press Start with the gate clear, wait five seconds, make several passes on each channel, then choose <strong>Calculate thresholds</strong>. Check the result on the chart.</li>
+                        <li>Wait for <strong>Saved</strong>. Repeat the walk-throughs to make sure each pilot consistently rises above Enter and falls below Exit after leaving the gate.</li>
+                    </ol>
+                    <div class="qs-tips">
+                        <h4>If calibration isn't picking up passes</h4>
+                        <ul>
+                            <li><strong>Flat trace:</strong> confirm the C5 is online, the video transmitter is active, and the selected frequency matches it.</li>
+                            <li><strong>Missed pass:</strong> check that Enter is below the pass peak. If the trace is always high, move the quad farther away and check the placement and receiver gain.</li>
+                            <li><strong>Extra laps:</strong> raise Enter slightly if movement near the gate reaches it, and check that the minimum lap time suits the course.</li>
+                            <li><strong>Moved the gate or changed channels?</strong> Stop the race and check the thresholds again before starting another heat.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="qs-section qs-section-alt" id="first-race">
+            <div class="container">
+                <div class="qs-section-header"><div class="qs-section-num" aria-hidden="true">4</div><h2>Your first race</h2></div>
+                <div class="qs-content">
+                    <h3>Run a test heat</h3>
+                    <ol class="qs-steps">
+                        <li>Check the pilot names, channels, and <strong>Race</strong> checkboxes in Calibration. Open the <strong>Race</strong> tab.</li>
+                        <li>Press <strong>Start Race</strong> and wait for the countdown. Walk a quad through the gate. The first crossing is recorded as <strong>Gate 1</strong>, the time from the start to that crossing.</li>
+                        <li>Move clear of the gate. After the minimum lap time, pass through again. This crossing should record the first complete lap for the correct pilot. Repeat on the other channels before running a group heat.</li>
+                        <li>Press <strong>Stop Race</strong> to finish the test. For later heats, you can also set a lap target or heat time so the gate stops and saves automatically.</li>
+                    </ol>
+                    <figure>
+                        <img class="qs-screenshot" src="images/quickstart/c5mk-race.png" alt="FPVGate multi-pilot race screen with live standings and a column of lap times for each pilot" loading="lazy">
+                    </figure>
+
+                    <h3>Review the result</h3>
+                    <p>Open <strong>Race History</strong> and select the latest race. Check the pilot names, Gate 1 and lap times. If you recorded RSSI to SD, open the race editor and choose a pilot in <strong>Visual Marshal</strong> to inspect their trace and correct crossings. Save when you have reviewed each edit.</p>
+                    <figure>
+                        <img class="qs-screenshot" src="images/quickstart/c5mk-history.png" alt="Race History showing a saved multi-pilot result, timeline, and lap table" loading="lazy">
+                    </figure>
+                    <div class="qs-note">
+                        <h4>Missing a lap or an announcement?</h4>
+                        <p>For missing laps, check that <strong>Race</strong> is enabled for the pilot and that the pass cleared Enter and the minimum lap time. For browser audio, keep the race page open, turn up media volume, and check silent mode and the selected announcer settings.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="qs-section">
+            <div class="container qs-content">
+                <h2>Next steps</h2>
+                <ul class="qs-feature-list">
+                    <li><a href="docs.html#c5-multipilot">Multi-pilot reference</a> for channels and calibration.</li>
+                    <li><a href="docs.html#event-mode">Event Mode</a> for pilot groups, race formats, and heat schedules.</li>
+                    <li><a href="c5.html#rotorhazard">RotorHazard setup</a> if you want to use direct receiver USB.</li>
+                    <li><a href="support.html">FPVGate support</a> if the receiver stays offline or you need help with your gate.</li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+<footer class="site-footer" id="site-footer">
+    <div class="container">
+        <div class="site-footer-main">
+            <div class="site-footer-brand">
+                <a href="index.html" class="site-footer-logo" aria-label="FPVGate home"><img src="images/LogoAnimated.svg" alt="" class="nav-logo" width="28" height="28"><span>FPVGate</span></a>
+                <p>Lap timing for pilots, clubs and the FPV community.</p>
+                <div class="site-footer-support">
+                    <a href="https://ko-fi.com/louishitchcock" target="_blank" rel="noopener noreferrer" class="footer-kofi-button" aria-label="Support FPVGate on Ko-fi (opens in a new tab)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 7h13v7a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V7Z"/><path d="M17 8h2a3 3 0 0 1 0 6h-2M3 22h16M8 2v2m5-2v2"/></svg>
+                        <span>Support on Ko-fi</span><span aria-hidden="true">&#8599;</span>
+                    </a>
+                    <p>Help fund development, testing and future releases.</p>
+                </div>
+            </div>
+            <nav class="site-footer-group" aria-label="Footer store">
+                <h2>Store</h2>
+                <ul><li><a href="shop.html">All products</a></li><li><a href="shop-fpvgate.html">FPVGate hardware</a></li><li><a href="shop-components.html">Components</a></li><li><a href="shop-misc.html">Tools &amp; accessories</a></li><li><a href="distributors.html">Become a distributor</a></li></ul>
+            </nav>
+            <nav class="site-footer-group" aria-label="Footer guides">
+                <h2>Guides</h2>
+                <ul><li><a href="quickstart.html">Getting started</a></li><li><a href="docs.html">Documentation</a></li><li><a href="flasher.html">Flash firmware</a></li><li><a href="c5.html">C5 Radio</a></li><li><a href="print-files.html">3D print files</a></li></ul>
+            </nav>
+            <nav class="site-footer-group" aria-label="Footer customer help">
+                <h2>Customer help</h2>
+                <ul><li><a href="help.html">Help centre</a></li><li><a href="support.html">Order support</a></li><li><a href="shipping.html">Shipping</a></li><li><a href="returns.html">Returns &amp; replacements</a></li></ul>
+            </nav>
+            <nav class="site-footer-group" aria-label="Footer community">
+                <h2>Community</h2>
+                <ul><li><a href="https://discord.gg/XwammuWCCj" target="_blank" rel="noopener noreferrer">Join Discord</a></li><li><a href="https://github.com/LouisHitchcock/FPVGate" target="_blank" rel="noopener noreferrer">GitHub</a></li><li><a href="https://github.com/LouisHitchcock/FPVGate/issues" target="_blank" rel="noopener noreferrer">Report a bug</a></li><li><a href="mailto:shop.fpvgate@gmail.com">Email FPVGate</a></li></ul>
+            </nav>
+        </div>
+        <div class="site-footer-bottom">
+            <p>Built for the FPV community.</p>
+            <nav aria-label="Footer privacy"><a href="privacy.html">Privacy policy</a><a href="data-collection.html">Data &amp; browser storage</a></nav>
+        </div>
+    </div>
+</footer>
+    <script src="animations.js"></script>
+    <script src="theme.js"></script>
 </body>
 </html>
