@@ -5,9 +5,11 @@ import { handleDistributorEnquiry } from './distributors.js';
 import { handleSupportAdmin } from './support.js';
 import { allocateOrderNumber } from './order-numbers.js';
 import { runStoreRetention } from './retention.js';
+import { handleOrderDocuments } from './order-documents.js';
 
 import {
     getShippingRates,
+    buildParcelFromItems,
     getReturnRates,
     purchaseLabel,
     DEFAULT_LABEL_FILE_TYPE,
@@ -219,6 +221,15 @@ export default {
                     return await handleListOrders(request, env, corsHeaders);
                 }
 
+                if (url.pathname === '/api/orders/distributor' && request.method === 'POST') {
+                    return await handleCreateManualOrder(request, env, corsHeaders, true);
+                }
+
+                const documentMatch = url.pathname.match(/^\/api\/orders\/(\d+)\/documents(?:\/(agreement|invoice)(?:\/([a-f0-9-]{36}))?)?$/);
+                if (documentMatch) {
+                    return await handleOrderDocuments(documentMatch, request, env, corsHeaders, jsonResponse);
+                }
+
                 const orderMatch = url.pathname.match(/^\/api\/orders\/(\d+)$/);
                 if (orderMatch && request.method === 'GET') {
                     return await handleGetOrder(orderMatch[1], env, corsHeaders);
@@ -244,7 +255,7 @@ export default {
 
                 const ratesMatch = url.pathname.match(/^\/api\/orders\/(\d+)\/rates$/);
                 if (ratesMatch && request.method === 'POST') {
-                    return await handleGetOrderRates(ratesMatch[1], env, corsHeaders);
+                    return await handleGetOrderRates(ratesMatch[1], request, env, corsHeaders);
                 }
 
                 const commentsGetMatch = url.pathname.match(/^\/api\/orders\/(\d+)\/comments$/);
@@ -284,7 +295,7 @@ export default {
 
                 // Manual order (review/test)
                 if (url.pathname === '/api/orders/test' && request.method === 'POST') {
-                    return await handleCreateTestOrder(request, env, corsHeaders);
+                    return await handleCreateManualOrder(request, env, corsHeaders);
                 }
 
                 // Labels
@@ -983,10 +994,34 @@ async function processCompletedCheckout(session, env, placedAt = new Date()) {
     }
 }
 
-// --- Admin: Manual Review/Test Order ---
+// --- Admin: Manual Orders ---
 
-async function handleCreateTestOrder(request, env, corsHeaders) {
-    const body = await request.json().catch(() => ({}));
+async function handleCreateManualOrder(request, env, corsHeaders, distributor = false) {
+    const body = await request.json().catch(() => null);
+    if (!body || typeof body !== 'object') return jsonResponse({ error: 'Invalid order details' }, corsHeaders, 400);
+
+    const selectedProducts = Array.isArray(body.selectedProducts) ? body.selectedProducts : [];
+    const parcelWeight = body.parcelWeight;
+    let manualSessionId = 'manual_' + crypto.randomUUID();
+    if (distributor) {
+        if (!/^[a-f0-9-]{36}$/.test(body.requestId || '')) {
+            return jsonResponse({ error: 'Invalid distributor order reference' }, corsHeaders, 400);
+        }
+        manualSessionId = 'distributor_' + body.requestId;
+        const existing = await env.DB.prepare('SELECT * FROM orders WHERE stripe_session_id = ?').bind(manualSessionId).first();
+        if (existing) return jsonResponse({ success: true, order: parseOrderJson(existing) }, corsHeaders);
+        if (!validParcelWeight(parcelWeight)) {
+            return jsonResponse({ error: 'Enter the packed parcel weight in whole grams' }, corsHeaders, 400);
+        }
+        const validProducts = selectedProducts.length > 0 && selectedProducts.length <= 30 &&
+            selectedProducts.every(item => typeof item?.id === 'string' && item.id.trim() &&
+                Number.isSafeInteger(item.quantity) && item.quantity > 0 && item.quantity <= 100000 &&
+                Number.isSafeInteger(item.unitPricePence) && item.unitPricePence >= 0 && item.unitPricePence <= 100000000) &&
+            new Set(selectedProducts.map(item => item.id.trim())).size === selectedProducts.length;
+        if (!validProducts || !Number.isSafeInteger(body.shippingPence) || body.shippingPence < 0 || body.shippingPence > 100000000) {
+            return jsonResponse({ error: 'Enter a quantity and GBP unit price for each distinct product, and a valid shipping charge' }, corsHeaders, 400);
+        }
+    }
 
     const toFiniteNumber = (value, fallback = 0) => {
         const parsed = Number.parseFloat(value);
@@ -1013,6 +1048,10 @@ async function handleCreateTestOrder(request, env, corsHeaders) {
         email: String(incomingShipping.email || customerEmail).trim()
     };
 
+    if (distributor && (!String(body.customerName || '').trim() || !shippingAddress.company ||
+        !/^[A-Z]{2}$/.test(shippingAddress.country) || (shippingAddress.country === 'US' && !shippingAddress.province))) {
+        return jsonResponse({ error: 'Enter the distributor, recipient, country code and state for US addresses' }, corsHeaders, 400);
+    }
     if (!shippingAddress.name || !shippingAddress.address1 || !shippingAddress.city || !shippingAddress.postalCode || !shippingAddress.country) {
         return jsonResponse({ error: 'shippingAddress must include name, address1, city, postalCode, and country' }, corsHeaders, 400);
     }
@@ -1020,9 +1059,8 @@ async function handleCreateTestOrder(request, env, corsHeaders) {
         return jsonResponse({ error: 'shippingAddress.country must be a 2-letter country code' }, corsHeaders, 400);
     }
 
-    const zeroValue = body.zeroValue !== false;
+    const zeroValue = !distributor && body.zeroValue !== false;
     const parseQuantity = (value) => Math.max(1, Number.parseInt(value, 10) || 1);
-    const selectedProducts = Array.isArray(body.selectedProducts) ? body.selectedProducts : [];
     const items = [];
 
     if (selectedProducts.length > 0) {
@@ -1048,7 +1086,8 @@ async function handleCreateTestOrder(request, env, corsHeaders) {
             }
 
             const basePrice = Math.max(0, toFiniteNumber(product.price, 0));
-            const unitPrice = zeroValue ? 0 : basePrice;
+            const wholesalePrice = distributor ? selectedProducts.find(item => item.id.trim() === productId).unitPricePence / 100 : basePrice;
+            const unitPrice = zeroValue ? 0 : wholesalePrice;
             const lineTotal = zeroValue ? 0 : Number((unitPrice * quantity).toFixed(2));
             const weight = Math.max(1, Number.parseInt(product.weight, 10) || 100);
             const lineItem = {
@@ -1101,27 +1140,29 @@ async function handleCreateTestOrder(request, env, corsHeaders) {
     }
 
     const subtotal = zeroValue ? 0 : Number(items.reduce((sum, item) => sum + (item.totalPrice || 0), 0).toFixed(2));
-    const shippingFees = zeroValue ? 0 : Math.max(0, toFiniteNumber(body.shippingFees, 0));
-    const total = zeroValue ? 0 : Number((body.total !== undefined ? toFiniteNumber(body.total, subtotal + shippingFees) : subtotal + shippingFees).toFixed(2));
+    const shippingFees = distributor ? body.shippingPence / 100 : zeroValue ? 0 : Math.max(0, toFiniteNumber(body.shippingFees, 0));
+    const total = zeroValue ? 0 : Number((!distributor && body.total !== undefined ? toFiniteNumber(body.total, subtotal + shippingFees) : subtotal + shippingFees).toFixed(2));
 
     const incomingLabels = Array.isArray(body.labels) ? body.labels : [];
-    const labels = [...new Set(incomingLabels.map((value) => String(value || '').trim().toLowerCase()).filter(Boolean))].slice(0, 10);
+    const labels = distributor ? ['wholesale'] : [...new Set(incomingLabels.map((value) => String(value || '').trim().toLowerCase()).filter(Boolean))].slice(0, 10);
     if (labels.length === 0 && zeroValue) labels.push('review');
 
-    const shippingMethod = String(body.shippingMethod || (zeroValue ? 'Review Unit Shipment' : 'Manual Shipment')).trim() || (zeroValue ? 'Review Unit Shipment' : 'Manual Shipment');
-    const notePrefix = zeroValue ? 'REVIEW ORDER' : 'MANUAL ORDER';
+    const defaultShippingMethod = distributor ? 'Distributor Shipment' : zeroValue ? 'Review Unit Shipment' : 'Manual Shipment';
+    const shippingMethod = String(body.shippingMethod || defaultShippingMethod).trim() || defaultShippingMethod;
+    const notePrefix = distributor ? 'DISTRIBUTOR STOCK ORDER' : zeroValue ? 'REVIEW ORDER' : 'MANUAL ORDER';
     const noteText = String(body.notes || '').trim();
     const notes = noteText ? `${notePrefix}: ${noteText}` : notePrefix;
 
-    const manualSessionId = 'manual_' + crypto.randomUUID();
     const invoiceNumber = await allocateOrderNumber(env.DB, manualSessionId);
 
-    await env.DB.prepare(`
+    const distributorFields = distributor ? ['distributor_stock', parcelWeight] : [];
+    const insertion = await env.DB.prepare(`
         INSERT INTO orders
         (stripe_session_id, stripe_payment_intent, invoice_number, customer_name, customer_email,
          shipping_address, billing_address, items, subtotal, shipping_fees,
-         total, currency, shipping_method, status, labels, notes)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new', ?, ?)
+         total, currency, shipping_method, status, labels, notes${distributor ? ', order_type, parcel_weight_g' : ''})
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'new', ?, ?${distributor ? ', ?, ?' : ''})
+        ON CONFLICT(stripe_session_id) DO NOTHING
     `).bind(
         manualSessionId,
         null,
@@ -1137,17 +1178,18 @@ async function handleCreateTestOrder(request, env, corsHeaders) {
         'gbp',
         shippingMethod,
         JSON.stringify(labels),
-        notes
+        notes,
+        ...distributorFields
     ).run();
 
     const order = await env.DB.prepare('SELECT * FROM orders WHERE invoice_number = ?').bind(invoiceNumber).first();
 
     let discordStatus = 'not_configured';
-    if (env.DISCORD_WEBHOOK_URL) {
+    if (env.DISCORD_WEBHOOK_URL && (insertion.meta?.changes ?? insertion.changes) > 0) {
         try {
             await sendDiscordNotification(env.DISCORD_WEBHOOK_URL, {
                 invoiceNumber, items, total, currency: 'gbp', shippingAddress, customerEmail,
-                orderKind: labels.includes('test') ? 'Test Order' : zeroValue ? 'Review Order' : 'Manual Order'
+                orderKind: distributor ? 'Distributor Stock Order' : labels.includes('test') ? 'Test Order' : zeroValue ? 'Review Order' : 'Manual Order'
             });
             discordStatus = 'sent';
         } catch {
@@ -1287,19 +1329,37 @@ async function handleUpdateOrder(orderId, request, env, corsHeaders) {
     return jsonResponse({ success: true, order: parseOrderJson(updated) }, corsHeaders);
 }
 
-async function handleGetOrderRates(orderId, env, corsHeaders) {
+function validParcelWeight(weight) {
+    return Number.isSafeInteger(weight) && weight > 0 && weight <= 1000000;
+}
+
+async function handleGetOrderRates(orderId, request, env, corsHeaders) {
     const order = await env.DB.prepare('SELECT * FROM orders WHERE id = ?').bind(orderId).first();
     if (!order) return jsonResponse({ error: 'Order not found' }, corsHeaders, 404);
 
     const shippingAddress = JSON.parse(order.shipping_address);
     const orderItems = tryParseJson(order.items) || [];
+    let parcel = null;
+    if (order.order_type === 'distributor_stock') {
+        const body = await request.json().catch(() => null);
+        const weight = body?.parcelWeight ?? order.parcel_weight_g;
+        if (!validParcelWeight(weight)) {
+            return jsonResponse({ error: 'Enter the packed parcel weight in whole grams' }, corsHeaders, 400);
+        }
+        parcel = { ...buildParcelFromItems(orderItems), weight };
+    }
 
     try {
-        const shipment = await getShippingRates(env.SHIPPO_API_TOKEN, shippingAddress, null, orderItems, env.EORI_NUMBER || '');
+        const shipment = await getShippingRates(env.SHIPPO_API_TOKEN, shippingAddress, parcel, orderItems, env.EORI_NUMBER || '');
 
-        await env.DB.prepare(
-            'UPDATE orders SET shippo_shipment_id = ?, updated_at = datetime(\'now\') WHERE id = ?'
-        ).bind(shipment.object_id, orderId).run();
+        if (parcel) {
+            await env.DB.prepare("UPDATE orders SET shippo_shipment_id = ?, parcel_weight_g = ?, updated_at = datetime('now') WHERE id = ?")
+                .bind(shipment.object_id, parcel.weight, orderId).run();
+        } else {
+            await env.DB.prepare(
+                'UPDATE orders SET shippo_shipment_id = ?, updated_at = datetime(\'now\') WHERE id = ?'
+            ).bind(shipment.object_id, orderId).run();
+        }
 
         const rates = (shipment.rates || []).map(rate => ({
             objectId: rate.object_id,
@@ -1864,6 +1924,10 @@ async function handleCancelOrder(orderId, request, env, corsHeaders) {
     }
 
     await env.DB.prepare('UPDATE orders SET status = \'cancelled\', updated_at = datetime(\'now\') WHERE id = ?').bind(orderId).run();
+
+    if (order.order_type === 'distributor_stock') {
+        return jsonResponse({ success: true, status: 'cancelled' }, corsHeaders);
+    }
 
     // Restore inventory
     try {

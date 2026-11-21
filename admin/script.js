@@ -79,23 +79,25 @@ async function bulkArchive(archive){if(exampleReadOnly())return;const action=arc
 function filterOrders(s,btn){currentFilter=s;document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');loadOrders()}
 let currentDetailOrderLabels=[];
 let currentDetailOrderId=null;
+let distributorOrderRequestId = null;
 async function addLabel(id){if(exampleReadOnly())return;const l=prompt('Enter label name (e.g. urgent, priority, vip, gift, wholesale, preorder, international, issue):');if(!l)return;const labels=[...currentDetailOrderLabels,l.trim().toLowerCase()];const unique=[...new Set(labels)];try{await storeApi(`/api/orders/${id}/labels`,'PUT',{labels:unique});openDetail(id);loadOrders()}catch(e){alert('Failed: '+e.message)}}
 async function removeLabel(id,label){if(exampleReadOnly())return;const labels=currentDetailOrderLabels.filter(l=>l!==label);try{await storeApi(`/api/orders/${id}/labels`,'PUT',{labels});openDetail(id);loadOrders()}catch(e){alert('Failed: '+e.message)}}
 async function archiveOrder(id,archive){if(exampleReadOnly())return;if(archive&&!confirm('Archive this order? It will be hidden from the main list.'))return;try{await storeApi(`/api/orders/${id}/archive`,'POST',{archived:archive});closeDetail();loadOrders()}catch(e){alert('Failed: '+e.message)}}
-async function openDetail(id){const p=document.getElementById('detail-panel'),ov=document.getElementById('detail-overlay'),c=document.getElementById('detail-content');p.style.removeProperty('background-color');p.classList.add('open');ov.classList.add('open');document.body.classList.add('no-scroll');c.innerHTML='<div class="loading"><div class="spinner"></div>Loading...</div>';try{const o=await storeApi(`/api/orders/${id}`);const cm=await storeApi(`/api/orders/${id}/comments`);const rf=await storeApi(`/api/orders/${id}/refunds`);const tk=await storeApi(`/api/orders/${id}/tracking`);const rt=await storeApi(`/api/orders/${id}/return`);document.getElementById('detail-title').textContent=`Order #${o.invoice_number||o.id}`;c.innerHTML=renderDetail(o,cm.comments||[],rf.refunds||[],tk.events||[],rt.return||null)}catch(e){c.innerHTML=`<div class="error-text">Failed: ${e.message}</div>`}}
+async function openDetail(id){const p=document.getElementById('detail-panel'),ov=document.getElementById('detail-overlay'),c=document.getElementById('detail-content');p.style.removeProperty('background-color');p.classList.add('open');ov.classList.add('open');document.body.classList.add('no-scroll');c.innerHTML='<div class="loading"><div class="spinner"></div>Loading...</div>';try{const o=await storeApi(`/api/orders/${id}`);const cm=await storeApi(`/api/orders/${id}/comments`);const rf=await storeApi(`/api/orders/${id}/refunds`);const tk=await storeApi(`/api/orders/${id}/tracking`);const rt=await storeApi(`/api/orders/${id}/return`);document.getElementById('detail-title').textContent=`Order #${o.invoice_number||o.id}`;c.innerHTML=renderDetail(o,cm.comments||[],rf.refunds||[],tk.events||[],rt.return||null);if(o.order_type==='distributor_stock')loadDistributorDocuments(o.id)}catch(e){c.innerHTML=`<div class="error-text">Failed: ${e.message}</div>`}}
 function closeDetail(){document.getElementById('detail-panel').classList.remove('open');document.getElementById('detail-overlay').classList.remove('open');document.body.classList.remove('no-scroll')}
 function renderDetail(o,comments,refunds,trackingEvents,returnData){const a=o.shipping_address||{},items=Array.isArray(o.items)?o.items:[],dt=new Date(o.created_at).toLocaleString('en-GB'),tr=refunds.reduce((s,r)=>s+r.amount,0);
 currentDetailOrderLabels=o.labels||[];currentDetailOrderId=o.id;
 let h=`<div class="detail-section"><h3>Order Info</h3><div class="detail-row"><span class="label">Status</span><span class="value"><span class="status-badge status-${o.status}">${formatStatus(o.status)}</span></span></div><div class="detail-row"><span class="label">Date</span><span class="value">${dt}</span></div><div class="detail-row"><span class="label">Email</span><span class="value">${escHtml(o.customer_email)}</span></div><div class="detail-row"><span class="label">Shipping Method</span><span class="value">${escHtml(o.shipping_method||'N/A')}</span></div><div class="detail-row"><span class="label">Labels</span><span class="value" style="display:flex;flex-wrap:wrap;gap:4px;align-items:center">${(o.labels||[]).map(l=>`<span class="order-label" style="background:${labelColor(l)};cursor:pointer" onclick="removeLabel(${o.id},'${l}')" title="Click to remove">${escHtml(l)} &times;</span>`).join('')}<button class="btn btn-sm btn-secondary" onclick="addLabel(${o.id})" style="padding:2px 8px;font-size:11px">+ Add</button></span></div></div>`;
 h+=`<div class=\"detail-section\"><h3>Shipping Address</h3><div style=\"font-size:14px;line-height:1.6\">${escHtml(a.name||o.customer_name)}<br>${a.company?escHtml(a.company)+'<br>':''}${escHtml(a.address1||'')}<br>${a.address2?escHtml(a.address2)+'<br>':''}${escHtml(a.city||'')}${a.province?', '+escHtml(a.province):''}<br>${escHtml(a.postalCode||'')}<br>${escHtml(a.country||'')}${a.phone?'<br>'+escHtml(a.phone):''}</div><div style=\"margin-top:10px\"><button class=\"btn btn-sm btn-secondary\" onclick=\"editOrderInfo(${o.id})\">Edit Order Info</button></div></div>`;
 h+=`<div class="detail-section"><h3>Items</h3>${items.map(i=>`<div class="item-row"><span>${escHtml(i.name)} x${i.quantity}${i.preorderQuantity?` <span class="order-label" style="background:${labelColor('preorder')}">Pre-order x${i.preorderQuantity}, ships ${formatShipDate(i.preorderShipDate)}</span>`:''}</span><span>&pound;${parseFloat(i.totalPrice||i.price*i.quantity).toFixed(2)}</span></div>`).join('')}<div class="item-row" style="border-top:1px solid #e2e8f0;margin-top:8px;padding-top:8px"><span>Shipping</span><span>&pound;${parseFloat(o.shipping_fees||0).toFixed(2)}</span></div><div class="item-row" style="font-weight:700;font-size:16px"><span>Total</span><span>&pound;${parseFloat(o.total).toFixed(2)}</span></div>${tr>0?`<div class="item-row" style="color:#e53e3e"><span>Total Refunded</span><span>-&pound;${tr.toFixed(2)}</span></div>`:''}</div>`;
+if(o.order_type==='distributor_stock')h+=renderDistributorOrderDetails(o);
 if(o.label_url||o.tracking_number){h+=`<div class=\\\"detail-section\\\"><h3>Shipping Label</h3><div class=\\\"detail-row\\\"><span class=\\\"label\\\">Tracking</span><span class=\\\"value\\\">${escHtml(o.tracking_number||'N/A')} <button class=\\\"btn btn-sm btn-secondary\\\" onclick=\\\"setManualTracking(${o.id})\\\" style=\\\"padding:2px 8px;font-size:11px;margin-left:8px\\\">Edit</button></span></div>`;if(o.label_url)h+=`<div style=\\\"margin-top:8px\\\"><a href=\\\"${escHtml(o.label_url)}\\\" target=\\\"_blank\\\" class=\\\"label-link\\\">View / Print Label</a></div>`;h+=`</div>`}
 if(trackingEvents&&trackingEvents.length>0){h+=`<div class="detail-section"><h3>Tracking Timeline</h3><div class="tracking-timeline">`;trackingEvents.forEach((evt,i)=>{const isLast=i===trackingEvents.length-1;const statusCls={'DELIVERED':'tracking-delivered','TRANSIT':'tracking-transit','PRE_TRANSIT':'tracking-pre','RETURNED':'tracking-returned','FAILURE':'tracking-failure'}[evt.status]||'tracking-unknown';const loc=[evt.location_city,evt.location_state,evt.location_country].filter(Boolean).join(', ');const evtDate=evt.status_date?new Date(evt.status_date).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):'';h+=`<div class="tracking-event${isLast?' tracking-latest':''}"><div class="tracking-dot ${statusCls}"></div><div class="tracking-line"></div><div class="tracking-info"><div class="tracking-status-row"><span class="tracking-badge ${statusCls}">${escHtml(evt.status)}</span><span class="tracking-date">${evtDate}</span></div><div class="tracking-details">${escHtml(evt.status_details||evt.substatus_text||'')}</div>${loc?`<div class="tracking-location">${escHtml(loc)}</div>`:''}</div></div>`});h+=`</div></div>`}
 if(refunds.length>0){h+=`<div class="detail-section"><h3>Refund History</h3>`;refunds.forEach(r=>{const rd=new Date(r.created_at).toLocaleString('en-GB');h+=`<div class="detail-row"><span class="label">&pound;${r.amount.toFixed(2)}${r.comment?' - '+escHtml(r.comment):''}</span><span class="value" style="font-size:12px;color:#a0aec0">${rd}</span></div>`});h+=`</div>`}
 h+=`<div class="detail-section"><h3>Comments</h3><div class="comment-list" id="cl-${o.id}">`;if(comments.length===0)h+='<div style="color:#a0aec0;font-size:13px">No comments yet</div>';comments.forEach(c=>{const cd=new Date(c.created_at).toLocaleString('en-GB');h+=`<div class="comment-item">${escHtml(c.comment)}<div class="comment-date">${cd}</div></div>`});h+=`</div><div class="comment-input-row"><input type="text" id="ci-${o.id}" placeholder="Add a comment..." onkeypress="if(event.key==='Enter')addComment(${o.id})"><button class="btn btn-sm btn-primary" onclick="addComment(${o.id})">Post</button></div></div>`;
 // Return section
 if(returnData)h+=renderReturnSection(o,returnData);
-h+=`<div class=\"action-bar\"><button class=\"btn btn-secondary\" onclick=\"printInvoice(${o.id})\"><svg fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" viewBox=\"0 0 24 24\" style=\"width:14px;height:14px;vertical-align:-2px;margin-right:4px\"><path d=\"M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6v-8z\"/></svg>Print Invoice</button>`;if(!o.label_url&&o.status!=='cancelled'&&o.status!=='refunded'){h+=`<button class=\"btn btn-secondary\" onclick=\"triggerLabelUpload(${o.id})\">Upload Label PDF</button><input type=\"file\" id=\"label-file-${o.id}\" accept=\"application/pdf\" style=\"display:none\" onchange=\"uploadLabelFile(${o.id})\">`;if(!o.tracking_number){h+=`<button class=\"btn btn-primary\" onclick=\"fetchRates(${o.id})\">Create 4x6 Shipping Label</button>`;h+=`<button class=\"btn btn-secondary\" onclick=\"setManualTracking(${o.id})\">Set Tracking Number</button>`}}if(o.status==='label_created')h+=`<button class=\"btn btn-success\" onclick=\"updateStatus(${o.id},'shipped')\">Mark as Shipped</button>`;if(o.status==='shipped')h+=`<button class=\"btn btn-secondary\" onclick=\"updateStatus(${o.id},'completed')\">Mark as Completed</button>`;if(o.status!=='cancelled'&&o.status!=='refunded'){h+=`<button class=\"btn btn-danger\" onclick=\"toggleRefund(${o.id})\">Issue Refund</button>`;if((o.status==='shipped'||o.status==='completed')&&!returnData)h+=`<button class=\"btn btn-secondary\" onclick=\"initiateReturn(${o.id})\">Initiate Return</button>`;h+=`<button class=\"btn btn-secondary\" onclick=\"confirmCancel(${o.id})\">Cancel Order</button>`}if(o.archived)h+=`<button class=\"btn btn-secondary\" onclick=\"archiveOrder(${o.id},false)\">Unarchive</button>`;else h+=`<button class=\"btn btn-secondary\" onclick=\"archiveOrder(${o.id},true)\">Archive</button>`;h+=`</div>`;
+h+=`<div class=\"action-bar\"><button class=\"btn btn-secondary\" onclick=\"printInvoice(${o.id})\"><svg fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" viewBox=\"0 0 24 24\" style=\"width:14px;height:14px;vertical-align:-2px;margin-right:4px\"><path d=\"M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6v-8z\"/></svg>Print Invoice</button>`;if(!o.label_url&&o.status!=='cancelled'&&o.status!=='refunded'){h+=`<button class=\"btn btn-secondary\" onclick=\"triggerLabelUpload(${o.id})\">Upload Label PDF</button><input type=\"file\" id=\"label-file-${o.id}\" accept=\"application/pdf\" style=\"display:none\" onchange=\"uploadLabelFile(${o.id})\">`;if(!o.tracking_number){h+=`<button class=\"btn btn-primary\" onclick=\"fetchRates(${o.id},this)\">Create 4x6 Shipping Label</button>`;h+=`<button class=\"btn btn-secondary\" onclick=\"setManualTracking(${o.id})\">Set Tracking Number</button>`}}if(o.status==='label_created')h+=`<button class=\"btn btn-success\" onclick=\"updateStatus(${o.id},'shipped')\">Mark as Shipped</button>`;if(o.status==='shipped')h+=`<button class=\"btn btn-secondary\" onclick=\"updateStatus(${o.id},'completed')\">Mark as Completed</button>`;if(o.status!=='cancelled'&&o.status!=='refunded'){h+=`<button class=\"btn btn-danger\" onclick=\"toggleRefund(${o.id})\">Issue Refund</button>`;if((o.status==='shipped'||o.status==='completed')&&!returnData)h+=`<button class=\"btn btn-secondary\" onclick=\"initiateReturn(${o.id})\">Initiate Return</button>`;h+=`<button class=\"btn btn-secondary\" onclick=\"confirmCancel(${o.id},${o.order_type==='distributor_stock'})\">Cancel Order</button>`}if(o.archived)h+=`<button class=\"btn btn-secondary\" onclick=\"archiveOrder(${o.id},false)\">Unarchive</button>`;else h+=`<button class=\"btn btn-secondary\" onclick=\"archiveOrder(${o.id},true)\">Archive</button>`;h+=`</div>`;
 h+=`<div class=\"detail-section\"><h3>Customer Emails</h3><div style=\"display:flex;gap:8px;flex-wrap:wrap\"><button class=\"btn btn-sm btn-secondary\" onclick=\"sendOrderEmail(${o.id},'tracking')\">${o.tracking_number?'Send Tracking Email':'No Tracking Set'}</button><button class=\"btn btn-sm btn-secondary\" onclick=\"sendOrderEmail(${o.id},'shipped')\">Send Shipped Email</button><button class=\"btn btn-sm btn-secondary\" onclick=\"sendOrderEmail(${o.id},'confirmation')\">Resend Confirmation</button></div></div>`;
 h+=`<div class="refund-form" id="rf-${o.id}"><label>Refund Amount (&pound;)</label><input type="number" id="ra-${o.id}" step="0.01" min="0.01" max="${o.total}" value="${o.total}"><label>Reason (optional)</label><textarea id="rr-${o.id}" placeholder="Reason for refund..."></textarea><div id="re-${o.id}" class="error-text" style="margin-bottom:8px"></div><div style="display:flex;gap:8px"><button class="btn btn-danger" onclick="submitRefund(${o.id})">Confirm Refund</button><button class="btn btn-secondary" onclick="toggleRefund(${o.id})">Cancel</button></div></div>`;
 h+=`<div id="rates-container"></div>`;return h}
@@ -103,8 +105,41 @@ h+=`<div id="rates-container"></div>`;return h}
 async function addComment(id){if(exampleReadOnly())return;const i=document.getElementById(`ci-${id}`);const t=i.value.trim();if(!t)return;i.disabled=true;try{await storeApi(`/api/orders/${id}/comments`,'POST',{comment:t});openDetail(id)}catch(e){alert('Failed: '+e.message)}i.disabled=false}
 function toggleRefund(id){document.getElementById(`rf-${id}`).classList.toggle('open')}
 async function submitRefund(id){if(exampleReadOnly())return;const amt=parseFloat(document.getElementById(`ra-${id}`).value);const cmt=document.getElementById(`rr-${id}`).value.trim();const err=document.getElementById(`re-${id}`);err.textContent='';if(!amt||amt<=0){err.textContent='Enter a valid amount';return}try{const r=await storeApi(`/api/orders/${id}/refund`,'POST',{amount:amt,comment:cmt});if(r.error){err.textContent=r.error;return}openDetail(id);loadOrders()}catch(e){err.textContent='Failed: '+e.message}}
-async function confirmCancel(id){if(exampleReadOnly())return;if(!confirm('Are you sure you want to cancel this order? This will issue a full refund and restore inventory.'))return;try{const r=await storeApi(`/api/orders/${id}/cancel`,'POST');if(r.error){alert(r.error);return}closeDetail();loadOrders()}catch(e){alert('Failed: '+e.message)}}
-async function fetchRates(id){const c=document.getElementById('rates-container');c.innerHTML='<div class="loading"><div class="spinner"></div>Fetching rates...</div>';try{const d=await storeApi(`/api/orders/${id}/rates`,'POST');if(!d.rates||d.rates.length===0){c.innerHTML='<div class="error-text">No rates available.</div>';return}let h='<div class="detail-section" style="margin-top:20px"><h3>Select Shipping Service</h3>';d.rates.forEach(r=>{h+=`<div class="rate-option" onclick="purchaseLabel(${id},'${r.objectId}')"><div><div class="rate-name">${escHtml(r.provider)} - ${escHtml(r.serviceName)}</div><div class="rate-days">${r.estimatedDays?r.estimatedDays+' day(s)':''} ${escHtml(r.durationTerms)}</div></div><div class="rate-price">${formatReturnRate(r)}</div></div>`});h+='</div>';c.innerHTML=h}catch(e){c.innerHTML=`<div class="error-text">Failed: ${e.message}</div>`}}
+async function confirmCancel(id,distributor=false){if(exampleReadOnly())return;if(!confirm(distributor?'Cancel this distributor order and remove it from sales analytics?':'Are you sure you want to cancel this order? This will issue a full refund and restore inventory.'))return;try{const r=await storeApi(`/api/orders/${id}/cancel`,'POST');if(r.error){alert(r.error);return}closeDetail();loadOrders()}catch(e){alert('Failed: '+e.message)}}
+async function fetchRates(id, button) {
+    if(exampleReadOnly())return;
+    const container = document.getElementById('rates-container');
+    const weightInput = document.getElementById(`distributor-label-weight-${id}`);
+    if(weightInput && !weightInput.reportValidity())return;
+    const options = weightInput ? {parcelWeight:weightInput.valueAsNumber} : null;
+    container.innerHTML='<div class="loading"><div class="spinner"></div>Fetching rates...</div>';
+    if(button)button.disabled=true;
+    if(weightInput)weightInput.disabled=true;
+    try{
+        const result=await storeApi(`/api/orders/${id}/rates`,'POST',options);
+        if(result.error)throw new Error(result.error);
+        if(!result.rates?.length){
+            container.textContent='No rates available.';
+            return;
+        }
+        container.innerHTML='<div class="detail-section" style="margin-top:20px"><h3>Select Shipping Service</h3></div>';
+        const services = container.firstElementChild;
+        result.rates.forEach(rate=>{
+            const option = document.createElement('div');
+            option.className='rate-option';
+            option.innerHTML=`<div><div class="rate-name">${escHtml(rate.provider)} - ${escHtml(rate.serviceName)}</div>
+                <div class="rate-days">${rate.estimatedDays ? rate.estimatedDays+' day(s)' : ''} ${escHtml(rate.durationTerms)}</div></div>
+                <div class="rate-price">${formatReturnRate(rate)}</div>`;
+            option.addEventListener('click',()=>purchaseLabel(id,rate.objectId));
+            services.append(option);
+        });
+    }catch(error){
+        container.textContent=error.message;
+    }finally{
+        if(button)button.disabled=false;
+        if(weightInput)weightInput.disabled=false;
+    }
+}
 async function purchaseLabel(id,rateId){if(exampleReadOnly())return;const c=document.getElementById('rates-container');c.innerHTML='<div class=\"loading\"><div class=\"spinner\"></div>Purchasing label...</div>';try{const d=await storeApi(`/api/orders/${id}/label`,'POST',{rateId,labelFileType:'PDF_4x6'});if(d.error){c.innerHTML=`<div class=\"error-text\">${escHtml(d.error)}</div>`;return}c.innerHTML=`<div class=\"detail-section\" style=\"margin-top:20px\"><h3 class=\"success-text\">4x6 Label Created</h3><div class=\"detail-row\"><span class=\"label\">Tracking</span><span class=\"value\">${escHtml(d.trackingNumber)}</span></div><div style=\"margin-top:12px\"><a href=\"${escHtml(d.labelUrl)}\" target=\"_blank\" class=\"btn btn-primary\">View / Print 4x6 Label</a></div></div>`;loadOrders()}catch(e){c.innerHTML=`<div class=\"error-text\">Failed: ${e.message}</div>`}}
 async function updateStatus(id,s){if(exampleReadOnly())return;try{await storeApi(`/api/orders/${id}/status`,'PUT',{status:s});closeDetail();loadOrders()}catch(e){alert('Failed: '+e.message)}}
 async function setManualTracking(id){if(exampleReadOnly())return;const tn=prompt('Enter tracking number:');if(!tn)return;const trimmed=tn.trim();if(!trimmed)return;try{await storeApi(`/api/orders/${id}/status`,'PUT',{status:'label_created',trackingNumber:trimmed});openDetail(id);loadOrders()}catch(e){alert('Failed: '+e.message)}}
@@ -288,15 +323,152 @@ function parseReviewProductQuantity(value){const parsed=Number.parseInt(value,10
 function findReviewProductById(productId){return reviewOrderProducts.find((product)=>String(product.product_id||'')===String(productId||''))}
 function getReviewProductDimensions(product){if(!product)return null;const length=parseReviewProductDimension(product.length_cm??product.length??product.parcel_length_cm);const width=parseReviewProductDimension(product.width_cm??product.width??product.parcel_width_cm);const height=parseReviewProductDimension(product.height_cm??product.height??product.parcel_height_cm);if(length&&width&&height)return{length,width,height};return null}
 function getReviewProductOptionsHtml(selectedProductId){if(!reviewOrderProducts.length)return'<option value="">No active products available</option>';let html='<option value="">Select product</option>';reviewOrderProducts.forEach((product)=>{const productId=String(product.product_id||'');const selected=productId===selectedProductId?' selected':'';const weight=Math.round(parseReviewProductWeight(product.weight));html+=`<option value="${escHtml(productId)}"${selected}>${escHtml(product.product_name||productId)} (${weight}g)</option>`});return html}
-function getSelectedReviewProducts(){return reviewOrderSelections.map((row)=>({id:String(row.productId||'').trim(),quantity:parseReviewProductQuantity(row.quantity)})).filter((row)=>row.id)}
+function renderDistributorOrderDetails(order) {
+    const id = order.id;
+    const canQuote = !order.label_url && !order.tracking_number && !['cancelled','refunded'].includes(order.status);
+    return `<div class="detail-section">
+        <h3>Distributor Stock Order</h3>
+        ${canQuote ? `<label for="distributor-label-weight-${id}">Packed parcel weight (g)</label>
+        <input id="distributor-label-weight-${id}" type="number" min="1" max="1000000" step="1" required value="${Number(order.parcel_weight_g)}"
+            oninput="document.getElementById('rates-container').replaceChildren()">`
+        : `<p>Packed parcel weight ${Number(order.parcel_weight_g)} g</p>`}
+        <h3>Order Documents</h3>
+        <div id="distributor-documents-${id}">Loading documents…</div>
+        <label>Signed FPVGate Reseller Agreement (PDF)
+            <input type="file" accept="application/pdf,.pdf" onchange="uploadDistributorDocument(${id},'agreement',this)">
+        </label>
+        <label>Invoice (PDF)
+            <input type="file" accept="application/pdf,.pdf" onchange="uploadDistributorDocument(${id},'invoice',this)">
+        </label>
+        <div id="distributor-document-status-${id}" role="status"></div>
+    </div>`;
+}
+
+const distributorDocumentLabels = { agreement: 'Signed FPVGate Reseller Agreement', invoice: 'Invoice' };
+
+async function loadDistributorDocuments(id) {
+    const container = document.getElementById(`distributor-documents-${id}`);
+    if(!container)return;
+    try{
+        const result = await storeApi(`/api/orders/${id}/documents`);
+        if(result.error)throw new Error(result.error);
+        container.replaceChildren();
+        if(!result.documents.length)container.textContent='No documents attached.';
+        result.documents.forEach(documentInfo=>{
+            const row = document.createElement('div');
+            row.className='detail-row';
+            const label = document.createElement('span');
+            label.textContent=distributorDocumentLabels[documentInfo.kind];
+            const button = document.createElement('button');
+            button.className='btn btn-sm btn-secondary';
+            button.textContent=documentInfo.name;
+            button.addEventListener('click',()=>downloadDistributorDocument(id,documentInfo));
+            row.append(label,button);
+            container.append(row);
+        });
+    }catch(error){
+        container.textContent=error.message;
+    }
+}
+
+async function uploadDistributorDocument(id, kind, input) {
+    const file = input.files[0];
+    if(!file || exampleReadOnly())return;
+    const status = document.getElementById(`distributor-document-status-${id}`);
+    input.disabled=true;
+    status.textContent='Uploading PDF…';
+    try{
+        if(file.size>10*1024*1024)throw new Error('PDFs must be 10 MB or smaller.');
+        const response = await fetch(`${STORE_API}/api/orders/${id}/documents/${kind}?name=${encodeURIComponent(file.name)}`,{
+            method:'POST',
+            headers:{Authorization:`Bearer ${adminToken}`,'Content-Type':'application/pdf'},
+            body:file
+        });
+        if(!response.ok)throw new Error((await response.json()).error || 'Upload failed.');
+        status.textContent='PDF attached.';
+        await loadDistributorDocuments(id);
+    }catch(error){
+        status.textContent=error.message;
+    }finally{
+        input.disabled=false;
+        input.value='';
+    }
+}
+
+async function downloadDistributorDocument(id, documentInfo) {
+    const status = document.getElementById(`distributor-document-status-${id}`);
+    try{
+        const response = await fetch(`${STORE_API}/api/orders/${id}/documents/${documentInfo.kind}/${documentInfo.id}`,{
+            headers:{Authorization:`Bearer ${adminToken}`}
+        });
+        if(!response.ok)throw new Error('Document download failed.');
+        const url = URL.createObjectURL(await response.blob());
+        const link = document.createElement('a');
+        link.href=url;
+        link.download=documentInfo.name;
+        link.click();
+        setTimeout(()=>URL.revokeObjectURL(url),1000);
+    }catch(error){
+        status.textContent=error.message;
+    }
+}
+
+function readOrderPence(value) {
+    return /^\d+(?:\.\d{1,2})?$/.test(value) && Number(value)<=1000000 ? Math.round(Number(value)*100) : null;
+}
+function getSelectedReviewProducts() {
+    return reviewOrderSelections.filter(row=>row.productId).map(row=>({
+        id:row.productId,
+        quantity:parseReviewProductQuantity(row.quantity),
+        ...(distributorOrderRequestId ? { unitPricePence:readOrderPence(row.unitPrice || '') } : {})
+    }));
+}
 function updateReviewProductSummary(){const summary=document.getElementById('review-product-summary');if(!summary)return;const selected=getSelectedReviewProducts();if(!selected.length){summary.textContent='No products selected';return}let totalUnits=0;let totalWeight=0;selected.forEach((row)=>{const product=findReviewProductById(row.id);const quantity=parseReviewProductQuantity(row.quantity);totalUnits+=quantity;totalWeight+=parseReviewProductWeight(product?.weight)*quantity});const totalKg=(totalWeight/1000).toFixed(2);summary.textContent=`${selected.length} product type(s), ${totalUnits} unit(s), estimated weight ${Math.round(totalWeight)}g (${totalKg}kg)`}
-function renderReviewProductRows(){const container=document.getElementById('review-product-rows');if(!container)return;if(!reviewOrderSelections.length)reviewOrderSelections=[{productId:'',quantity:1}];container.innerHTML=reviewOrderSelections.map((row,index)=>{const selectedId=String(row.productId||'');const quantity=parseReviewProductQuantity(row.quantity);const product=findReviewProductById(selectedId);const weight=parseReviewProductWeight(product?.weight);const lineWeight=Math.round(weight*quantity);const dimensions=getReviewProductDimensions(product);const dimensionsText=dimensions?` ${dimensions.length}x${dimensions.width}x${dimensions.height}cm`:'';const stockText=product&&Number.isFinite(Number(product.stock_quantity))?` • Stock ${product.stock_quantity}`:'';const meta=product?`${weight}g each • line ${lineWeight}g${dimensionsText}${stockText}`:'Choose a product and quantity';const disableRemove=reviewOrderSelections.length===1?' disabled':'';return`<div class="review-product-row"><select onchange="updateReviewProductSelection(${index},'productId',this.value)">${getReviewProductOptionsHtml(selectedId)}</select><input type="number" min="1" value="${quantity}" onchange="updateReviewProductSelection(${index},'quantity',this.value)" inputmode="numeric"><button type="button" class="review-product-remove" onclick="removeReviewProductRow(${index})"${disableRemove} title="Remove row">&times;</button><div class="review-product-meta">${escHtml(meta)}</div></div>`}).join('');updateReviewProductSummary()}
+function renderReviewProductRows(){const container=document.getElementById('review-product-rows');if(!container)return;if(!reviewOrderSelections.length)reviewOrderSelections=[{productId:'',quantity:1}];container.innerHTML=reviewOrderSelections.map((row,index)=>{const selectedId=String(row.productId||'');const quantity=parseReviewProductQuantity(row.quantity);const product=findReviewProductById(selectedId);const weight=parseReviewProductWeight(product?.weight);const lineWeight=Math.round(weight*quantity);const dimensions=getReviewProductDimensions(product);const dimensionsText=dimensions?` ${dimensions.length}x${dimensions.width}x${dimensions.height}cm`:'';const stockText=product&&Number.isFinite(Number(product.stock_quantity))?` • Stock ${product.stock_quantity}`:'';const meta=product?`${weight}g each • line ${lineWeight}g${dimensionsText}${stockText}`:'Choose a product and quantity';const disableRemove=reviewOrderSelections.length===1?' disabled':'';return`<div class="review-product-row"><select onchange="updateReviewProductSelection(${index},'productId',this.value)">${getReviewProductOptionsHtml(selectedId)}</select><input type="number" aria-label="Quantity" min="1" value="${quantity}" onchange="updateReviewProductSelection(${index},'quantity',this.value)" inputmode="numeric"><button type="button" class="review-product-remove" onclick="removeReviewProductRow(${index})"${disableRemove} title="Remove row">&times;</button><div class="review-product-meta">${escHtml(meta)}</div>${distributorOrderRequestId ? `<label class="review-product-meta">Wholesale unit price (&pound;)<input type="number" min="0" max="1000000" step="0.01" oninput="reviewOrderSelections[${index}].unitPrice=this.value"></label>` : ''}</div>`}).join('');
+    if(distributorOrderRequestId){
+        container.querySelectorAll('label input').forEach((input,index)=>{input.value=reviewOrderSelections[index].unitPrice || ''});
+    }
+    updateReviewProductSummary()
+}
 function addReviewProductRow(){reviewOrderSelections.push({productId:'',quantity:1});renderReviewProductRows()}
 function removeReviewProductRow(index){if(index<0||index>=reviewOrderSelections.length)return;if(reviewOrderSelections.length===1){reviewOrderSelections=[{productId:'',quantity:1}]}else{reviewOrderSelections.splice(index,1)}renderReviewProductRows()}
 function updateReviewProductSelection(index,field,value){if(index<0||index>=reviewOrderSelections.length)return;if(field==='quantity'){reviewOrderSelections[index].quantity=parseReviewProductQuantity(value)}else{reviewOrderSelections[index].productId=String(value||'')}renderReviewProductRows()}
 async function ensureReviewOrderProductsLoaded(){const response=await storeApi('/api/inventory');const products=Array.isArray(response.products)?response.products:[];reviewOrderProducts=products.filter((product)=>product&&product.active!==0&&product.active!==false)}
-async function openTestOrderModal(){if(exampleReadOnly())return;document.getElementById('test-order-modal').classList.add('open');document.getElementById('test-order-error').textContent='';document.body.classList.add('no-scroll');reviewOrderSelections=[{productId:'',quantity:1}];try{await ensureReviewOrderProductsLoaded();renderReviewProductRows()}catch(e){document.getElementById('test-order-error').textContent='Failed to load products: '+e.message}}
-function closeTestOrderModal(){document.getElementById('test-order-modal').classList.remove('open');document.body.classList.remove('no-scroll')}
+async function openTestOrderModal(distributor = false) {
+    if(exampleReadOnly())return;
+    distributorOrderRequestId = distributor ? crypto.randomUUID() : null;
+    const modal = document.getElementById('test-order-modal');
+    modal.querySelectorAll('input, textarea').forEach(input=>{input.value=input.defaultValue});
+    document.getElementById('manual-order-title').textContent = distributor ? 'Create Distributor Stock Order' : 'Create Review Order (\u00a30)';
+    document.getElementById('manual-order-help').textContent = distributor
+        ? 'Record the order for sales analytics. Attach the signed agreement and invoices from the saved order.'
+        : 'Record a review-unit shipment and purchase its label from the saved order.';
+    document.getElementById('manual-order-company').textContent = distributor ? 'Distributor company' : 'Company (optional)';
+    document.getElementById('manual-order-product-help').textContent = distributor
+        ? 'Use the agreed wholesale price in GBP for each product.'
+        : 'Parcel weight and size are estimated from the selected products.';
+    document.getElementById('distributor-order-fields').hidden = !distributor;
+    document.getElementById('review-order-fields').hidden = distributor;
+    document.getElementById('test-order-error').textContent='';
+    const submit = document.getElementById('test-order-submit');
+    submit.textContent = distributor ? 'Create Distributor Stock Order' : 'Create Review Order';
+    modal.classList.add('open');
+    document.body.classList.add('no-scroll');
+    reviewOrderProducts=[];
+    reviewOrderSelections=[{productId:'',quantity:1}];
+    renderReviewProductRows();
+    try{
+        await ensureReviewOrderProductsLoaded();
+        renderReviewProductRows();
+    }catch(e){
+        document.getElementById('test-order-error').textContent='Failed to load products: '+e.message;
+    }
+}
+function closeTestOrderModal(){
+    if(document.getElementById('test-order-submit').disabled)return;
+    document.getElementById('test-order-modal').classList.remove('open');
+    document.body.classList.remove('no-scroll');
+}
 async function submitTestOrder(){
 if(exampleReadOnly())return;
 const err=document.getElementById('test-order-error');
@@ -317,14 +489,26 @@ const shippingMethod=document.getElementById('test-shipping-method').value.trim(
 const notes=document.getElementById('test-order-notes').value.trim();
 const labelsInput=(document.getElementById('test-order-labels').value||'').split(',').map(v=>v.trim().toLowerCase()).filter(Boolean);
 const labels=[...new Set(labelsInput)];
+const distributor = distributorOrderRequestId !== null;
+const parcelWeight = document.getElementById('distributor-parcel-weight').valueAsNumber;
+const shippingPence = readOrderPence(document.getElementById('distributor-shipping').value);
 if(!name||!email||!address1||!city||!postalCode){err.textContent='Name, email, address line 1, city, and postcode are required';return}
 if(!email.includes('@')){err.textContent='Please enter a valid email address';return}
 if(country.length!==2){err.textContent='Country code must be a 2-letter code (for example, GB or US)';return}
 if(!selectedProducts.length){err.textContent='Select at least one shipment product';return}
+if(distributor && (!company || (country==='US' && !province))){
+    err.textContent='Enter the distributor company and state for US addresses';
+    return;
+}
+if(distributor && (!Number.isInteger(parcelWeight) || parcelWeight<1 || parcelWeight>1000000 ||
+    shippingPence===null || selectedProducts.some(product=>product.unitPricePence===null))){
+    err.textContent='Enter a packed weight in whole grams, each unit price and the shipping charge';
+    return;
+}
 btn.disabled=true;
 btn.textContent='Creating...';
 try{
-const r=await storeApi('/api/orders/test','POST',{
+const r=await storeApi(distributor?'/api/orders/distributor':'/api/orders/test','POST',{
 orderType:'review',
 zeroValue:true,
 customerName:name,
@@ -344,16 +528,19 @@ email
 selectedProducts,
 shippingFees:0,
 total:0,
-shippingMethod,
+shippingMethod:distributor?'Distributor Shipment':shippingMethod,
 labels:labels.length?labels:['review'],
-notes
+notes,
+...(distributor ? { requestId:distributorOrderRequestId, parcelWeight, shippingPence } : {})
 });
-if(r.error){err.textContent=r.error;btn.disabled=false;btn.textContent='Create Review Order';return}
+if(r.error)throw new Error(r.error);
+btn.disabled=false;
 closeTestOrderModal();
 if(document.getElementById('section-orders').classList.contains('active'))loadOrders();else{switchSection('orders',document.querySelectorAll('.nav-item')[1])}
+if(distributor)openDetail(r.order.id);
 }catch(e){err.textContent='Failed: '+e.message}
 btn.disabled=false;
-btn.textContent='Create Review Order'
+btn.textContent=distributor?'Create Distributor Stock Order':'Create Review Order'
 }
 function countryFlag(c){if(!c||c.length!==2)return'';const cp=[...c.toUpperCase()].map(x=>0x1F1E6-65+x.charCodeAt(0));return String.fromCodePoint(...cp)}
 

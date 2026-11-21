@@ -212,6 +212,7 @@ export async function getShippingRates(token, toAddress, parcel = null, items = 
         address_from: FROM_ADDRESS,
         address_to: {
             name: toAddress.name || 'Customer',
+            ...(toAddress.company ? { company: toAddress.company } : {}),
             street1: toAddress.street1 || toAddress.address1,
             street2: toAddress.street2 || toAddress.address2 || '',
             city: toAddress.city,

@@ -13,6 +13,11 @@ database_id = "5e54869f-c57a-4bbc-a0be-e2e86853e801"
 binding = "IMAGES"
 bucket_name = "fpvgate-product-images"
 
+# Private reseller agreements and invoices
+[[r2_buckets]]
+binding = "ORDER_DOCUMENTS"
+bucket_name = "fpvgate-order-documents"
+
 [vars]
 FROM_EMAIL = "FPVGate <orders@fpvgate.xyz>"
 # Optional override for Shippo label output format
